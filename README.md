@@ -42,6 +42,18 @@ The pipeline produces:
 GitHub Actions runs two smoke tests on every push/PR (`.github/workflows/ci.yml`):
 1. `python -m localization.pipeline ...` trains/evaluates on both campaigns to validate the CLI pipeline.
 2. `python scripts/notebook_smoke.py` replays the main steps from the notebook (split, train, predict, explain) to guarantee that the tutorial/code samples keep working.
+3. `python scripts/query_vertiloc.py ...` runs twice (one 2 m sample, one 4 m sample) to confirm the query CLI returns a plausible cell prediction and logs the top-K neighbors.
+
+## Querying VertiLoc with custom RSSI readings
+After training (`python -m localization.pipeline ...`), you can ask the model to localize a custom RSSI vector using:
+```bash
+PYTHONPATH=src python scripts/query_vertiloc.py \
+  -42 -95 -44 -41 -43 2
+# or
+python scripts/query_vertiloc.py --vector "-42,-95,-44,-41,-43,2"
+```
+Arguments correspond to `[Signal, Noise, signal_A1, signal_A2, signal_A3, router_distance_m]`.  
+The script loads `reports/localizer.joblib`, prints the predicted `grid_cell`, and lists the top-K neighbors used in the vote.
 
 ## Current results (80/20 split)
 ```

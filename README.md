@@ -38,6 +38,9 @@ The pipeline produces:
 - `reports/predictions.csv`: per-sample explainability file (true/pred cell, error, confidence, nearest neighbors).
 - `reports/localizer.joblib`: serialized model ready for offline inference.
 
+## Continuous Integration
+GitHub Actions runs a smoke test on every push/PR (`.github/workflows/ci.yml`). The job installs the dependencies and executes the localization pipeline with both measurement campaigns (`ddeuxmetres` and `dquatremetres`) to ensure training/evaluation still succeeds end-to-end.
+
 ## Current results (80/20 split)
 ```
 accuracy ≈ 99.7 %

@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run localization pipeline smoke test
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m localization.pipeline \
+            --campaign ddeuxmetres:2 \
+            --campaign dquatremetres:4 \
+            --max-iter 200 \
+            --k-neighbors 5 \
+            --test-size 0.3

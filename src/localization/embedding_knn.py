@@ -1,3 +1,5 @@
+"""Neural-network encoder + local KNN decoder used for RSSI localization."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -44,8 +46,10 @@ class EmbeddingKnnLocalizer:
     train_embeddings_: np.ndarray | None = field(init=False, default=None)
 
     def fit(self, X, y):
+        """Train scaler, MLP encoder, and k-NN classifier on RSSI data."""
         X_arr = self._ensure_2d_array(X)
-        # RSSI scales differ per campaign, therefore we always re-fit a scaler.
+        # RSSI scales differ per campaign, therefore we always re-fit a scaler so
+        # the MLP operates on standardized inputs irrespective of router distance.
         self.scaler_ = StandardScaler()
         X_scaled = self.scaler_.fit_transform(X_arr)
 
@@ -61,6 +65,8 @@ class EmbeddingKnnLocalizer:
         )
         self.encoder_.fit(X_scaled, y)
 
+        # Compute embeddings for the training set once and store them: they are
+        # reused by KNN and the explain() helper to expose nearest neighbors.
         train_embeddings = self._compute_embeddings(X_scaled)
         self.train_embeddings_ = train_embeddings
         self.train_labels_ = np.asarray(y)
@@ -73,19 +79,23 @@ class EmbeddingKnnLocalizer:
         return self
 
     def predict(self, X):
+        """Predict the grid_cell label for each RSSI vector in X."""
         # Prediction = encode + run through the k-NN decoder.
         embeddings = self.transform(X)
         return self.knn_.predict(embeddings)
 
     def predict_proba(self, X):
+        """Return class probabilities computed by the k-NN classifier."""
         embeddings = self.transform(X)
         return self.knn_.predict_proba(embeddings)
 
     def kneighbors(self, X, n_neighbors: int | None = None):
+        """Expose k-NN distances/indices for downstream explainability tools."""
         embeddings = self.transform(X)
         return self.knn_.kneighbors(embeddings, n_neighbors=n_neighbors)
 
     def transform(self, X):
+        """Encode raw RSSI vectors into the learned embedding space."""
         X_arr = self._ensure_2d_array(X)
         if self.scaler_ is None or self.encoder_ is None:
             raise RuntimeError("The model must be fitted before calling transform.")
@@ -118,4 +128,5 @@ class EmbeddingKnnLocalizer:
             if X.ndim != 2:
                 raise ValueError("Feature matrix must be 2-D.")
             return X
+        # Pandas DataFrame / list-like inputs end up here.
         return np.asarray(X, dtype=float)

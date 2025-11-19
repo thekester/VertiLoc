@@ -1,3 +1,5 @@
+"""CLI pipeline for training/evaluating the RSSI localization model."""
+
 from __future__ import annotations
 
 import argparse
@@ -257,6 +259,7 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     )
     print(f"Loaded {len(df)} samples from {len(specs)} campaign(s).")
 
+    # Print a quick overview of the grid to ensure every cell has data.
     summary = df.groupby("grid_cell").agg({"Signal": ["mean", "std"], "grid_x": "first", "grid_y": "first"})
     print("Grid coverage:\n", summary.head())
 
@@ -283,6 +286,8 @@ def run_pipeline(args: argparse.Namespace) -> dict:
         alpha=args.alpha,
         random_state=args.random_state,
     )
+    # Fit the encoder + KNN. The embeddings for the training set are cached and
+    # reused later when we call explain() for every test point.
     localizer = EmbeddingKnnLocalizer(config=config).fit(X_train, y_train)
     y_pred = localizer.predict(X_test)
     y_proba = localizer.predict_proba(X_test)

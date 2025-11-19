@@ -1,3 +1,5 @@
+"""Data loading utilities for RSSI localization experiments."""
+
 from __future__ import annotations
 
 import re
@@ -9,6 +11,8 @@ import pandas as pd
 
 # Physical grid definition (meters). The notebook uses the same constants so we keep
 # everything in sync at module level.
+# Default cell dimensions (meters). The physical grid spacing never changes in
+# this project, so it is convenient to expose them as module-level constants.
 DEFAULT_CELL_WIDTH_M = 0.25
 DEFAULT_CELL_HEIGHT_M = 0.30
 
@@ -62,7 +66,7 @@ def _grid_to_physical(
     cell_width_m: float,
     cell_height_m: float,
 ) -> tuple[float, float]:
-    """Return the physical coordinate (meters) of the cell center."""
+    """Return (x, y) coordinates in meters for the center of cell (grid_x, grid_y)."""
     x_m = grid_y * cell_width_m + cell_width_m / 2.0
     y_m = grid_x * cell_height_m + cell_height_m / 2.0
     return x_m, y_m
@@ -95,12 +99,18 @@ def load_measurements(
             grid_x, grid_y = map(int, grid_part)
 
             df = pd.read_csv(csv_path)
-            # Add spatial metadata so downstream consumers do not have to guess it again.
+
+            # Add spatial metadata to every row so downstream consumers never
+            # have to parse the filename again. These are the supervision labels
+            # used by the neural network / KNN.
             df["grid_x"] = grid_x
             df["grid_y"] = grid_y
             df["grid_cell"] = f"{grid_x}_{grid_y}"
             df["router_distance_m"] = distance
             df["campaign"] = path.name
+
+            # Convert discrete grid indices into physical coordinates expressed
+            # in meters. This is used when computing localization error.
             coord_x_m, coord_y_m = _grid_to_physical(
                 grid_x, grid_y, cell_width_m=cell_width_m, cell_height_m=cell_height_m
             )

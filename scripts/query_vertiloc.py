@@ -1,3 +1,5 @@
+"""CLI helper to query the VertiLoc model with raw RSSI measurements."""
+
 from __future__ import annotations
 
 import argparse
@@ -20,6 +22,17 @@ DEFAULT_MODEL = ROOT / "reports/localizer.joblib"
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Build the CLI parser and handle two input styles.
+
+    Args:
+        argv: Optional list of arguments (used after pre-processing the
+            --vector option so values starting with '-' are accepted).
+
+    Returns:
+        Parsed arguments with either the positional fields populated or the
+        comma-separated vector stored in `args.vector`.
+    """
+
     parser = argparse.ArgumentParser(description="Hello VertiLoc! Identify the cell from RSSI readings.")
     parser.add_argument("Signal", type=float, nargs="?", help="Global RSSI (dBm)")
     parser.add_argument("Noise", type=float, nargs="?", help="Noise floor (dBm)")
@@ -48,6 +61,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def main() -> None:
+    """Entry point for the VertiLoc CLI helper."""
     raw_argv = sys.argv[1:]
     processed = []
     skip_next = False

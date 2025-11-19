@@ -34,3 +34,8 @@ jobs:
             --max-iter 200 \
             --k-neighbors 5 \
             --test-size 0.3
+
+      - name: Run notebook-style smoke test
+        env:
+            PYTHONPATH: src
+        run: python scripts/notebook_smoke.py

@@ -39,7 +39,9 @@ The pipeline produces:
 - `reports/localizer.joblib`: serialized model ready for offline inference.
 
 ## Continuous Integration
-GitHub Actions runs a smoke test on every push/PR (`.github/workflows/ci.yml`). The job installs the dependencies and executes the localization pipeline with both measurement campaigns (`ddeuxmetres` and `dquatremetres`) to ensure training/evaluation still succeeds end-to-end.
+GitHub Actions runs two smoke tests on every push/PR (`.github/workflows/ci.yml`):
+1. `python -m localization.pipeline ...` trains/evaluates on both campaigns to validate the CLI pipeline.
+2. `python scripts/notebook_smoke.py` replays the main steps from the notebook (split, train, predict, explain) to guarantee that the tutorial/code samples keep working.
 
 ## Current results (80/20 split)
 ```

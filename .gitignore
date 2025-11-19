@@ -1,1 +1,13 @@
 .venv
+# bytecode / cache
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.idea/
+.vs/
+.DS_Store

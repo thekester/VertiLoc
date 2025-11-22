@@ -42,12 +42,12 @@ jobs:
 
       - name: Run VertiLoc query CLI (2 m sample)
         run: |
-          python scripts/query_vertiloc.py -37 -95 -38 -43 -48 2
+          python scripts/query_vertiloc.py -37 -95 -38 -43 -48
 
       - name: Run VertiLoc query CLI (4 m sample)
         run: |
-          python scripts/query_vertiloc.py -29 -95 -43 -30 -37 4
+          python scripts/query_vertiloc.py -29 -95 -43 -30 -37
 
       - name: Run VertiLoc query CLI with comma-separated vector
         run: |
-          python scripts/query_vertiloc.py --vector "-30,-95,-35,-36,-34,4"
+          python scripts/query_vertiloc.py --vector "-30,-95,-35,-36,-34"

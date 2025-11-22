@@ -25,7 +25,7 @@ from localization.data import (
 )
 from localization.embedding_knn import EmbeddingKnnConfig, EmbeddingKnnLocalizer
 
-FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3", "router_distance_m"]
+FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3"]
 
 
 def main() -> None:

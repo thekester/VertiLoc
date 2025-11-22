@@ -31,7 +31,9 @@ from .data import (
 )
 from .embedding_knn import EmbeddingKnnConfig, EmbeddingKnnLocalizer
 
-FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3", "router_distance_m"]
+# Only use RSSI-derived signals as inputs. Router distance stays out of features to
+# avoid leaking the target context; the model must infer distance implicitly.
+FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3"]
 META_COLUMNS = ["grid_x", "grid_y", "coord_x_m", "coord_y_m"]
 REPORT_DIR = Path("reports")
 MODEL_PATH = REPORT_DIR / "localizer.joblib"
@@ -249,6 +251,42 @@ def save_model(localizer: EmbeddingKnnLocalizer, path: Path) -> None:
     joblib.dump(localizer, path)
 
 
+def _log_split_diagnostics(df: pd.DataFrame, train_idx, test_idx, labels: pd.Series) -> None:
+    """Print a concise summary of the 80/20 split to spot leakage issues quickly."""
+    train_cells = labels.loc[train_idx].value_counts().sort_index()
+    test_cells = labels.loc[test_idx].value_counts().sort_index()
+    shared = set(train_idx) & set(test_idx)
+
+    print(f"Split sizes -> train: {len(train_idx)} | test: {len(test_idx)} (target ratio ~{len(test_idx) / len(df):.2f})")
+    print(f"Unique cells -> train: {train_cells.shape[0]} | test: {test_cells.shape[0]} | union: {labels.nunique()}")
+    print(f"Train/test index overlap: {len(shared)} (should be 0)")
+    print("Per-cell counts (train | test):")
+    for cell in sorted(labels.unique()):
+        tr = int(train_cells.get(cell, 0))
+        te = int(test_cells.get(cell, 0))
+        print(f"  {cell}: {tr:3d} | {te:3d}")
+
+
+def _log_embedding_preview(
+    localizer: EmbeddingKnnLocalizer,
+    sample_idx,
+    feature_df: pd.DataFrame,
+    y: pd.Series,
+) -> None:
+    """Show a tiny example of raw features -> embedding for interpretability."""
+    indices = list(sample_idx)
+    if len(indices) == 0:
+        return
+    take = indices[:3]
+    raw = feature_df.loc[take].to_numpy()
+    emb = localizer.transform(raw)
+    print("\nEmbedding preview (raw RSSI -> embedding vector):")
+    for row_idx, raw_vec, emb_vec in zip(take, raw, emb):
+        print(f"- sample idx {row_idx}, label={y.loc[row_idx]}:")
+        print(f"  raw: {np.array2string(raw_vec, precision=2, separator=', ')}")
+        print(f"  emb: {np.array2string(emb_vec, precision=3, separator=', ')}")
+
+
 def run_pipeline(args: argparse.Namespace) -> dict:
     """Main orchestration: data load, split, fit, evaluation, and artifact export."""
     specs = parse_campaign_args(args.campaign)
@@ -263,19 +301,27 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     summary = df.groupby("grid_cell").agg({"Signal": ["mean", "std"], "grid_x": "first", "grid_y": "first"})
     print("Grid coverage:\n", summary.head())
 
-    X = df[FEATURE_COLUMNS].to_numpy()
-    y = df["grid_cell"].to_numpy()
-    meta = df[META_COLUMNS].to_numpy()
+    feature_df = df[FEATURE_COLUMNS]
+    labels = df["grid_cell"]
+    meta = df[META_COLUMNS]
 
     # Stratified split keeps each cell represented in both train and test folds.
-    X_train, X_test, y_train, y_test, _, meta_test = train_test_split(
-        X,
-        y,
-        meta,
+    # Split on the dataframe index so we can explicitly verify the two subsets do not overlap.
+    train_idx, test_idx = train_test_split(
+        df.index,
         test_size=args.test_size,
         random_state=args.random_state,
-        stratify=y,
+        stratify=labels,
     )
+    if set(train_idx) & set(test_idx):
+        raise RuntimeError("Train/test split leakage detected: overlapping sample indices.")
+
+    X_train = feature_df.loc[train_idx].to_numpy()
+    X_test = feature_df.loc[test_idx].to_numpy()
+    y_train = labels.loc[train_idx].to_numpy()
+    y_test = labels.loc[test_idx].to_numpy()
+    meta_test = meta.loc[test_idx].to_numpy()
+    _log_split_diagnostics(df, train_idx, test_idx, labels)
 
     config = EmbeddingKnnConfig(
         hidden_layer_sizes=tuple(args.hidden_layers),
@@ -289,6 +335,8 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     # Fit the encoder + KNN. The embeddings for the training set are cached and
     # reused later when we call explain() for every test point.
     localizer = EmbeddingKnnLocalizer(config=config).fit(X_train, y_train)
+    _log_embedding_preview(localizer, test_idx if len(test_idx) > 0 else train_idx, feature_df, labels)
+
     y_pred = localizer.predict(X_test)
     y_proba = localizer.predict_proba(X_test)
     class_order = list(localizer.knn_.classes_)
@@ -346,7 +394,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--hidden-layers", type=int, nargs="+", default=[64, 32])
     parser.add_argument("--k-neighbors", type=int, default=5)
     parser.add_argument("--activation", type=str, default="relu", choices=["relu", "tanh", "logistic", "identity"])
-    parser.add_argument("--max-iter", type=int, default=800)
+    parser.add_argument("--max-iter", type=int, default=1500)
     parser.add_argument("--learning-rate", type=float, default=1e-3)
     parser.add_argument("--alpha", type=float, default=1e-4, help="L2 regularization for the encoder.")
     parser.add_argument("--explain-k", type=int, default=3, help="Number of nearest neighbors to log for explainability.")

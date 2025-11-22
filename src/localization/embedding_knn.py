@@ -26,12 +26,18 @@ def _apply_activation(x: np.ndarray, activation: str) -> np.ndarray:
 class EmbeddingKnnConfig:
     hidden_layer_sizes: tuple[int, ...] = (64, 32)
     activation: str = "relu"
-    max_iter: int = 800
+    max_iter: int = 1500
     learning_rate_init: float = 1e-3
     alpha: float = 1e-4
     k_neighbors: int = 5
     weights: str = "distance"
     random_state: int = 42
+    # Early stopping is left disabled by default because sklearn's MLP uses
+    # string labels and triggers dtype issues when scoring the validation set.
+    early_stopping: bool = False
+    n_iter_no_change: int = 25
+    tol: float = 1e-4
+    validation_fraction: float = 0.1
 
 
 @dataclass
@@ -62,6 +68,10 @@ class EmbeddingKnnLocalizer:
             alpha=cfg.alpha,
             solver="adam",
             random_state=cfg.random_state,
+            early_stopping=cfg.early_stopping,
+            n_iter_no_change=cfg.n_iter_no_change,
+            tol=cfg.tol,
+            validation_fraction=cfg.validation_fraction,
         )
         self.encoder_.fit(X_scaled, y)
 

@@ -18,6 +18,7 @@ pip install -r requirements.txt
 ```
 
 ## Running the NN + L-KNN pipeline
+From the repository root, expose `src/` on `PYTHONPATH` (or install the project in editable mode) before invoking the module:
 ```bash
 PYTHONPATH=src python -m localization.pipeline \
   --campaign ddeuxmetres:2 \
@@ -48,11 +49,11 @@ GitHub Actions runs two smoke tests on every push/PR (`.github/workflows/ci.yml`
 After training (`python -m localization.pipeline ...`), you can ask the model to localize a custom RSSI vector using:
 ```bash
 PYTHONPATH=src python scripts/query_vertiloc.py \
-  -42 -95 -44 -41 -43 2
+  -42 -95 -44 -41 -43
 # or
-python scripts/query_vertiloc.py --vector "-42,-95,-44,-41,-43,2"
+PYTHONPATH=src python scripts/query_vertiloc.py --vector "-42,-95,-44,-41,-43"
 ```
-Arguments correspond to `[Signal, Noise, signal_A1, signal_A2, signal_A3, router_distance_m]`.  
+Arguments correspond to `[Signal, Noise, signal_A1, signal_A2, signal_A3]`.  
 The script loads `reports/localizer.joblib`, prints the predicted `grid_cell`, and lists the top-K neighbors used in the vote.
 
 ## Current results (80/20 split)

@@ -17,7 +17,8 @@ if str(SRC_DIR) not in sys.path:
 
 from localization.embedding_knn import EmbeddingKnnLocalizer
 
-FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3", "router_distance_m"]
+# Mirror the training feature set: only RSSI-based fields, no router distance as input.
+FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3"]
 DEFAULT_MODEL = ROOT / "reports/localizer.joblib"
 
 
@@ -39,7 +40,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("signal_A1", type=float, nargs="?", help="Per-antenna RSSI A1 (dBm)")
     parser.add_argument("signal_A2", type=float, nargs="?", help="Per-antenna RSSI A2 (dBm)")
     parser.add_argument("signal_A3", type=float, nargs="?", help="Per-antenna RSSI A3 (dBm)")
-    parser.add_argument("router_distance_m", type=float, nargs="?", help="Router distance from the board (meters)")
     parser.add_argument(
         "--model",
         default=DEFAULT_MODEL,
@@ -55,7 +55,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--vector",
         type=str,
-        help="Comma-separated RSSI vector (Signal,Noise,signal_A1,signal_A2,signal_A3,router_distance_m)",
+        help="Comma-separated RSSI vector (Signal,Noise,signal_A1,signal_A2,signal_A3)",
     )
     return parser.parse_args(argv)
 
@@ -95,7 +95,7 @@ def main() -> None:
             value = getattr(args, col)
             if value is None:
                 raise ValueError(
-                    "Either provide all positional arguments or a --vector \"val1,...,val6\" string."
+                    "Either provide all positional arguments or a --vector \"val1,...,val5\" string."
                 )
             values.append(value)
 

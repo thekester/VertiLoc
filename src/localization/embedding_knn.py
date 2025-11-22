@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
 
@@ -50,6 +51,8 @@ class EmbeddingKnnLocalizer:
     knn_: KNeighborsClassifier | None = field(init=False, default=None)
     train_labels_: np.ndarray | None = field(init=False, default=None)
     train_embeddings_: np.ndarray | None = field(init=False, default=None)
+    distance_clf_: LogisticRegression | None = field(init=False, default=None)
+    distance_classes_: np.ndarray | None = field(init=False, default=None)
 
     def fit(self, X, y):
         """Train scaler, MLP encoder, and k-NN classifier on RSSI data."""

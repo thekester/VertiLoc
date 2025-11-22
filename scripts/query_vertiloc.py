@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import sys
+import warnings
 
 import joblib
 import numpy as np
@@ -20,6 +21,7 @@ from localization.embedding_knn import EmbeddingKnnLocalizer
 # Mirror the training feature set: only RSSI-based fields, no router distance as input.
 FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3"]
 DEFAULT_MODEL = ROOT / "reports/localizer.joblib"
+METRICS_PATH = ROOT / "reports/latest_metrics.json"
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -82,6 +84,7 @@ def main() -> None:
         )
 
     localizer: EmbeddingKnnLocalizer = joblib.load(args.model)
+    print("Note: the model does NOT take router distance as input; distance is inferred from embeddings (LogReg head).")
     if args.vector:
         parts = [token.strip() for token in args.vector.split(",") if token.strip()]
         if len(parts) != len(FEATURE_COLUMNS):
@@ -112,6 +115,34 @@ def main() -> None:
     print("Top-K neighbors in the embedding space:")
     for rank, (cell, dist) in enumerate(zip(neighbors[0], distances[0]), start=1):
         print(f"  #{rank}: cell={cell} | embedding_distance={dist:.4f}")
+
+    # If available, use the embedded LogisticRegression head to infer router distance for this sample.
+    dist_clf = getattr(localizer, "distance_clf_", None)
+    if dist_clf is not None:
+        try:
+            dist_proba = dist_clf.predict_proba(localizer.transform(sample))[0]
+            dist_classes = getattr(localizer, "distance_classes_", dist_clf.classes_)
+            best_idx = dist_proba.argmax()
+            print(f"Predicted router distance: {dist_classes[best_idx]} m (confidence={dist_proba[best_idx]:.3f})")
+        except Exception as exc:  # pragma: no cover
+            warnings.warn(f"Could not infer router distance: {exc}")
+    else:
+        print("Router distance head not available in the loaded model (rerun localization.pipeline to refresh it).")
+
+    # Surface router-distance accuracies from the last pipeline run (stored in latest_metrics.json).
+    if METRICS_PATH.exists():
+        try:
+            import json
+
+            metrics = json.loads(METRICS_PATH.read_text())
+            acc = metrics.get("router_distance_accuracy")
+            acc_base = metrics.get("router_distance_accuracy_baseline")
+            if acc is not None and acc_base is not None:
+                print(
+                    f"Distance inference (last training run) -> LogReg head: {acc:.3f} | baseline (mode per cell): {acc_base:.3f}"
+                )
+        except Exception as exc:  # pragma: no cover - best-effort log
+            print(f"Warning: unable to read {METRICS_PATH}: {exc}")
 
 if __name__ == "__main__":
     main()

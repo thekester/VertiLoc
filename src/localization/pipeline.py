@@ -358,6 +358,9 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     distance_pred = distance_clf.predict(test_embeddings)
     distance_proba = distance_clf.predict_proba(test_embeddings)
     distance_confidence = distance_proba.max(axis=1)
+    # Persist the distance head inside the localizer so downstream consumers can reuse it at inference time.
+    localizer.distance_clf_ = distance_clf
+    localizer.distance_classes_ = distance_clf.classes_
 
     y_pred = localizer.predict(X_test)
     y_proba = localizer.predict_proba(X_test)

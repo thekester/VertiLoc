@@ -62,7 +62,7 @@ def main() -> None:
     # Optional head: predict router distance from embeddings (no distance used as input).
     train_emb = localizer.train_embeddings_
     test_emb = localizer.transform(X_test)
-    dist_clf = LogisticRegression(max_iter=500, multi_class="auto")
+    dist_clf = LogisticRegression(max_iter=500)
     dist_clf.fit(train_emb, d_train)
     dist_pred = dist_clf.predict(test_emb)
     dist_acc = accuracy_score(d_test, dist_pred)

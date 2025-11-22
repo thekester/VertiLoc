@@ -31,7 +31,6 @@ jobs:
           python -m localization.pipeline \
             --campaign ddeuxmetres:2 \
             --campaign dquatremetres:4 \
-            --max-iter 200 \
             --k-neighbors 5 \
             --test-size 0.3
 

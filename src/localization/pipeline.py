@@ -353,7 +353,7 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     # On recycle l'espace latent appris pour la localisation sans jamais réintroduire la distance comme feature brute.
     train_embeddings = localizer.train_embeddings_
     test_embeddings = localizer.transform(X_test)
-    distance_clf = LogisticRegression(max_iter=1000, multi_class="multinomial", n_jobs=None)
+    distance_clf = LogisticRegression(max_iter=1000, n_jobs=None)
     distance_clf.fit(train_embeddings, distance_train)
     distance_pred = distance_clf.predict(test_embeddings)
     distance_proba = distance_clf.predict_proba(test_embeddings)

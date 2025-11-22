@@ -51,7 +51,8 @@ def main() -> None:
         stratify=y,
     )
 
-    config = EmbeddingKnnConfig(hidden_layer_sizes=(64, 32), max_iter=200, k_neighbors=5)
+    # Use the default max_iter from the library to avoid convergence warnings in CI.
+    config = EmbeddingKnnConfig(hidden_layer_sizes=(64, 32), k_neighbors=5)
     localizer = EmbeddingKnnLocalizer(config=config).fit(X_train, y_train)
     y_pred = localizer.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)

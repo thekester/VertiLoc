@@ -249,7 +249,7 @@ def save_prediction_report(
     if neighbor_distances is not None and neighbor_labels is not None:
         for k in range(neighbor_labels.shape[1]):
             report_df[f"neighbor_{k+1}_cell"] = neighbor_labels[:, k]
-            report_df[f"neighbor_{k+1}_distance"] = neighbor_distances[:, k]
+            report_df[f"neighbor_{k+1}_embedding_distance"] = neighbor_distances[:, k]
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     report_df.to_csv(out_path, index=False)

@@ -38,7 +38,7 @@ The pipeline produces:
 - `reports/confusion_matrix.png` and `reports/roc_micro_macro.png`: confusion matrix and ROC curves.
 - `reports/confusion_cell_distance_with_logreg.png`: confusion matrix sur le couple (cellule, distance routeur prédite) avec la tête LogisticRegression.
 - `reports/confusion_cell_distance_without_logreg.png`: même matrice mais en utilisant une baseline (distance = mode observée pour la cellule prédite).
-- `reports/predictions.csv`: per-sample explainability file (true/pred cell, error, confidence, nearest neighbors, predicted router distance + confidence). Les colonnes `neighbor_i_embedding_distance` sont les distances dans l'espace latent (pas des distances physiques). L’estimation de distance est faite par une petite `LogisticRegression` entraînée sur les embeddings (sans distance en entrée).
+- `reports/predictions.csv`: per-sample explainability file (true/pred cell, error, confidence, nearest neighbors, predicted router distance + confidence). Les colonnes `neighbor_i_embedding_distance` sont les distances dans l'espace latent (pas des distances physiques) : elles n'ont rien à voir avec la distance routeur (2 m ou 4 m) prédite séparément.
 - `reports/localizer.joblib`: serialized model ready for offline inference.
 
 ## Continuous Integration

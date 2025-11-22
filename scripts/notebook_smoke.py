@@ -63,7 +63,7 @@ def main() -> None:
     # Optional head: predict router distance from embeddings (no distance used as input).
     train_emb = localizer.train_embeddings_
     test_emb = localizer.transform(X_test)
-    dist_clf = LogisticRegression(max_iter=500)
+    dist_clf = LogisticRegression(max_iter=1000)
     dist_clf.fit(train_emb, d_train)
     dist_pred = dist_clf.predict(test_emb)
     dist_acc = accuracy_score(d_test, dist_pred)
@@ -84,9 +84,9 @@ def main() -> None:
     sample_proba = localizer.predict_proba(sample_features).max()
     neighbor_dist, neighbor_cells = localizer.explain(sample_features, top_k=3)
     print(f"[CI notebook smoke] sample prediction: {sample_pred} (confidence={sample_proba:.3f})")
-    print("[CI notebook smoke] closest neighbors:")
+    print("[CI notebook smoke] closest neighbors (distance = latent embedding distance, not physical):")
     for rank, (cell, dist) in enumerate(zip(neighbor_cells[0], neighbor_dist[0]), start=1):
-        print(f"  #{rank}: cell={cell} | embedding_dist={dist:.4f}")
+        print(f"  #{rank}: cell={cell} | embedding_distance={dist:.4f}")
 
 
 if __name__ == "__main__":

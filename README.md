@@ -33,10 +33,11 @@ Useful options:
 - `--explain-k`, `--model-output`, `--confusion-matrix`, `--roc-curve`, `--predictions-report` to control explainability depth and artifact locations.
 
 The pipeline produces:
-- `reports/latest_metrics.json`: accuracy, mean errors, average confidence, micro/macro ROC AUC.
+- `reports/latest_metrics.json`: accuracy, mean errors, average confidence, micro/macro ROC AUC, router-distance accuracy (campagne 2 m vs 4 m).
 - `reports/embedding_pca.png`: 2D projection of the embeddings to visually inspect cluster separation.
 - `reports/confusion_matrix.png` and `reports/roc_micro_macro.png`: confusion matrix and ROC curves.
-- `reports/predictions.csv`: per-sample explainability file (true/pred cell, error, confidence, nearest neighbors).
+- `reports/confusion_cell_distance.png`: confusion matrix sur le couple (cellule, distance routeur prédite).
+- `reports/predictions.csv`: per-sample explainability file (true/pred cell, error, confidence, nearest neighbors, predicted router distance + confidence).
 - `reports/localizer.joblib`: serialized model ready for offline inference.
 
 ## Continuous Integration

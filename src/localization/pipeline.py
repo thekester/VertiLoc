@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     ConfusionMatrixDisplay,
     accuracy_score,
@@ -39,6 +40,7 @@ REPORT_DIR = Path("reports")
 MODEL_PATH = REPORT_DIR / "localizer.joblib"
 CONFUSION_PATH = REPORT_DIR / "confusion_matrix.png"
 ROC_PATH = REPORT_DIR / "roc_micro_macro.png"
+CONFUSION_CELL_DISTANCE_PATH = REPORT_DIR / "confusion_cell_distance.png"
 PREDICTIONS_PATH = REPORT_DIR / "predictions.csv"
 
 
@@ -150,12 +152,12 @@ def save_embedding_projection(localizer: EmbeddingKnnLocalizer, df, feature_cols
     plt.close()
 
 
-def save_confusion_matrix(y_true, y_pred, labels, out_path: Path) -> None:
+def save_confusion_matrix(y_true, y_pred, labels, out_path: Path, title: str = "Confusion matrix (cells)") -> None:
     cm = confusion_matrix(y_true, y_pred, labels=labels)
     fig, ax = plt.subplots(figsize=(10, 10))
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
     disp.plot(ax=ax, cmap="Blues", colorbar=False, xticks_rotation=90)
-    ax.set_title("Confusion matrix (cells)")
+    ax.set_title(title)
     fig.tight_layout()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, dpi=200)
@@ -205,6 +207,9 @@ def save_prediction_report(
     cell_lookup,
     neighbor_distances,
     neighbor_labels,
+    true_distances,
+    pred_distances,
+    pred_distance_proba,
     out_path: Path,
 ) -> None:
     confidences = y_proba.max(axis=1)
@@ -234,6 +239,9 @@ def save_prediction_report(
             "error_m": errors_m,
             "confidence": confidences,
             "confidence_margin": confidence_margin,
+            "true_router_distance_m": true_distances,
+            "pred_router_distance_m": pred_distances,
+            "distance_confidence": pred_distance_proba,
         }
     )
 
@@ -303,6 +311,7 @@ def run_pipeline(args: argparse.Namespace) -> dict:
 
     feature_df = df[FEATURE_COLUMNS]
     labels = df["grid_cell"]
+    distances = df["router_distance_m"]
     meta = df[META_COLUMNS]
 
     # Stratified split keeps each cell represented in both train and test folds.
@@ -320,6 +329,8 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     X_test = feature_df.loc[test_idx].to_numpy()
     y_train = labels.loc[train_idx].to_numpy()
     y_test = labels.loc[test_idx].to_numpy()
+    distance_train = distances.loc[train_idx].to_numpy()
+    distance_test = distances.loc[test_idx].to_numpy()
     meta_test = meta.loc[test_idx].to_numpy()
     _log_split_diagnostics(df, train_idx, test_idx, labels)
 
@@ -336,6 +347,15 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     # reused later when we call explain() for every test point.
     localizer = EmbeddingKnnLocalizer(config=config).fit(X_train, y_train)
     _log_embedding_preview(localizer, test_idx if len(test_idx) > 0 else train_idx, feature_df, labels)
+
+    # Auxiliary head: predict router distance (campaign) from learned embeddings without using it as input.
+    train_embeddings = localizer.train_embeddings_
+    test_embeddings = localizer.transform(X_test)
+    distance_clf = LogisticRegression(max_iter=1000, multi_class="auto", n_jobs=None)
+    distance_clf.fit(train_embeddings, distance_train)
+    distance_pred = distance_clf.predict(test_embeddings)
+    distance_proba = distance_clf.predict_proba(test_embeddings)
+    distance_confidence = distance_proba.max(axis=1)
 
     y_pred = localizer.predict(X_test)
     y_proba = localizer.predict_proba(X_test)
@@ -357,12 +377,25 @@ def run_pipeline(args: argparse.Namespace) -> dict:
         class_order=class_order,
         y_true_binarized=y_test_binarized,
     )
+    metrics["router_distance_accuracy"] = float(accuracy_score(distance_test, distance_pred))
+    metrics["router_distance_classes"] = [float(c) for c in sorted(np.unique(distances))]
     print(json.dumps(metrics, indent=2))
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     save_metrics(metrics, REPORT_DIR / "latest_metrics.json")
     save_embedding_projection(localizer, df, FEATURE_COLUMNS, REPORT_DIR / "embedding_pca.png")
     save_confusion_matrix(y_test, y_pred, class_order, Path(args.confusion_matrix))
+    # Confusion matrix that jointly evaluates predicted cell + predicted router distance.
+    true_combo = np.array([f"{cell}|{dist}" for cell, dist in zip(y_test, distance_test)])
+    pred_combo = np.array([f"{cell}|{dist}" for cell, dist in zip(y_pred, distance_pred)])
+    combo_labels = sorted(np.unique(np.concatenate([true_combo, pred_combo])))
+    save_confusion_matrix(
+        true_combo,
+        pred_combo,
+        combo_labels,
+        Path(args.confusion_cell_distance),
+        title="Confusion matrix (cell + router distance)",
+    )
     save_roc_curves(y_test_binarized, y_proba, class_order, Path(args.roc_curve))
     save_prediction_report(
         y_test,
@@ -372,6 +405,9 @@ def run_pipeline(args: argparse.Namespace) -> dict:
         cell_lookup,
         neighbor_distances,
         neighbor_labels,
+        distance_test,
+        distance_pred,
+        distance_confidence,
         Path(args.predictions_report),
     )
     save_model(localizer, Path(args.model_output))
@@ -415,6 +451,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=ROC_PATH,
         help="Path of the ROC micro/macro PNG.",
+    )
+    parser.add_argument(
+        "--confusion-cell-distance",
+        type=Path,
+        default=CONFUSION_CELL_DISTANCE_PATH,
+        help="Path of the confusion matrix combining cell and router-distance predictions.",
     )
     parser.add_argument(
         "--predictions-report",

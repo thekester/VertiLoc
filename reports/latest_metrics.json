@@ -54,6 +54,7 @@
     "3_7": 1.0
   },
   "router_distance_accuracy": 0.8176470588235294,
+  "router_distance_accuracy_baseline": 0.38823529411764707,
   "router_distance_classes": [
     2.0,
     4.0

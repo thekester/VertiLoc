@@ -40,7 +40,8 @@ REPORT_DIR = Path("reports")
 MODEL_PATH = REPORT_DIR / "localizer.joblib"
 CONFUSION_PATH = REPORT_DIR / "confusion_matrix.png"
 ROC_PATH = REPORT_DIR / "roc_micro_macro.png"
-CONFUSION_CELL_DISTANCE_PATH = REPORT_DIR / "confusion_cell_distance.png"
+CONFUSION_CELL_DISTANCE_PATH = REPORT_DIR / "confusion_cell_distance_with_logreg.png"
+CONFUSION_CELL_DISTANCE_BASELINE_PATH = REPORT_DIR / "confusion_cell_distance_without_logreg.png"
 PREDICTIONS_PATH = REPORT_DIR / "predictions.csv"
 
 
@@ -348,10 +349,11 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     localizer = EmbeddingKnnLocalizer(config=config).fit(X_train, y_train)
     _log_embedding_preview(localizer, test_idx if len(test_idx) > 0 else train_idx, feature_df, labels)
 
-    # Auxiliary head: predict router distance (campaign) from learned embeddings without using it as input.
+    # Auxiliary head: predict router distance (campagne 2 m vs 4 m) à partir des embeddings.
+    # On recycle l'espace latent appris pour la localisation sans jamais réintroduire la distance comme feature brute.
     train_embeddings = localizer.train_embeddings_
     test_embeddings = localizer.transform(X_test)
-    distance_clf = LogisticRegression(max_iter=1000, multi_class="auto", n_jobs=None)
+    distance_clf = LogisticRegression(max_iter=1000, multi_class="multinomial", n_jobs=None)
     distance_clf.fit(train_embeddings, distance_train)
     distance_pred = distance_clf.predict(test_embeddings)
     distance_proba = distance_clf.predict_proba(test_embeddings)
@@ -362,6 +364,17 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     class_order = list(localizer.knn_.classes_)
     y_test_binarized = label_binarize(y_test, classes=class_order)
     neighbor_distances, neighbor_labels = localizer.explain(X_test, top_k=args.explain_k)
+
+    # Baseline: distance = mode observée pour la cellule prédite (calculée sur le train).
+    train_distance_mode = (
+        pd.DataFrame({"cell": labels.loc[train_idx], "distance": distance_train})
+        .groupby("cell")["distance"]
+        .agg(lambda s: s.mode().iloc[0])
+    )
+    global_distance_mode = float(pd.Series(distance_train).mode().iloc[0])
+    distance_pred_baseline = np.array(
+        [train_distance_mode.get(cell, global_distance_mode) for cell in y_pred]
+    )
 
     cell_lookup = (
         df[["grid_cell", "grid_x", "grid_y", "coord_x_m", "coord_y_m"]]
@@ -378,8 +391,13 @@ def run_pipeline(args: argparse.Namespace) -> dict:
         y_true_binarized=y_test_binarized,
     )
     metrics["router_distance_accuracy"] = float(accuracy_score(distance_test, distance_pred))
+    metrics["router_distance_accuracy_baseline"] = float(accuracy_score(distance_test, distance_pred_baseline))
     metrics["router_distance_classes"] = [float(c) for c in sorted(np.unique(distances))]
     print(json.dumps(metrics, indent=2))
+    print(
+        f"Router distance accuracy (LogReg on embeddings): {metrics['router_distance_accuracy']:.3f} | "
+        f"baseline (mode per predicted cell): {metrics['router_distance_accuracy_baseline']:.3f}"
+    )
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     save_metrics(metrics, REPORT_DIR / "latest_metrics.json")
@@ -395,6 +413,16 @@ def run_pipeline(args: argparse.Namespace) -> dict:
         combo_labels,
         Path(args.confusion_cell_distance),
         title="Confusion matrix (cell + router distance)",
+    )
+    # Baseline confusion: reuse predicted cell, distance = mode for that cell.
+    pred_combo_baseline = np.array([f"{cell}|{dist}" for cell, dist in zip(y_pred, distance_pred_baseline)])
+    combo_labels_baseline = sorted(np.unique(np.concatenate([true_combo, pred_combo_baseline])))
+    save_confusion_matrix(
+        true_combo,
+        pred_combo_baseline,
+        combo_labels_baseline,
+        Path(args.confusion_cell_distance_baseline),
+        title="Confusion matrix (cell + router distance baseline)",
     )
     save_roc_curves(y_test_binarized, y_proba, class_order, Path(args.roc_curve))
     save_prediction_report(
@@ -457,6 +485,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=CONFUSION_CELL_DISTANCE_PATH,
         help="Path of the confusion matrix combining cell and router-distance predictions.",
+    )
+    parser.add_argument(
+        "--confusion-cell-distance-baseline",
+        type=Path,
+        default=CONFUSION_CELL_DISTANCE_BASELINE_PATH,
+        help="Path of the confusion matrix combining cell and router-distance predictions (baseline: modal distance per predicted cell).",
     )
     parser.add_argument(
         "--predictions-report",

@@ -16,6 +16,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
@@ -38,10 +40,12 @@ def main() -> None:
 
     X = df[FEATURE_COLUMNS].to_numpy()
     y = df["grid_cell"].to_numpy()
+    distances = df["router_distance_m"].to_numpy()
 
-    X_train, X_test, y_train, y_test = train_test_split(
+    X_train, X_test, y_train, y_test, d_train, d_test = train_test_split(
         X,
         y,
+        distances,
         test_size=0.25,
         random_state=123,
         stratify=y,
@@ -54,6 +58,24 @@ def main() -> None:
     print(f"[CI notebook smoke] accuracy on held-out set: {accuracy:.3f}")
     if accuracy < 0.8:
         raise AssertionError("Expected accuracy >= 0.8 for the smoke test.")
+
+    # Optional head: predict router distance from embeddings (no distance used as input).
+    train_emb = localizer.train_embeddings_
+    test_emb = localizer.transform(X_test)
+    dist_clf = LogisticRegression(max_iter=500, multi_class="auto")
+    dist_clf.fit(train_emb, d_train)
+    dist_pred = dist_clf.predict(test_emb)
+    dist_acc = accuracy_score(d_test, dist_pred)
+    # Baseline without logistic head: guess distance from the modal distance of the predicted cell.
+    mode_map = (
+        pd.DataFrame({"cell": y_train, "distance": d_train})
+        .groupby("cell")["distance"]
+        .agg(lambda s: s.mode().iloc[0])
+    )
+    dist_pred_baseline = np.array([mode_map.get(cell, mode_map.mode().iloc[0]) for cell in y_pred])
+    dist_acc_baseline = accuracy_score(d_test, dist_pred_baseline)
+    print(f"[CI notebook smoke] router-distance accuracy (LogReg on embeddings): {dist_acc:.3f}")
+    print(f"[CI notebook smoke] router-distance accuracy (cell-mode baseline):   {dist_acc_baseline:.3f}")
 
     # Grab a single sample to replicate the notebook explainability step.
     sample_features = X_test[:1]

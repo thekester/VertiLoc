@@ -29,8 +29,10 @@ jobs:
           PYTHONPATH: src
         run: |
           python -m localization.pipeline \
-            --campaign ddeuxmetres:2 \
-            --campaign dquatremetres:4 \
+            --campaign data/D005/ddeuxmetres:2 \
+            --campaign data/D005/dquatremetres:4 \
+            --campaign data/E101/dtroismetres:3 \
+            --campaign data/E101/dcinqmetres:5 \
             --k-neighbors 5 \
             --test-size 0.3
 
@@ -38,6 +40,11 @@ jobs:
         env:
             PYTHONPATH: src
         run: python scripts/notebook_smoke.py
+
+      - name: Run cross-room benchmarks (NN+L-KNN, LogisticRegression heads)
+        env:
+          PYTHONPATH: src
+        run: python scripts/benchmark_models.py
 
       - name: Run VertiLoc query CLI (2 m sample)
         run: |

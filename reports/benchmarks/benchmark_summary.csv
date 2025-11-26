@@ -1,0 +1,8 @@
+algorithm,cell_acc,mean_error_m,p90_error_m,router_dist_acc,room_acc
+"NN+L-KNN (room-agnostic, LORO mean)",0.009517973856209151,1.1780169610348932,2.0223748416156684,,
+"RandomForest (room-agnostic, LORO mean)",0.007083333333333333,1.1868112457690132,2.055218071698889,,
+"NN+L-KNN (room-aware, cell+distance)",0.9745283018867924,0.027099718303381166,0.0,0.7575471698113208,
+"RandomForest (room-aware, cell)",0.9688679245283018,0.043881241597674404,0.0,,
+LogReg (router distance on embedding),,,,0.5971698113207548,
+RandomForest (router distance on raw RSSI),,,,0.9632075471698113,
+LogReg (room on embedding),,,,,0.7377358490566037

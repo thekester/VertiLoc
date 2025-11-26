@@ -14,12 +14,18 @@ in the notebook remains functional during CI runs.
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from localization.data import (
     CampaignSpec,
@@ -32,8 +38,10 @@ FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3"]
 
 def main() -> None:
     campaigns = [
-        CampaignSpec(Path("ddeuxmetres"), 2.0),
-        CampaignSpec(Path("dquatremetres"), 4.0),
+        CampaignSpec(Path("data/D005/ddeuxmetres"), 2.0),
+        CampaignSpec(Path("data/D005/dquatremetres"), 4.0),
+        CampaignSpec(Path("data/E101/dtroismetres"), 3.0),
+        CampaignSpec(Path("data/E101/dcinqmetres"), 5.0),
     ]
     df = load_measurements(campaigns)
     print(f"[CI notebook smoke] loaded {len(df)} samples across {df['grid_cell'].nunique()} cells.")
@@ -63,7 +71,7 @@ def main() -> None:
     # Optional head: predict router distance from embeddings (no distance used as input).
     train_emb = localizer.train_embeddings_
     test_emb = localizer.transform(X_test)
-    dist_clf = LogisticRegression(max_iter=1000)
+    dist_clf = LogisticRegression(max_iter=2000)
     dist_clf.fit(train_emb, d_train)
     dist_pred = dist_clf.predict(test_emb)
     dist_acc = accuracy_score(d_test, dist_pred)

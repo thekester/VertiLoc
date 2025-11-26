@@ -1,0 +1,312 @@
+{
+  "cell_acc_mean": 0.9760000000000001,
+  "cell_acc_std": 0.03352610922848042,
+  "router_dist_acc_mean": 0.5710000000000001,
+  "router_dist_acc_std": 0.11184364085633121,
+  "room_acc_mean": 0.721,
+  "room_acc_std": 0.10958558299338467,
+  "iterations": 50,
+  "sample_size": 20,
+  "draw_logs": [
+    {
+      "draw": 1,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.65,
+      "room_acc": 0.65
+    },
+    {
+      "draw": 2,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.6,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 3,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.55,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 4,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.75,
+      "room_acc": 0.8
+    },
+    {
+      "draw": 5,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 6,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.65,
+      "room_acc": 0.75
+    },
+    {
+      "draw": 7,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.45,
+      "room_acc": 0.55
+    },
+    {
+      "draw": 8,
+      "cell_acc": 0.9,
+      "router_dist_acc": 0.7,
+      "room_acc": 0.9
+    },
+    {
+      "draw": 9,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.6
+    },
+    {
+      "draw": 10,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.85,
+      "room_acc": 0.95
+    },
+    {
+      "draw": 11,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.45,
+      "room_acc": 0.65
+    },
+    {
+      "draw": 12,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.75
+    },
+    {
+      "draw": 13,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.55,
+      "room_acc": 0.65
+    },
+    {
+      "draw": 14,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.55
+    },
+    {
+      "draw": 15,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.55,
+      "room_acc": 0.8
+    },
+    {
+      "draw": 16,
+      "cell_acc": 0.9,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 17,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.65,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 18,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.65,
+      "room_acc": 0.75
+    },
+    {
+      "draw": 19,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.3,
+      "room_acc": 0.5
+    },
+    {
+      "draw": 20,
+      "cell_acc": 0.9,
+      "router_dist_acc": 0.75,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 21,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.55,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 22,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.75,
+      "room_acc": 0.9
+    },
+    {
+      "draw": 23,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 24,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.55,
+      "room_acc": 0.8
+    },
+    {
+      "draw": 25,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.6,
+      "room_acc": 0.75
+    },
+    {
+      "draw": 26,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 27,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.65,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 28,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.6
+    },
+    {
+      "draw": 29,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.4,
+      "room_acc": 0.75
+    },
+    {
+      "draw": 30,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.8,
+      "room_acc": 0.85
+    },
+    {
+      "draw": 31,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.6,
+      "room_acc": 0.9
+    },
+    {
+      "draw": 32,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.65
+    },
+    {
+      "draw": 33,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.4,
+      "room_acc": 0.5
+    },
+    {
+      "draw": 34,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.6,
+      "room_acc": 0.75
+    },
+    {
+      "draw": 35,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.65,
+      "room_acc": 0.75
+    },
+    {
+      "draw": 36,
+      "cell_acc": 0.9,
+      "router_dist_acc": 0.6,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 37,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.8,
+      "room_acc": 0.9
+    },
+    {
+      "draw": 38,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.6,
+      "room_acc": 0.85
+    },
+    {
+      "draw": 39,
+      "cell_acc": 0.9,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.75
+    },
+    {
+      "draw": 40,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.7,
+      "room_acc": 0.9
+    },
+    {
+      "draw": 41,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.6,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 42,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.9
+    },
+    {
+      "draw": 43,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.55,
+      "room_acc": 0.5
+    },
+    {
+      "draw": 44,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.5,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 45,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.45,
+      "room_acc": 0.75
+    },
+    {
+      "draw": 46,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.55,
+      "room_acc": 0.75
+    },
+    {
+      "draw": 47,
+      "cell_acc": 0.95,
+      "router_dist_acc": 0.45,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 48,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.55,
+      "room_acc": 0.7
+    },
+    {
+      "draw": 49,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.6,
+      "room_acc": 0.65
+    },
+    {
+      "draw": 50,
+      "cell_acc": 1.0,
+      "router_dist_acc": 0.45,
+      "room_acc": 0.55
+    }
+  ]
+}

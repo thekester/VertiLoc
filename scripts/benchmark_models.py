@@ -18,11 +18,12 @@ from typing import Iterable
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
@@ -166,6 +167,36 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
             REPORT_DIR / f"confusion_room_agnostic_rf_{held_out}.csv",
         )
 
+        # KNN direct on RSSI.
+        knn = KNeighborsClassifier(n_neighbors=7, weights="distance")
+        knn.fit(X_train, train_df["grid_cell"])
+        knn_pred = knn.predict(X_test)
+        knn_summary = localization_summary(test_df, knn_pred, cell_lookup)
+        save_confusion(
+            test_df["grid_cell"],
+            knn_pred,
+            labels,
+            REPORT_DIR / f"confusion_room_agnostic_knn_{held_out}.csv",
+        )
+
+        # ExtraTrees as alternative ensemble.
+        et = ExtraTreesClassifier(
+            n_estimators=300,
+            max_depth=18,
+            min_samples_leaf=2,
+            random_state=held_out.__hash__() % 10_000,
+            n_jobs=-1,
+        )
+        et.fit(X_train, train_df["grid_cell"])
+        et_pred = et.predict(X_test)
+        et_summary = localization_summary(test_df, et_pred, cell_lookup)
+        save_confusion(
+            test_df["grid_cell"],
+            et_pred,
+            labels,
+            REPORT_DIR / f"confusion_room_agnostic_extratrees_{held_out}.csv",
+        )
+
         # Distance head only if all distances are present in train.
         router_acc = np.nan
         if set(test_df["router_distance_m"]).issubset(set(train_df["router_distance_m"])):
@@ -186,6 +217,12 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
                 "rf_cell_accuracy": rf_summary.cell_accuracy,
                 "rf_mean_error_m": rf_summary.mean_error_m,
                 "rf_p90_error_m": rf_summary.p90_error_m,
+                "knn_cell_accuracy": knn_summary.cell_accuracy,
+                "knn_mean_error_m": knn_summary.mean_error_m,
+                "knn_p90_error_m": knn_summary.p90_error_m,
+                "et_cell_accuracy": et_summary.cell_accuracy,
+                "et_mean_error_m": et_summary.mean_error_m,
+                "et_p90_error_m": et_summary.p90_error_m,
                 "router_distance_acc": router_acc,
             }
         )
@@ -230,6 +267,36 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
         REPORT_DIR / "confusion_room_aware_rf.csv",
     )
 
+    # KNN with room feature.
+    knn = KNeighborsClassifier(n_neighbors=7, weights="distance")
+    knn.fit(X_train, train_df["grid_cell"])
+    knn_pred = knn.predict(X_test)
+    knn_summary = localization_summary(test_df, knn_pred, cell_lookup)
+    save_confusion(
+        test_df["grid_cell"],
+        knn_pred,
+        labels,
+        REPORT_DIR / "confusion_room_aware_knn.csv",
+    )
+
+    # ExtraTrees with room feature.
+    et = ExtraTreesClassifier(
+        n_estimators=300,
+        max_depth=18,
+        min_samples_leaf=2,
+        random_state=21,
+        n_jobs=-1,
+    )
+    et.fit(X_train, train_df["grid_cell"])
+    et_pred = et.predict(X_test)
+    et_summary = localization_summary(test_df, et_pred, cell_lookup)
+    save_confusion(
+        test_df["grid_cell"],
+        et_pred,
+        labels,
+        REPORT_DIR / "confusion_room_aware_extratrees.csv",
+    )
+
     # Distance head with room features.
     train_emb = model.transform(build_features(train_df, include_room=True))
     test_emb = model.transform(build_features(test_df, include_room=True))
@@ -245,6 +312,12 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
         "rf_cell_accuracy": rf_summary.cell_accuracy,
         "rf_mean_error_m": rf_summary.mean_error_m,
         "rf_p90_error_m": rf_summary.p90_error_m,
+        "knn_cell_accuracy": knn_summary.cell_accuracy,
+        "knn_mean_error_m": knn_summary.mean_error_m,
+        "knn_p90_error_m": knn_summary.p90_error_m,
+        "et_cell_accuracy": et_summary.cell_accuracy,
+        "et_mean_error_m": et_summary.mean_error_m,
+        "et_p90_error_m": et_summary.p90_error_m,
     }
 
 
@@ -299,6 +372,95 @@ def benchmark_distance_rf(df: pd.DataFrame, save_path: Path | None = None) -> di
         "accuracy": acc,
         "confusion_matrix": cm.tolist(),
         "labels": [float(c) for c in clf.classes_],
+    }
+
+
+def benchmark_distance_extratrees(df: pd.DataFrame, save_path: Path | None = None) -> dict:
+    train_df, test_df = train_test_split(
+        df,
+        test_size=0.2,
+        random_state=52,
+        stratify=df["router_distance_m"],
+    )
+    clf = ExtraTreesClassifier(
+        n_estimators=400,
+        max_depth=24,
+        min_samples_leaf=2,
+        random_state=52,
+        n_jobs=-1,
+    )
+    X_train = build_features(train_df, include_room=False)
+    X_test = build_features(test_df, include_room=False)
+    clf.fit(X_train, train_df["router_distance_m"])
+    pred = clf.predict(X_test)
+    acc = float(accuracy_score(test_df["router_distance_m"], pred))
+    cm = confusion_matrix(test_df["router_distance_m"], pred, normalize="true")
+    if save_path is not None:
+        save_confusion(test_df["router_distance_m"], pred, clf.classes_, save_path)
+    return {
+        "accuracy": acc,
+        "confusion_matrix": cm.tolist(),
+        "labels": [float(c) for c in clf.classes_],
+    }
+
+
+def benchmark_multihead_embedding(
+    df: pd.DataFrame,
+    cell_lookup: pd.DataFrame,
+    *,
+    save_prefix: Path,
+) -> dict:
+    """Single model using RSSI only, predicting cell + distance + room from the same embedding."""
+    train_df, test_df = train_test_split(
+        df,
+        test_size=0.2,
+        random_state=64,
+        stratify=df["grid_cell"],
+    )
+    labels = sorted(df["grid_cell"].unique())
+    # Fit embedding on cell labels only (no room/distance as features).
+    model = fit_localizer(train_df, include_room=False, random_state=64)
+    y_pred = model.predict(build_features(test_df, include_room=False))
+    cell_metrics = localization_summary(test_df, y_pred, cell_lookup)
+    save_confusion(
+        test_df["grid_cell"],
+        y_pred,
+        labels,
+        save_prefix.with_name("confusion_multihead_cell.csv"),
+    )
+
+    # Shared embedding reused for distance and room heads.
+    train_emb = model.transform(build_features(train_df, include_room=False))
+    test_emb = model.transform(build_features(test_df, include_room=False))
+
+    dist_clf = LogisticRegression(max_iter=800)
+    dist_clf.fit(train_emb, train_df["router_distance_m"])
+    dist_pred = dist_clf.predict(test_emb)
+    dist_acc = float(accuracy_score(test_df["router_distance_m"], dist_pred))
+    save_confusion(
+        test_df["router_distance_m"],
+        dist_pred,
+        dist_clf.classes_,
+        save_prefix.with_name("confusion_multihead_distance.csv"),
+    )
+
+    room_clf = LogisticRegression(max_iter=800)
+    room_clf.fit(train_emb, train_df["room"])
+    room_pred = room_clf.predict(test_emb)
+    room_acc = float(accuracy_score(test_df["room"], room_pred))
+    save_confusion(
+        test_df["room"],
+        room_pred,
+        room_clf.classes_,
+        save_prefix.with_name("confusion_multihead_room.csv"),
+    )
+
+    return {
+        "cell_acc": cell_metrics.cell_accuracy,
+        "mean_error_m": cell_metrics.mean_error_m,
+        "p90_error_m": cell_metrics.p90_error_m,
+        "router_dist_acc": dist_acc,
+        "room_acc": room_acc,
     }
 
 
@@ -363,6 +525,16 @@ def main():
     print(json.dumps(distance_rf, indent=2))
     print(f"Confusion enregistrée dans {REPORT_DIR}/confusion_distance_rf.csv")
 
+    print("\n=== ExtraTrees on raw features: router distance ===")
+    distance_et = benchmark_distance_extratrees(df, REPORT_DIR / "confusion_distance_extratrees.csv")
+    print(json.dumps(distance_et, indent=2))
+    print(f"Confusion enregistrée dans {REPORT_DIR}/confusion_distance_extratrees.csv")
+
+    print("\n=== Multihead embedding (cell + distance + room from RSSI only) ===")
+    multihead = benchmark_multihead_embedding(df, cell_lookup, save_prefix=REPORT_DIR / "multihead_placeholder.csv")
+    print(json.dumps(multihead, indent=2))
+    print("Confusions enregistrées dans reports/benchmarks/confusion_multihead_*.csv")
+
     print("\n=== LogisticRegression on embedding: room classification ===")
     room_res = benchmark_room_classifier(df, REPORT_DIR / "confusion_room_classifier.csv")
     print(json.dumps(room_res, indent=2))
@@ -387,6 +559,22 @@ def main():
             "room_acc": np.nan,
         },
         {
+            "algorithm": "KNN (room-agnostic, LORO mean)",
+            "cell_acc": room_agnostic_mean["knn_cell_accuracy"],
+            "mean_error_m": room_agnostic_mean["knn_mean_error_m"],
+            "p90_error_m": room_agnostic_mean["knn_p90_error_m"],
+            "router_dist_acc": np.nan,
+            "room_acc": np.nan,
+        },
+        {
+            "algorithm": "ExtraTrees (room-agnostic, LORO mean)",
+            "cell_acc": room_agnostic_mean["et_cell_accuracy"],
+            "mean_error_m": room_agnostic_mean["et_mean_error_m"],
+            "p90_error_m": room_agnostic_mean["et_p90_error_m"],
+            "router_dist_acc": np.nan,
+            "room_acc": np.nan,
+        },
+        {
             "algorithm": "NN+L-KNN (room-aware, cell+distance)",
             "cell_acc": aware["nn_lknn_cell_accuracy"],
             "mean_error_m": aware["nn_lknn_mean_error_m"],
@@ -399,6 +587,22 @@ def main():
             "cell_acc": aware["rf_cell_accuracy"],
             "mean_error_m": aware["rf_mean_error_m"],
             "p90_error_m": aware["rf_p90_error_m"],
+            "router_dist_acc": np.nan,
+            "room_acc": np.nan,
+        },
+        {
+            "algorithm": "KNN (room-aware, cell)",
+            "cell_acc": aware["knn_cell_accuracy"],
+            "mean_error_m": aware["knn_mean_error_m"],
+            "p90_error_m": aware["knn_p90_error_m"],
+            "router_dist_acc": np.nan,
+            "room_acc": np.nan,
+        },
+        {
+            "algorithm": "ExtraTrees (room-aware, cell)",
+            "cell_acc": aware["et_cell_accuracy"],
+            "mean_error_m": aware["et_mean_error_m"],
+            "p90_error_m": aware["et_p90_error_m"],
             "router_dist_acc": np.nan,
             "room_acc": np.nan,
         },
@@ -419,12 +623,28 @@ def main():
             "room_acc": np.nan,
         },
         {
+            "algorithm": "ExtraTrees (router distance on raw RSSI)",
+            "cell_acc": np.nan,
+            "mean_error_m": np.nan,
+            "p90_error_m": np.nan,
+            "router_dist_acc": distance_et["accuracy"],
+            "room_acc": np.nan,
+        },
+        {
             "algorithm": "LogReg (room on embedding)",
             "cell_acc": np.nan,
             "mean_error_m": np.nan,
             "p90_error_m": np.nan,
             "router_dist_acc": np.nan,
             "room_acc": room_res["accuracy"],
+        },
+        {
+            "algorithm": "Multihead (RSSI only: cell+distance+room)",
+            "cell_acc": multihead["cell_acc"],
+            "mean_error_m": multihead["mean_error_m"],
+            "p90_error_m": multihead["p90_error_m"],
+            "router_dist_acc": multihead["router_dist_acc"],
+            "room_acc": multihead["room_acc"],
         },
     ]
     summary_df = pd.DataFrame(summary_rows).set_index("algorithm")

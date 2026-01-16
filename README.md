@@ -17,6 +17,11 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Optional extra dependencies (for the full benchmark sweep, CatBoost/LightGBM/XGBoost):
+```bash
+pip install catboost lightgbm xgboost
+```
+
 ## Running the NN + L-KNN pipeline
 From the repository root, expose `src/` on `PYTHONPATH` (or install the project in editable mode) before invoking the module:
 ```bash
@@ -76,6 +81,15 @@ import joblib
 localizer = joblib.load("reports/localizer.joblib")
 proba = localizer.predict_proba(new_feature_array)
 ```
+
+## Benchmarks and optional models
+Run the full benchmark suite (room-agnostic LORO, room-aware split, router distance/room heads, stacking):
+```bash
+python3 scripts/benchmark_models.py
+```
+- Results are written to `reports/benchmarks/benchmark_summary.csv`, with confusions in the same folder.
+- Any stage that is skipped (e.g., GPC for speed, missing CatBoost/LightGBM/XGBoost) or fails will be recorded with its reason in `reports/benchmarks/benchmark_failures.json`.
+- Install `catboost`, `lightgbm`, and `xgboost` to fill the corresponding rows instead of `nan`/skipped.
 
 ## Suggested next steps
 1. Increase dataset diversity (different router heights, obstacles, ESP32 orientation) to stress-test the embeddings.

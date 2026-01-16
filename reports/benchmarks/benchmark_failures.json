@@ -1,0 +1,117 @@
+[
+  {
+    "stage": "KNN Mahalanobis",
+    "status": "skipped",
+    "context": {
+      "mode": "room_agnostic",
+      "held_out_room": "D005"
+    }
+  },
+  {
+    "stage": "GPC",
+    "status": "skipped",
+    "context": {
+      "mode": "room_agnostic",
+      "held_out_room": "D005"
+    }
+  },
+  {
+    "stage": "CatBoost",
+    "status": "skipped",
+    "context": {
+      "mode": "room_agnostic",
+      "held_out_room": "D005"
+    }
+  },
+  {
+    "stage": "LightGBM",
+    "status": "skipped",
+    "context": {
+      "mode": "room_agnostic",
+      "held_out_room": "D005"
+    }
+  },
+  {
+    "stage": "XGBoost",
+    "status": "skipped",
+    "context": {
+      "mode": "room_agnostic",
+      "held_out_room": "D005"
+    }
+  },
+  {
+    "stage": "KNN Mahalanobis",
+    "status": "skipped",
+    "context": {
+      "mode": "room_agnostic",
+      "held_out_room": "E101"
+    }
+  },
+  {
+    "stage": "GPC",
+    "status": "skipped",
+    "context": {
+      "mode": "room_agnostic",
+      "held_out_room": "E101"
+    }
+  },
+  {
+    "stage": "CatBoost",
+    "status": "skipped",
+    "context": {
+      "mode": "room_agnostic",
+      "held_out_room": "E101"
+    }
+  },
+  {
+    "stage": "LightGBM",
+    "status": "skipped",
+    "context": {
+      "mode": "room_agnostic",
+      "held_out_room": "E101"
+    }
+  },
+  {
+    "stage": "XGBoost",
+    "status": "skipped",
+    "context": {
+      "mode": "room_agnostic",
+      "held_out_room": "E101"
+    }
+  },
+  {
+    "stage": "KNN Mahalanobis",
+    "status": "skipped",
+    "context": {
+      "mode": "room_aware"
+    }
+  },
+  {
+    "stage": "GPC",
+    "status": "skipped",
+    "context": {
+      "mode": "room_aware"
+    }
+  },
+  {
+    "stage": "CatBoost",
+    "status": "skipped",
+    "context": {
+      "mode": "room_aware"
+    }
+  },
+  {
+    "stage": "LightGBM",
+    "status": "skipped",
+    "context": {
+      "mode": "room_aware"
+    }
+  },
+  {
+    "stage": "XGBoost",
+    "status": "skipped",
+    "context": {
+      "mode": "room_aware"
+    }
+  }
+]

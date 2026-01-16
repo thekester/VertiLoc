@@ -9,9 +9,11 @@ This script mirrors the notebook scenarios:
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 import warnings
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -41,7 +43,33 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVC, SVC
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn, TimeRemainingColumn
-from progress_table import ProgressTable
+try:
+    from progress_table import ProgressTable
+except ImportError:  # pragma: no cover - optional dependency
+    class ProgressTable:
+        """Minimal fallback when progress_table is not installed."""
+
+        def __init__(self, columns, interactive=None, refresh_rate=None):
+            self._columns = list(columns)
+            self._rows: list[dict] = []
+
+        def add_row(self, *values):
+            row = dict(zip(self._columns, values))
+            self._rows.append(row)
+
+        def num_rows(self) -> int:
+            return len(self._rows)
+
+        def update(self, column, value, *, row: int):
+            if row < 0 or row >= len(self._rows):
+                return
+            self._rows[row][column] = value
+
+        def to_df(self):
+            return pd.DataFrame(self._rows, columns=self._columns)
+
+        def close(self):
+            return None
 import time
 
 try:
@@ -63,7 +91,7 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from localization.data import CampaignSpec, load_measurements  # noqa: E402
+from localization.data import CampaignSpec, infer_router_distance, load_measurements  # noqa: E402
 from localization.embedding_knn import EmbeddingKnnConfig, EmbeddingKnnLocalizer  # noqa: E402
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 console = Console()
@@ -92,10 +120,164 @@ class BenchmarkResult:
     extra: dict
 
 
-def load_cross_room() -> pd.DataFrame:
+FAIL_LOG: list[dict] = []
+
+
+def _normalize_room_name(room: str) -> str:
+    return room.strip().upper()
+
+
+def _distance_matches(distance: float, distance_filter: set[float]) -> bool:
+    return any(abs(distance - target) < 1e-6 for target in distance_filter)
+
+
+def _filter_room_campaigns(
+    room_filter: list[str] | None,
+    distance_filter: list[float] | None,
+) -> dict[str, list[Path]]:
+    normalized_rooms = None
+    if room_filter:
+        normalized_rooms = {_normalize_room_name(room) for room in room_filter if room and room.strip()}
+        if not normalized_rooms:
+            normalized_rooms = None
+
+    distance_set = set(distance_filter) if distance_filter else None
+    filtered: dict[str, list[Path]] = {}
+    for room, folders in ROOM_CAMPAIGNS.items():
+        if normalized_rooms and _normalize_room_name(room) not in normalized_rooms:
+            continue
+        selected: list[Path] = []
+        for folder in folders:
+            if distance_set:
+                inferred = infer_router_distance(folder.name)
+                if inferred is None or not _distance_matches(inferred, distance_set):
+                    continue
+            selected.append(folder)
+        if selected:
+            filtered[room] = selected
+    return filtered
+
+
+def _make_label_encoder(classes: Iterable[str]) -> tuple[dict[str, int], np.ndarray]:
+    """Return (label_to_idx, idx_to_label) for consistent int encoding."""
+    classes = list(classes)
+    label_to_idx = {label: i for i, label in enumerate(classes)}
+    idx_to_label = np.asarray(classes)
+    return label_to_idx, idx_to_label
+
+
+def _encode_labels(series: pd.Series, label_to_idx: dict[str, int]) -> np.ndarray:
+    try:
+        return series.map(label_to_idx).to_numpy(dtype=int)
+    except KeyError as exc:  # pragma: no cover - defensive
+        missing = set(series.unique()) - set(label_to_idx)
+        raise ValueError(f"Unexpected labels encountered: {missing}") from exc
+
+
+def _fit_predict_xgb(
+    clf,
+    X_train: np.ndarray,
+    y_train: pd.Series,
+    X_test: np.ndarray,
+) -> np.ndarray:
+    """Fit XGBoost on a contiguous label encoding derived from the training fold."""
+    train_labels = sorted(y_train.unique())
+    local_label_to_idx = {label: i for i, label in enumerate(train_labels)}
+    y_enc = y_train.map(local_label_to_idx).to_numpy(dtype=int)
+    clf.set_params(num_class=len(train_labels))
+    clf.fit(X_train, y_enc)
+    pred_idx = np.asarray(clf.predict(X_test)).astype(int).ravel()
+    return np.asarray(train_labels, dtype=object)[pred_idx]
+
+
+def _as_feature_df(X: np.ndarray) -> pd.DataFrame:
+    """Return a DataFrame with stable column names to silence feature-name warnings."""
+    X_arr = np.asarray(X, dtype=float)
+    return pd.DataFrame(X_arr, columns=[f"f{i}" for i in range(X_arr.shape[1])])
+
+
+def _ensure_benchmark_result(value, stage_name: str) -> "BenchmarkResult":
+    if isinstance(value, BenchmarkResult):
+        return value
+    if callable(value):
+        try:
+            value = value()
+        except Exception as exc:  # pragma: no cover - defensive
+            return BenchmarkResult(
+                np.nan,
+                np.nan,
+                np.nan,
+                extra={"status": "failed", "reason": f"{stage_name} callable failed: {exc}"},
+            )
+        if isinstance(value, BenchmarkResult):
+            return value
+    return BenchmarkResult(
+        np.nan,
+        np.nan,
+        np.nan,
+        extra={"status": "failed", "reason": f"{stage_name} returned {type(value).__name__}"},
+    )
+
+
+def _maybe_subsample_df(
+    df: pd.DataFrame,
+    *,
+    max_samples: int | None,
+    label_col: str,
+    random_state: int,
+) -> pd.DataFrame:
+    if max_samples is None or len(df) <= max_samples:
+        return df
+    stratify = df[label_col]
+    if max_samples < df[label_col].nunique():
+        stratify = None
+    if stratify is not None:
+        try:
+            subset, _ = train_test_split(
+                df,
+                train_size=max_samples,
+                random_state=random_state,
+                stratify=stratify,
+            )
+            return subset
+        except ValueError:
+            return df.sample(n=max_samples, random_state=random_state)
+    return df.sample(n=max_samples, random_state=random_state)
+
+
+def _extract_status(result) -> tuple[str, str]:
+    """Return (status, reason) from a BenchmarkResult, defaulting to done/empty."""
+    if isinstance(result, BenchmarkResult) and result.extra:
+        return result.extra.get("status", "done"), result.extra.get("reason", "")
+    return "done", ""
+
+
+def _record_stage_outcome(stage_name: str, status: str, context: dict | None, reason: str = "") -> None:
+    """Persist non-successful stages so we can surface skipped/failed runs later."""
+    if status == "done":
+        return
+    entry = {"stage": stage_name, "status": status}
+    if context:
+        entry["context"] = context
+    if reason:
+        entry["reason"] = reason
+    FAIL_LOG.append(entry)
+
+
+def _failed_result(reason: str) -> BenchmarkResult:
+    return BenchmarkResult(np.nan, np.nan, np.nan, extra={"status": "failed", "reason": reason})
+
+
+def load_cross_room(
+    room_filter: list[str] | None = None,
+    distance_filter: list[float] | None = None,
+) -> pd.DataFrame:
     frames: list[pd.DataFrame] = []
     missing: list[Path] = []
-    for room, folders in ROOM_CAMPAIGNS.items():
+    campaigns = _filter_room_campaigns(room_filter, distance_filter)
+    if not campaigns:
+        raise ValueError("No campaign folders match the provided filters.")
+    for room, folders in campaigns.items():
         for folder in folders:
             if folder.exists():
                 df_room = load_measurements([CampaignSpec(folder)])
@@ -132,12 +314,20 @@ def _mahalanobis_vi(X: np.ndarray, ridge: float = 1e-3) -> np.ndarray:
     X = np.asarray(X)
     if X.ndim != 2 or X.shape[0] < 2:
         raise np.linalg.LinAlgError("Mahalanobis requires a 2D array with at least 2 rows.")
-    try:
-        cov = np.cov(X, rowvar=False)
-        cov += np.eye(cov.shape[0]) * ridge
-        return np.linalg.pinv(cov)
-    except Exception as exc:  # pragma: no cover - defensive
-        raise np.linalg.LinAlgError(f"Failed to compute covariance: {exc}") from exc
+    n_features = X.shape[1]
+    cov = np.asarray(np.cov(X, rowvar=False))
+    if cov.ndim == 0:  # degenerate case -> scalar
+        cov = np.array([[float(cov)]], dtype=float)
+    if cov.shape != (n_features, n_features):
+        cov = np.eye(n_features) * float(np.nan_to_num(cov).max(initial=1.0))
+    # Try progressively larger ridges to avoid singular matrices; fall back to identity.
+    for penalty in (ridge, ridge * 10, ridge * 100, 1.0):
+        try:
+            cov_reg = cov + np.eye(n_features) * penalty
+            return np.linalg.pinv(cov_reg)
+        except Exception:  # pragma: no cover - defensive
+            continue
+    return np.eye(n_features)
 
 
 def save_confusion(y_true, y_pred, labels, path: Path, normalize: str = "true") -> None:
@@ -176,10 +366,19 @@ def fit_localizer(train_df: pd.DataFrame, include_room: bool, random_state: int 
     return model
 
 
-def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.DataFrame:
+def benchmark_room_agnostic(
+    df: pd.DataFrame,
+    cell_lookup: pd.DataFrame,
+    *,
+    skip_optional: bool = False,
+    run_gpc: bool = False,
+    gpc_max_samples: int | None = None,
+) -> pd.DataFrame:
     rows: list[dict] = []
     labels = sorted(df["grid_cell"].unique())
+    label_to_idx, idx_to_label = _make_label_encoder(labels)
     rooms = sorted(df["room"].unique())
+    optional_stages = {"KNN Mahalanobis", "GPC", "CatBoost", "LightGBM", "XGBoost"}
 
     progress = Progress(
         SpinnerColumn(),
@@ -196,13 +395,30 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
             stage_table = ProgressTable(columns=["stage", "status", "elapsed_s"], interactive=2, refresh_rate=20)
             train_df = df[df["room"] != held_out]
             test_df = df[df["room"] == held_out]
+            stage_context = {"mode": "room_agnostic", "held_out_room": held_out}
 
-            def log_stage(stage_name: str, fn):
+            def log_stage(stage_name: str, fn, *, fallback=None):
+                if skip_optional and stage_name in optional_stages and not (stage_name == "GPC" and run_gpc):
+                    stage_table.add_row(stage_name, "skipped", 0.0)
+                    _record_stage_outcome(stage_name, "skipped", stage_context, "")
+                    return fallback if fallback is not None else BenchmarkResult(np.nan, np.nan, np.nan, extra={"status": "skipped"})
                 stage_table.add_row(stage_name, "running", 0.0)
                 row_idx = stage_table.num_rows() - 1
                 start = time.time()
-                result = fn()
-                stage_table.update("status", "done", row=row_idx)
+                status = "done"
+                reason = ""
+                try:
+                    result = fn()
+                    status, reason = _extract_status(result)
+                except Exception as exc:  # noqa: BLE001 - we want to log any failure
+                    reason = f"{type(exc).__name__}: {exc}"
+                    status = "failed"
+                    result = fallback if fallback is not None else _failed_result(reason)
+                    console.print(f"[red]{stage_name} failed: {reason}[/red]")
+                _record_stage_outcome(stage_name, status, stage_context, reason)
+                if reason and status != "done":
+                    console.print(f"[yellow]{stage_name}: {reason}[/yellow]")
+                stage_table.update("status", status, row=row_idx)
                 stage_table.update("elapsed_s", time.time() - start, row=row_idx)
                 return result
 
@@ -229,6 +445,8 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
 
             X_train = build_features(train_df, include_room=False)
             X_test = build_features(test_df, include_room=False)
+            X_train_df = _as_feature_df(X_train)
+            X_test_df = _as_feature_df(X_test)
 
             rf_summary = log_stage(
                 "RandomForest",
@@ -294,6 +512,9 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
 
             def fit_distance():
                 nonlocal router_acc
+                if train_df["router_distance_m"].nunique() < 2:
+                    router_acc = np.nan
+                    return
                 train_emb = model.transform(build_features(train_df, include_room=False))
                 test_emb = model.transform(build_features(test_df, include_room=False))
                 dist_clf = LogisticRegression(max_iter=600)
@@ -302,7 +523,7 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
                 router_acc = float(accuracy_score(test_df["router_distance_m"], dist_pred))
 
             if set(test_df["router_distance_m"]).issubset(set(train_df["router_distance_m"])):
-                log_stage("LogReg distance head", fit_distance)
+                log_stage("LogReg distance head", fit_distance, fallback=np.nan)
 
             svm_summary = log_stage(
                 "SVM RBF",
@@ -318,9 +539,9 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
                 "HistGB",
                 lambda: (
                     lambda clf=HistGradientBoostingClassifier(
-                        learning_rate=0.05,
-                        max_depth=12,
-                        max_iter=600,
+                        learning_rate=0.1,
+                        max_depth=8,
+                        max_iter=200,
                         random_state=held_out.__hash__() % 10_000,
                     ): (
                         clf.fit(X_train, train_df["grid_cell"]),
@@ -342,13 +563,38 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
             def safe_mahalanobis():
                 try:
                     vi = _mahalanobis_vi(X_train)
+                    vi = np.asarray(vi, dtype=float)
+                    if (
+                        vi.ndim != 2
+                        or vi.shape[0] != vi.shape[1]
+                        or vi.shape[0] != X_train.shape[1]
+                        or not np.isfinite(vi).all()
+                    ):
+                        return BenchmarkResult(
+                            np.nan,
+                            np.nan,
+                            np.nan,
+                            extra={"status": "skipped", "reason": "invalid Mahalanobis matrix"},
+                        )
                     knn_maha = KNeighborsClassifier(
                         n_neighbors=7, weights="distance", metric="mahalanobis", metric_params={"VI": vi}
                     )
                     knn_maha.fit(X_train, train_df["grid_cell"])
                     return localization_summary(test_df, knn_maha.predict(X_test), cell_lookup)
                 except np.linalg.LinAlgError:
-                    return BenchmarkResult(np.nan, np.nan, np.nan, extra={})
+                    return BenchmarkResult(
+                        np.nan,
+                        np.nan,
+                        np.nan,
+                        extra={"status": "failed", "reason": "mahalanobis covariance inversion failed"},
+                    )
+                except Exception as exc:  # pragma: no cover - defensive
+                    return BenchmarkResult(
+                        np.nan,
+                        np.nan,
+                        np.nan,
+                        extra={"status": "skipped", "reason": f"mahalanobis skipped: {exc}"},
+                    )
 
             knn_maha_summary = log_stage("KNN Mahalanobis", safe_mahalanobis)
 
@@ -414,8 +660,36 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
                 )()[1],
             )
 
-            log_stage("GPC skipped", lambda: console.print("Skipping GPC (too slow at current dataset size)"))
-            gpc_summary = BenchmarkResult(np.nan, np.nan, np.nan, extra={})
+            if run_gpc:
+                def fit_gpc():
+                gpc_train_df = _maybe_subsample_df(
+                    train_df, max_samples=gpc_max_samples, label_col="grid_cell", random_state=held_out.__hash__() % 10_000
+                )
+                    X_train_gpc = build_features(gpc_train_df, include_room=False)
+                    X_test_gpc = build_features(test_df, include_room=False)
+                    clf = make_pipeline(
+                        StandardScaler(),
+                        GaussianProcessClassifier(
+                            kernel=RBF(length_scale=1.0),
+                            optimizer=None,
+                            random_state=held_out.__hash__() % 10_000,
+                        ),
+                    )
+                    clf.fit(X_train_gpc, gpc_train_df["grid_cell"])
+                    return localization_summary(test_df, clf.predict(X_test_gpc), cell_lookup)
+
+                gpc_summary = log_stage("GPC", fit_gpc)
+                gpc_summary = _ensure_benchmark_result(gpc_summary, "GPC")
+            else:
+                gpc_summary = log_stage(
+                    "GPC",
+                    lambda: BenchmarkResult(
+                        np.nan,
+                        np.nan,
+                        np.nan,
+                        extra={"status": "skipped", "reason": "skipped for speed"},
+                    ),
+                )
 
             qda_summary = log_stage(
                 "QDA",
@@ -445,7 +719,12 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
 
             cat_summary = log_stage(
                 "CatBoost",
-                lambda: BenchmarkResult(np.nan, np.nan, np.nan, extra={})
+                lambda: BenchmarkResult(
+                    np.nan,
+                    np.nan,
+                    np.nan,
+                    extra={"status": "skipped", "reason": "catboost not installed"},
+                )
                 if CatBoostClassifier is None
                 else (
                     lambda clf=CatBoostClassifier(
@@ -456,15 +735,26 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
                         verbose=False,
                         random_seed=held_out.__hash__() % 10_000,
                     ): (
-                        clf.fit(X_train, train_df["grid_cell"]),
-                        localization_summary(test_df, clf.predict(X_test), cell_lookup),
-                    )
-                )()[1],
+                        lambda y_train_enc=_encode_labels(train_df["grid_cell"], label_to_idx): (
+                            clf.fit(X_train, y_train_enc),
+                            localization_summary(
+                                test_df,
+                                idx_to_label[np.asarray(clf.predict(X_test)).astype(int).ravel()],
+                                cell_lookup,
+                            ),
+                        )
+                    )()[1]
+                )(),
             )
 
             lgbm_summary = log_stage(
                 "LightGBM",
-                lambda: BenchmarkResult(np.nan, np.nan, np.nan, extra={})
+                lambda: BenchmarkResult(
+                    np.nan,
+                    np.nan,
+                    np.nan,
+                    extra={"status": "skipped", "reason": "lightgbm not installed"},
+                )
                 if LGBMClassifier is None
                 else (
                     lambda clf=LGBMClassifier(
@@ -473,16 +763,31 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
                         n_estimators=260,
                         max_depth=-1,
                         random_state=held_out.__hash__() % 10_000,
+                        min_split_gain=0.0,
+                        min_child_samples=5,
+                        min_child_weight=1e-3,
+                        verbosity=-1,
                     ): (
-                        clf.fit(X_train, train_df["grid_cell"]),
-                        localization_summary(test_df, clf.predict(X_test), cell_lookup),
-                    )
-                )()[1],
+                        lambda y_train_enc=_encode_labels(train_df["grid_cell"], label_to_idx): (
+                            clf.fit(X_train_df, y_train_enc),
+                            localization_summary(
+                                test_df,
+                                idx_to_label[np.asarray(clf.predict(X_test_df)).astype(int).ravel()],
+                                cell_lookup,
+                            ),
+                        )
+                    )()[1]
+                )(),
             )
 
             xgb_summary = log_stage(
                 "XGBoost",
-                lambda: BenchmarkResult(np.nan, np.nan, np.nan, extra={})
+                lambda: BenchmarkResult(
+                    np.nan,
+                    np.nan,
+                    np.nan,
+                    extra={"status": "skipped", "reason": "xgboost not installed"},
+                )
                 if XGBClassifier is None
                 else (
                     lambda clf=XGBClassifier(
@@ -495,10 +800,14 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
                         random_state=held_out.__hash__() % 10_000,
                         eval_metric="mlogloss",
                     ): (
-                        clf.fit(X_train, train_df["grid_cell"]),
-                        localization_summary(test_df, clf.predict(X_test), cell_lookup),
-                    )
-                )()[1],
+                        lambda: (
+                            lambda preds=_fit_predict_xgb(clf, X_train, train_df["grid_cell"], X_test): (
+                                clf,
+                                localization_summary(test_df, preds, cell_lookup),
+                            )
+                        )()[1]
+                    )()
+                )(),
             )
 
             stacking_summary = log_stage(
@@ -608,7 +917,14 @@ def benchmark_room_agnostic(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> pd.D
 
 
 
-def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
+def benchmark_room_aware(
+    df: pd.DataFrame,
+    cell_lookup: pd.DataFrame,
+    *,
+    skip_optional: bool = False,
+    run_gpc: bool = False,
+    gpc_max_samples: int | None = None,
+) -> dict:
     progress = Progress(
         SpinnerColumn(),
         TextColumn("{task.description}"),
@@ -620,13 +936,34 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
     with progress:
         task = progress.add_task("Room-aware models", total=21)
         stage_table = ProgressTable(columns=["stage", "status", "elapsed_s"], interactive=2, refresh_rate=20)
+        stage_context = {"mode": "room_aware"}
+        labels = sorted(df["grid_cell"].unique())
+        label_to_idx, idx_to_label = _make_label_encoder(labels)
+        optional_stages = {"KNN Mahalanobis", "GPC", "CatBoost", "LightGBM", "XGBoost"}
 
-        def log_stage(stage_name: str, fn):
+        def log_stage(stage_name: str, fn, *, fallback=None):
+            if skip_optional and stage_name in optional_stages and not (stage_name == "GPC" and run_gpc):
+                stage_table.add_row(stage_name, "skipped", 0.0)
+                _record_stage_outcome(stage_name, "skipped", stage_context, "")
+                progress.advance(task)
+                return fallback if fallback is not None else BenchmarkResult(np.nan, np.nan, np.nan, extra={"status": "skipped"})
             stage_table.add_row(stage_name, "running", 0.0)
             row_idx = stage_table.num_rows() - 1
             start_t = time.time()
-            result = fn()
-            stage_table.update("status", "done", row=row_idx)
+            status = "done"
+            reason = ""
+            try:
+                result = fn()
+                status, reason = _extract_status(result)
+            except Exception as exc:  # noqa: BLE001
+                reason = f"{type(exc).__name__}: {exc}"
+                status = "failed"
+                result = fallback if fallback is not None else _failed_result(reason)
+                console.print(f"[red]{stage_name} failed: {reason}[/red]")
+            _record_stage_outcome(stage_name, status, stage_context, reason)
+            if reason and status != "done":
+                console.print(f"[yellow]{stage_name}: {reason}[/yellow]")
+            stage_table.update("status", status, row=row_idx)
             stage_table.update("elapsed_s", time.time() - start_t, row=row_idx)
             progress.advance(task)
             return result
@@ -661,6 +998,8 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
 
         X_train = build_features(train_df, include_room=True)
         X_test = build_features(test_df, include_room=True)
+        X_train_df = _as_feature_df(X_train)
+        X_test_df = _as_feature_df(X_test)
 
         rf_summary = log_stage(
             "RandomForest",
@@ -723,6 +1062,8 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
         )
 
         def fit_distance():
+            if train_df["router_distance_m"].nunique() < 2:
+                return np.nan
             train_emb = model.transform(build_features(train_df, include_room=True))
             test_emb = model.transform(build_features(test_df, include_room=True))
             dist_clf = LogisticRegression(max_iter=600)
@@ -730,7 +1071,7 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
             dist_pred = dist_clf.predict(test_emb)
             return float(accuracy_score(test_df["router_distance_m"], dist_pred))
 
-        dist_acc = log_stage("LogReg distance head", fit_distance)
+        dist_acc = log_stage("LogReg distance head", fit_distance, fallback=np.nan)
 
         svm_summary = log_stage(
             "SVM RBF",
@@ -766,9 +1107,9 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
             "HistGB",
             lambda: (
                 lambda clf=HistGradientBoostingClassifier(
-                    learning_rate=0.05,
-                    max_depth=12,
-                    max_iter=600,
+                    learning_rate=0.1,
+                    max_depth=8,
+                    max_iter=200,
                     random_state=21,
                 ): (
                     clf.fit(X_train, train_df["grid_cell"]),
@@ -790,13 +1131,38 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
         def safe_mahalanobis():
             try:
                 vi = _mahalanobis_vi(X_train)
+                vi = np.asarray(vi, dtype=float)
+                if (
+                    vi.ndim != 2
+                    or vi.shape[0] != vi.shape[1]
+                    or vi.shape[0] != X_train.shape[1]
+                    or not np.isfinite(vi).all()
+                ):
+                    return BenchmarkResult(
+                        np.nan,
+                        np.nan,
+                        np.nan,
+                        extra={"status": "skipped", "reason": "invalid Mahalanobis matrix"},
+                    )
                 knn_maha = KNeighborsClassifier(
                     n_neighbors=7, weights="distance", metric="mahalanobis", metric_params={"VI": vi}
                 )
                 knn_maha.fit(X_train, train_df["grid_cell"])
                 return localization_summary(test_df, knn_maha.predict(X_test), cell_lookup)
             except np.linalg.LinAlgError:
-                return BenchmarkResult(np.nan, np.nan, np.nan, extra={})
+                return BenchmarkResult(
+                    np.nan,
+                    np.nan,
+                    np.nan,
+                    extra={"status": "failed", "reason": "mahalanobis covariance inversion failed"},
+                )
+            except Exception as exc:  # pragma: no cover - defensive
+                return BenchmarkResult(
+                    np.nan,
+                    np.nan,
+                    np.nan,
+                    extra={"status": "skipped", "reason": f"mahalanobis skipped: {exc}"},
+                )
 
         knn_maha_summary = log_stage("KNN Mahalanobis", safe_mahalanobis)
 
@@ -858,8 +1224,36 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
             )()[1],
         )
 
-        log_stage("GPC skipped", lambda: console.print("Skipping GPC (room-aware) for speed"))
-        gpc_summary = BenchmarkResult(np.nan, np.nan, np.nan, extra={})
+        if run_gpc:
+            def fit_gpc():
+                gpc_train_df = _maybe_subsample_df(
+                    train_df, max_samples=gpc_max_samples, label_col="grid_cell", random_state=21
+                )
+                X_train_gpc = build_features(gpc_train_df, include_room=True)
+                X_test_gpc = build_features(test_df, include_room=True)
+                clf = make_pipeline(
+                    StandardScaler(),
+                    GaussianProcessClassifier(
+                        kernel=RBF(length_scale=1.0),
+                        optimizer=None,
+                        random_state=21,
+                    ),
+                )
+                clf.fit(X_train_gpc, gpc_train_df["grid_cell"])
+                return localization_summary(test_df, clf.predict(X_test_gpc), cell_lookup)
+
+            gpc_summary = log_stage("GPC", fit_gpc)
+            gpc_summary = _ensure_benchmark_result(gpc_summary, "GPC")
+        else:
+            gpc_summary = log_stage(
+                "GPC",
+                lambda: BenchmarkResult(
+                    np.nan,
+                    np.nan,
+                    np.nan,
+                    extra={"status": "skipped", "reason": "skipped for speed"},
+                ),
+            )
 
         qda_summary = log_stage(
             "QDA",
@@ -873,7 +1267,12 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
 
         cat_summary = log_stage(
             "CatBoost",
-            lambda: BenchmarkResult(np.nan, np.nan, np.nan, extra={})
+            lambda: BenchmarkResult(
+                np.nan,
+                np.nan,
+                np.nan,
+                extra={"status": "skipped", "reason": "catboost not installed"},
+            )
             if CatBoostClassifier is None
             else (
                 lambda clf=CatBoostClassifier(
@@ -884,15 +1283,26 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
                     verbose=False,
                     random_seed=21,
                 ): (
-                    clf.fit(X_train, train_df["grid_cell"]),
-                    localization_summary(test_df, clf.predict(X_test), cell_lookup),
-                )
-            )()[1],
+                    lambda y_train_enc=_encode_labels(train_df["grid_cell"], label_to_idx): (
+                        clf.fit(X_train, y_train_enc),
+                        localization_summary(
+                            test_df,
+                            idx_to_label[np.asarray(clf.predict(X_test)).astype(int).ravel()],
+                            cell_lookup,
+                        ),
+                    )
+                )()[1]
+            )(),
         )
 
         lgbm_summary = log_stage(
             "LightGBM",
-            lambda: BenchmarkResult(np.nan, np.nan, np.nan, extra={})
+            lambda: BenchmarkResult(
+                np.nan,
+                np.nan,
+                np.nan,
+                extra={"status": "skipped", "reason": "lightgbm not installed"},
+            )
             if LGBMClassifier is None
             else (
                 lambda clf=LGBMClassifier(
@@ -901,16 +1311,31 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
                     n_estimators=260,
                     max_depth=-1,
                     random_state=21,
+                    min_split_gain=0.0,
+                    min_child_samples=5,
+                    min_child_weight=1e-3,
+                    verbosity=-1,
                 ): (
-                    clf.fit(X_train, train_df["grid_cell"]),
-                    localization_summary(test_df, clf.predict(X_test), cell_lookup),
-                )
-            )()[1],
+                    lambda y_train_enc=_encode_labels(train_df["grid_cell"], label_to_idx): (
+                        clf.fit(X_train_df, y_train_enc),
+                        localization_summary(
+                            test_df,
+                            idx_to_label[np.asarray(clf.predict(X_test_df)).astype(int).ravel()],
+                            cell_lookup,
+                        ),
+                    )
+                )()[1]
+            )(),
         )
 
         xgb_summary = log_stage(
             "XGBoost",
-            lambda: BenchmarkResult(np.nan, np.nan, np.nan, extra={})
+            lambda: BenchmarkResult(
+                np.nan,
+                np.nan,
+                np.nan,
+                extra={"status": "skipped", "reason": "xgboost not installed"},
+            )
             if XGBClassifier is None
             else (
                 lambda clf=XGBClassifier(
@@ -923,10 +1348,14 @@ def benchmark_room_aware(df: pd.DataFrame, cell_lookup: pd.DataFrame) -> dict:
                     random_state=21,
                     eval_metric="mlogloss",
                 ): (
-                    clf.fit(X_train, train_df["grid_cell"]),
-                    localization_summary(test_df, clf.predict(X_test), cell_lookup),
-                )
-            )()[1],
+                    lambda: (
+                        lambda preds=_fit_predict_xgb(clf, X_train, train_df["grid_cell"], X_test): (
+                            clf,
+                            localization_summary(test_df, preds, cell_lookup),
+                        )
+                    )()[1]
+                )()
+            ),
         )
 
         base_estimators = [
@@ -1197,61 +1626,193 @@ def benchmark_room_classifier(df: pd.DataFrame, save_path: Path | None = None) -
     }
 
 
-def main():
-    df = load_cross_room()
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Benchmark localization models across rooms.")
+    parser.add_argument(
+        "--room",
+        action="append",
+        help="Filter to a specific room (repeatable). Example: --room D005 --room E101",
+    )
+    parser.add_argument(
+        "--distances",
+        type=float,
+        nargs="+",
+        help="Filter to router distances in meters. Example: --distances 2 4",
+    )
+    parser.add_argument(
+        "--holdout",
+        choices=["auto", "room", "distance", "none"],
+        default="auto",
+        help="Holdout strategy for the group-split benchmarks (room or distance).",
+    )
+    parser.add_argument(
+        "--skip-optional",
+        action="store_true",
+        help="Skip optional/unstable models (Mahalanobis, GPC, CatBoost, LightGBM, XGBoost).",
+    )
+    parser.add_argument(
+        "--run-gpc",
+        action="store_true",
+        help="Run the Gaussian Process Classifier stages (very slow on large datasets).",
+    )
+    parser.add_argument(
+        "--gpc-max-samples",
+        type=int,
+        help="Optional cap on training samples for GPC to keep runtime reasonable (default: 1400 when GPC is enabled).",
+    )
+    parser.add_argument(
+        "--all-models",
+        action="store_true",
+        help="Run all optional models, including GPC.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None):
+    args = parse_args(argv)
+    if args.all_models:
+        args.skip_optional = False
+        args.run_gpc = True
+    if args.run_gpc and args.gpc_max_samples is None:
+        args.gpc_max_samples = 1400
+    df = load_cross_room(room_filter=args.room, distance_filter=args.distances)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     cell_lookup = (
         df[["grid_cell", "coord_x_m", "coord_y_m"]]
         .drop_duplicates("grid_cell")
         .set_index("grid_cell")
     )
+    rooms = sorted(df["room"].unique())
+    distances = sorted(df["router_distance_m"].unique())
+    if args.room or args.distances:
+        print(f"Filters -> rooms={args.room or 'all'} | distances={args.distances or 'all'}")
+    holdout_mode = args.holdout
+    if holdout_mode == "auto":
+        if len(rooms) > 1:
+            holdout_mode = "room"
+        elif len(distances) > 1:
+            holdout_mode = "distance"
+        else:
+            holdout_mode = "none"
+    if holdout_mode == "room":
+        holdout_label = "room-agnostic, LORO mean"
+    elif holdout_mode == "distance":
+        holdout_label = "distance-agnostic, LODO mean"
+    else:
+        holdout_label = "holdout skipped"
+    holdout_suffix = f"({holdout_label})"
+    print(f"Holdout strategy: {holdout_mode}")
 
     print(
-        f"Loaded {len(df)} samples | rooms={sorted(df['room'].unique())} | "
-        f"cells={df['grid_cell'].nunique()} | distances={sorted(df['router_distance_m'].unique())}"
+        f"Loaded {len(df)} samples | rooms={rooms} | "
+        f"cells={df['grid_cell'].nunique()} | distances={distances}"
     )
 
-    print("\n=== Room-agnostic (leave-one-room-out) ===")
-    room_agnostic = benchmark_room_agnostic(df, cell_lookup)
-    print(room_agnostic.to_string(index=False))
-    print("Averages:", room_agnostic.mean(numeric_only=True).to_dict())
-    print(f"Confusions enregistrées dans {REPORT_DIR}/confusion_room_agnostic_*.csv")
-    room_agnostic_mean = room_agnostic.mean(numeric_only=True)
+    print(f"\n=== Holdout benchmark ({holdout_label}) ===")
+    can_room = len(rooms) > 1
+    can_distance = len(distances) > 1
+    room_agnostic_mean = defaultdict(lambda: np.nan)
+    if holdout_mode == "room":
+        if can_room:
+            room_agnostic = benchmark_room_agnostic(
+                df,
+                cell_lookup,
+                skip_optional=args.skip_optional,
+                run_gpc=args.run_gpc,
+                gpc_max_samples=args.gpc_max_samples,
+            )
+            print(room_agnostic.to_string(index=False))
+            print("Averages:", room_agnostic.mean(numeric_only=True).to_dict())
+            print(f"Confusions enregistrées dans {REPORT_DIR}/confusion_room_agnostic_*.csv")
+            room_agnostic_mean.update(room_agnostic.mean(numeric_only=True).to_dict())
+        else:
+            print("Skipped: needs at least 2 rooms.")
+    elif holdout_mode == "distance":
+        if can_distance:
+            df_holdout = df.copy()
+            df_holdout["room"] = df_holdout["router_distance_m"].map(lambda d: f"dist_{d:g}")
+            room_agnostic = benchmark_room_agnostic(
+                df_holdout,
+                cell_lookup,
+                skip_optional=args.skip_optional,
+                run_gpc=args.run_gpc,
+                gpc_max_samples=args.gpc_max_samples,
+            )
+            print(room_agnostic.to_string(index=False))
+            print("Averages:", room_agnostic.mean(numeric_only=True).to_dict())
+            print(f"Confusions enregistrées dans {REPORT_DIR}/confusion_room_agnostic_*.csv")
+            room_agnostic_mean.update(room_agnostic.mean(numeric_only=True).to_dict())
+        else:
+            print("Skipped: needs at least 2 distances.")
+    else:
+        print("Skipped: holdout disabled.")
 
     print("\n=== Room-aware (one-hot room feature) ===")
-    aware = benchmark_room_aware(df, cell_lookup)
+    aware = benchmark_room_aware(
+        df,
+        cell_lookup,
+        skip_optional=args.skip_optional,
+        run_gpc=args.run_gpc,
+        gpc_max_samples=args.gpc_max_samples,
+    )
     print(json.dumps(aware, indent=2))
     print(f"Confusions enregistrées dans {REPORT_DIR}/confusion_room_aware_*.csv")
 
     print("\n=== LogisticRegression on embedding: router distance ===")
-    distance_res = benchmark_distance_logreg(df, REPORT_DIR / "confusion_distance_logreg.csv")
-    print(json.dumps(distance_res, indent=2))
-    print(f"Confusion enregistrée dans {REPORT_DIR}/confusion_distance_logreg.csv")
+    if can_distance:
+        distance_res = benchmark_distance_logreg(df, REPORT_DIR / "confusion_distance_logreg.csv")
+        print(json.dumps(distance_res, indent=2))
+        print(f"Confusion enregistrée dans {REPORT_DIR}/confusion_distance_logreg.csv")
+    else:
+        print("Skipped: needs at least 2 distances.")
+        distance_res = {"accuracy": np.nan}
 
     print("\n=== RandomForest on raw features: router distance ===")
-    distance_rf = benchmark_distance_rf(df, REPORT_DIR / "confusion_distance_rf.csv")
-    print(json.dumps(distance_rf, indent=2))
-    print(f"Confusion enregistrée dans {REPORT_DIR}/confusion_distance_rf.csv")
+    if can_distance:
+        distance_rf = benchmark_distance_rf(df, REPORT_DIR / "confusion_distance_rf.csv")
+        print(json.dumps(distance_rf, indent=2))
+        print(f"Confusion enregistrée dans {REPORT_DIR}/confusion_distance_rf.csv")
+    else:
+        print("Skipped: needs at least 2 distances.")
+        distance_rf = {"accuracy": np.nan}
 
     print("\n=== ExtraTrees on raw features: router distance ===")
-    distance_et = benchmark_distance_extratrees(df, REPORT_DIR / "confusion_distance_extratrees.csv")
-    print(json.dumps(distance_et, indent=2))
-    print(f"Confusion enregistrée dans {REPORT_DIR}/confusion_distance_extratrees.csv")
+    if can_distance:
+        distance_et = benchmark_distance_extratrees(df, REPORT_DIR / "confusion_distance_extratrees.csv")
+        print(json.dumps(distance_et, indent=2))
+        print(f"Confusion enregistrée dans {REPORT_DIR}/confusion_distance_extratrees.csv")
+    else:
+        print("Skipped: needs at least 2 distances.")
+        distance_et = {"accuracy": np.nan}
 
     print("\n=== Multihead embedding (cell + distance + room from RSSI only) ===")
-    multihead = benchmark_multihead_embedding(df, cell_lookup, save_prefix=REPORT_DIR / "multihead_placeholder.csv")
-    print(json.dumps(multihead, indent=2))
-    print("Confusions enregistrées dans reports/benchmarks/confusion_multihead_*.csv")
+    if can_room and can_distance:
+        multihead = benchmark_multihead_embedding(df, cell_lookup, save_prefix=REPORT_DIR / "multihead_placeholder.csv")
+        print(json.dumps(multihead, indent=2))
+        print("Confusions enregistrées dans reports/benchmarks/confusion_multihead_*.csv")
+    else:
+        print("Skipped: needs at least 2 rooms and 2 distances.")
+        multihead = {
+            "cell_acc": np.nan,
+            "mean_error_m": np.nan,
+            "p90_error_m": np.nan,
+            "router_dist_acc": np.nan,
+            "room_acc": np.nan,
+        }
 
     print("\n=== LogisticRegression on embedding: room classification ===")
-    room_res = benchmark_room_classifier(df, REPORT_DIR / "confusion_room_classifier.csv")
-    print(json.dumps(room_res, indent=2))
-    print(f"Confusion enregistrée dans {REPORT_DIR}/confusion_room_classifier.csv")
+    if can_room:
+        room_res = benchmark_room_classifier(df, REPORT_DIR / "confusion_room_classifier.csv")
+        print(json.dumps(room_res, indent=2))
+        print(f"Confusion enregistrée dans {REPORT_DIR}/confusion_room_classifier.csv")
+    else:
+        print("Skipped: needs at least 2 rooms.")
+        room_res = {"accuracy": np.nan}
 
     # Aggregate a compact score table for quick comparison.
     summary_rows = [
         {
-            "algorithm": "NN+L-KNN (room-agnostic, LORO mean)",
+            "algorithm": f"NN+L-KNN {holdout_suffix}",
             "cell_acc": room_agnostic_mean["cell_accuracy"],
             "mean_error_m": room_agnostic_mean["mean_error_m"],
             "p90_error_m": room_agnostic_mean["p90_error_m"],
@@ -1259,7 +1820,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "SVM RBF (room-agnostic, LORO mean)",
+            "algorithm": f"SVM RBF {holdout_suffix}",
             "cell_acc": room_agnostic_mean["svm_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["svm_mean_error_m"],
             "p90_error_m": room_agnostic_mean["svm_p90_error_m"],
@@ -1267,7 +1828,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "SVM lin (room-agnostic, LORO mean)",
+            "algorithm": f"SVM lin {holdout_suffix}",
             "cell_acc": room_agnostic_mean["svm_lin_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["svm_lin_mean_error_m"],
             "p90_error_m": room_agnostic_mean["svm_lin_p90_error_m"],
@@ -1275,7 +1836,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "SVM poly (room-agnostic, LORO mean)",
+            "algorithm": f"SVM poly {holdout_suffix}",
             "cell_acc": room_agnostic_mean["svm_poly_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["svm_poly_mean_error_m"],
             "p90_error_m": room_agnostic_mean["svm_poly_p90_error_m"],
@@ -1283,7 +1844,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "HistGradientBoosting (room-agnostic, LORO mean)",
+            "algorithm": f"HistGradientBoosting {holdout_suffix}",
             "cell_acc": room_agnostic_mean["hgb_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["hgb_mean_error_m"],
             "p90_error_m": room_agnostic_mean["hgb_p90_error_m"],
@@ -1291,7 +1852,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "GradientBoosting (room-agnostic, LORO mean)",
+            "algorithm": f"GradientBoosting {holdout_suffix}",
             "cell_acc": room_agnostic_mean["gbdt_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["gbdt_mean_error_m"],
             "p90_error_m": room_agnostic_mean["gbdt_p90_error_m"],
@@ -1299,7 +1860,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "RandomForest (room-agnostic, LORO mean)",
+            "algorithm": f"RandomForest {holdout_suffix}",
             "cell_acc": room_agnostic_mean["rf_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["rf_mean_error_m"],
             "p90_error_m": room_agnostic_mean["rf_p90_error_m"],
@@ -1307,7 +1868,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "KNN (room-agnostic, LORO mean)",
+            "algorithm": f"KNN {holdout_suffix}",
             "cell_acc": room_agnostic_mean["knn_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["knn_mean_error_m"],
             "p90_error_m": room_agnostic_mean["knn_p90_error_m"],
@@ -1315,7 +1876,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "Bagging KNN (room-agnostic, LORO mean)",
+            "algorithm": f"Bagging KNN {holdout_suffix}",
             "cell_acc": room_agnostic_mean["bag_knn_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["bag_knn_mean_error_m"],
             "p90_error_m": room_agnostic_mean["bag_knn_p90_error_m"],
@@ -1323,7 +1884,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "Mahalanobis KNN (room-agnostic, LORO mean)",
+            "algorithm": f"Mahalanobis KNN {holdout_suffix}",
             "cell_acc": room_agnostic_mean["knn_maha_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["knn_maha_mean_error_m"],
             "p90_error_m": room_agnostic_mean["knn_maha_p90_error_m"],
@@ -1331,7 +1892,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "LDA+KNN (room-agnostic, LORO mean)",
+            "algorithm": f"LDA+KNN {holdout_suffix}",
             "cell_acc": room_agnostic_mean["knn_lda_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["knn_lda_mean_error_m"],
             "p90_error_m": room_agnostic_mean["knn_lda_p90_error_m"],
@@ -1339,7 +1900,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "ExtraTrees (room-agnostic, LORO mean)",
+            "algorithm": f"ExtraTrees {holdout_suffix}",
             "cell_acc": room_agnostic_mean["et_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["et_mean_error_m"],
             "p90_error_m": room_agnostic_mean["et_p90_error_m"],
@@ -1347,7 +1908,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "Deep MLP softmax (room-agnostic, LORO mean)",
+            "algorithm": f"Deep MLP softmax {holdout_suffix}",
             "cell_acc": room_agnostic_mean["mlp_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["mlp_mean_error_m"],
             "p90_error_m": room_agnostic_mean["mlp_p90_error_m"],
@@ -1355,7 +1916,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "GaussianNB (room-agnostic, LORO mean)",
+            "algorithm": f"GaussianNB {holdout_suffix}",
             "cell_acc": room_agnostic_mean["gnb_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["gnb_mean_error_m"],
             "p90_error_m": room_agnostic_mean["gnb_p90_error_m"],
@@ -1363,7 +1924,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "Gaussian Process (room-agnostic, LORO mean)",
+            "algorithm": f"Gaussian Process {holdout_suffix}",
             "cell_acc": room_agnostic_mean["gpc_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["gpc_mean_error_m"],
             "p90_error_m": room_agnostic_mean["gpc_p90_error_m"],
@@ -1371,7 +1932,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "QDA (room-agnostic, LORO mean)",
+            "algorithm": f"QDA {holdout_suffix}",
             "cell_acc": room_agnostic_mean["qda_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["qda_mean_error_m"],
             "p90_error_m": room_agnostic_mean["qda_p90_error_m"],
@@ -1379,7 +1940,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "CatBoost (room-agnostic, LORO mean)",
+            "algorithm": f"CatBoost {holdout_suffix}",
             "cell_acc": room_agnostic_mean["cat_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["cat_mean_error_m"],
             "p90_error_m": room_agnostic_mean["cat_p90_error_m"],
@@ -1387,7 +1948,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "LightGBM (room-agnostic, LORO mean)",
+            "algorithm": f"LightGBM {holdout_suffix}",
             "cell_acc": room_agnostic_mean["lgbm_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["lgbm_mean_error_m"],
             "p90_error_m": room_agnostic_mean["lgbm_p90_error_m"],
@@ -1395,7 +1956,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "XGBoost (room-agnostic, LORO mean)",
+            "algorithm": f"XGBoost {holdout_suffix}",
             "cell_acc": room_agnostic_mean["xgb_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["xgb_mean_error_m"],
             "p90_error_m": room_agnostic_mean["xgb_p90_error_m"],
@@ -1403,7 +1964,7 @@ def main():
             "room_acc": np.nan,
         },
         {
-            "algorithm": "Stacking (RF+SVM+MLP, room-agnostic, LORO mean)",
+            "algorithm": f"Stacking (RF+SVM+MLP) {holdout_suffix}",
             "cell_acc": room_agnostic_mean["stacking_cell_accuracy"],
             "mean_error_m": room_agnostic_mean["stacking_mean_error_m"],
             "p90_error_m": room_agnostic_mean["stacking_p90_error_m"],
@@ -1617,6 +2178,13 @@ def main():
     print("\n=== Benchmark summary (rows = algos, columns = tests) ===")
     print(summary_df.to_string())
     print(f"\nSummary saved to {summary_path}")
+
+    failure_path = REPORT_DIR / "benchmark_failures.json"
+    if FAIL_LOG:
+        failure_path.write_text(json.dumps(FAIL_LOG, indent=2))
+        print(f"Stages skipped/failed logged in {failure_path}")
+    else:
+        print("No skipped/failed stages recorded.")
 
 
 if __name__ == "__main__":

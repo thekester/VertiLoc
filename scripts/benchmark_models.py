@@ -749,6 +749,7 @@ def benchmark_room_agnostic(
                     )()[1]
                 )(),
             )
+            cat_summary = _ensure_benchmark_result(cat_summary, "CatBoost")
 
             lgbm_summary = log_stage(
                 "LightGBM",
@@ -782,6 +783,7 @@ def benchmark_room_agnostic(
                     )()[1]
                 )(),
             )
+            lgbm_summary = _ensure_benchmark_result(lgbm_summary, "LightGBM")
 
             xgb_summary = log_stage(
                 "XGBoost",
@@ -812,6 +814,7 @@ def benchmark_room_agnostic(
                     )()
                 )(),
             )
+            xgb_summary = _ensure_benchmark_result(xgb_summary, "XGBoost")
 
             stacking_summary = log_stage(
                 "Stacking",
@@ -1297,6 +1300,7 @@ def benchmark_room_aware(
                 )()[1]
             )(),
         )
+        cat_summary = _ensure_benchmark_result(cat_summary, "CatBoost")
 
         lgbm_summary = log_stage(
             "LightGBM",
@@ -1330,6 +1334,7 @@ def benchmark_room_aware(
                 )()[1]
             )(),
         )
+        lgbm_summary = _ensure_benchmark_result(lgbm_summary, "LightGBM")
 
         xgb_summary = log_stage(
             "XGBoost",
@@ -1358,8 +1363,9 @@ def benchmark_room_aware(
                         )
                     )()[1]
                 )()
-            ),
+            )(),
         )
+        xgb_summary = _ensure_benchmark_result(xgb_summary, "XGBoost")
 
         base_estimators = [
             ("rf", RandomForestClassifier(

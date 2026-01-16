@@ -662,9 +662,12 @@ def benchmark_room_agnostic(
 
             if run_gpc:
                 def fit_gpc():
-                gpc_train_df = _maybe_subsample_df(
-                    train_df, max_samples=gpc_max_samples, label_col="grid_cell", random_state=held_out.__hash__() % 10_000
-                )
+                    gpc_train_df = _maybe_subsample_df(
+                        train_df,
+                        max_samples=gpc_max_samples,
+                        label_col="grid_cell",
+                        random_state=held_out.__hash__() % 10_000,
+                    )
                     X_train_gpc = build_features(gpc_train_df, include_room=False)
                     X_test_gpc = build_features(test_df, include_room=False)
                     clf = make_pipeline(

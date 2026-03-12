@@ -11,3 +11,6 @@ __pycache__/
 .idea/
 .vs/
 .DS_Store
+
+# Local agent settings
+.claude/

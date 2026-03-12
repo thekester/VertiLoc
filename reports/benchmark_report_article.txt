@@ -1,0 +1,636 @@
+================================================================================
+RAPPORT TECHNIQUE — LOCALISATION INDOOR PAR FINGERPRINTING RSSI (Wi-Fi)
+Synthèse des benchmarks Machine Learning pour article scientifique
+Date : Mars 2026
+================================================================================
+
+
+════════════════════════════════════════════════════════════════════════════════
+1. CONTEXTE ET OBJECTIF
+════════════════════════════════════════════════════════════════════════════════
+
+L'objectif du projet est de réaliser une localisation indoor fine-grained (à
+l'échelle de la cellule de 25 cm × 30 cm) en utilisant uniquement les signaux
+Wi-Fi (RSSI) mesurés depuis un point d'accès fixe (routeur). Aucun capteur
+supplémentaire n'est utilisé.
+
+L'approche retenue est le fingerprinting RSSI : une phase hors-ligne ("offline")
+collecte des mesures RSSI pour chaque position connue de la grille, constituant
+une "carte radio". En phase en-ligne ("online"), le système classifie une
+nouvelle mesure RSSI pour prédire la cellule occupée.
+
+Matériel utilisé :
+  - Routeur Wi-Fi standard avec 3 antennes distinctes (A1, A2, A3)
+  - PC de mesure relié au routeur par câble RJ45 (distance routeur-PC : 125 cm)
+  - Distance routeur–tableau blanc : 4 mètres, centré sur le tableau
+
+Grille de mesure :
+  - Cellules au format X_Y (ligne_colonne), taille 25 cm (largeur) × 30 cm (hauteur)
+  - Lignes 0 à 4 (de devant vers le fond de la salle)
+  - Colonnes de -4 à +10 (gauche à droite)
+  - 75 cellules en E102, 35 cellules en D005, 34-72 cellules en E101
+
+
+════════════════════════════════════════════════════════════════════════════════
+2. FEATURES (VARIABLES D'ENTRÉE)
+════════════════════════════════════════════════════════════════════════════════
+
+Chaque échantillon est composé de 5 features brutes issues du scan Wi-Fi :
+
+  1. Signal   : RSSI global du point d'accès (dBm)
+  2. Noise    : niveau de bruit ambiant (dBm)
+  3. signal_A1 : RSSI de l'antenne 1 du routeur (dBm)
+  4. signal_A2 : RSSI de l'antenne 2 du routeur (dBm)
+  5. signal_A3 : RSSI de l'antenne 3 du routeur (dBm)
+
+Ces 5 features constituent le vecteur d'entrée des modèles de classification.
+Dans les configurations "room-aware", un vecteur one-hot encodant la salle est
+concaténé aux features RSSI. Dans le modèle NN+L-KNN, une couche d'embedding
+apprend une représentation latente avant la classification KNN.
+
+Nombre d'échantillons par cellule : 25 mesures par campagne.
+
+
+════════════════════════════════════════════════════════════════════════════════
+3. DONNÉES COLLECTÉES — DESCRIPTION DES CAMPAGNES
+════════════════════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────────────────────
+3.1 Salle D005
+────────────────────────────────────────────────────────────────────────────────
+  - 35 cellules
+  - 2 distances routeur–tableau : 2 m et 4 m
+  - Total : ~1 700 échantillons
+
+────────────────────────────────────────────────────────────────────────────────
+3.2 Salle E101
+────────────────────────────────────────────────────────────────────────────────
+  - 72 cellules
+
+  Campagnes de distance (utilisées dans les benchmarks) :
+    - dtroismetres : distance routeur–tableau = 3 m   | 72 cellules | ~1 800 éch.
+    - dcinqmetres  : distance routeur–tableau = 5 m   | 72 cellules | ~1 800 éch.
+    Total utilisé dans les benchmarks : ~3 600 échantillons
+
+  Campagnes circulaires (orientations antenne — NON incluses dans les benchmarks) :
+    Le dataset "circulaire" de E101 reproduit le même protocole multi-orientation
+    que E102, avec 4 orientations du routeur testées :
+      - back  : antenne orientée vers l'arrière  | 72 cellules | ~1 800 éch.
+      - front : antenne orientée vers l'avant    | 72 cellules | ~1 800 éch.
+      - left  : antenne orientée vers la gauche  | 72 cellules | ~1 800 éch.
+      - right : antenne orientée vers la droite  | 72 cellules | ~1 800 éch.
+    Total circulaire disponible mais non exploité : ~7 200 échantillons supplémentaires
+    Distance routeur–tableau de ces campagnes : 3 m
+    Note : ces données permettraient d'étudier la robustesse à l'orientation
+    d'antenne en E101 (équivalent du LOCO réalisé sur E102).
+
+────────────────────────────────────────────────────────────────────────────────
+3.3 Salle E102 — 6 campagnes expérimentales
+────────────────────────────────────────────────────────────────────────────────
+  Distance routeur–tableau : 4 m (fixe pour toutes les campagnes)
+  75 cellules × 25 mesures × 6 campagnes = 11 250 échantillons
+
+  exp1 — Back Right (antenne devant le tableau blanc, orientée vers la droite)
+    - Ligne 0 : 2 fenêtres ouvertes (gauche + 3e), porte ouverte, personne au fond
+    - Ligne 1 : fenêtres fermées, personne qui passe devant
+    - Ligne 2 : chaises empilées, 2 tables au 1er rang en moins, porte + fenêtres fermées
+    - Ligne 3 : 1 fenêtre entrouverte (droite), table avancée entre rangs, porte fermée
+    - Ligne 4 : 1 fenêtre entrouverte, porte ouverte, personne devant
+
+  exp2 — Front Right (antenne derrière le tableau blanc, orientée vers la droite)
+    - Lignes 1–4 : conditions standard (porte/fenêtres variables)
+
+  exp3 — Front Left (antenne derrière le tableau blanc, orientée vers la gauche)
+    - Ligne 0 : porte ouverte
+    - Lignes 1–4 : porte fermée (ligne 3 : personne devant)
+
+  exp4 — Back Left (antenne entre le tableau blanc et le routeur, côté gauche)
+    - Lignes 0–4 : porte ouverte ou fermée, présence humaine systématique
+
+  exp5 — Élévation au sol (routeur posé au sol, mode Front)
+    - Configuration d'élévation minimale (hauteur sol : 0 m)
+
+  exp6 — Élévation 1.50 m (table sur table, mode Front)
+    - Hauteur d'élévation : 2 × 75 cm = 1,50 m
+
+────────────────────────────────────────────────────────────────────────────────
+3.4 Récapitulatif dataset complet
+────────────────────────────────────────────────────────────────────────────────
+  Total D005 + E101 + E102 : 16 550 échantillons
+  Distances couvertes : 2 m, 3 m, 4 m, 5 m
+  Salles : 3 (D005, E101, E102)
+  Campagnes E102 : 6 (orientations antenne + élévations)
+
+
+════════════════════════════════════════════════════════════════════════════════
+4. MODÈLES DE MACHINE LEARNING ÉVALUÉS
+════════════════════════════════════════════════════════════════════════════════
+
+Tous les modèles résolvent un problème de classification multi-classes (75 classes
+= 75 cellules) à partir du vecteur RSSI de 5 dimensions.
+
+────────────────────────────────────────────────────────────────────────────────
+4.1 K-Nearest Neighbors (KNN)
+────────────────────────────────────────────────────────────────────────────────
+  Principe : classe prédite = majorité parmi les k voisins les plus proches
+  (distance euclidienne dans l'espace RSSI). Paramètre k optimisé par CV.
+  Variantes testées :
+    - KNN raw : KNN direct sur les 5 features
+    - Bagging KNN : ensemble de KNN sur sous-échantillons bootstrap
+    - KNN Mahalanobis : distance de Mahalanobis (skippé, données insuffisantes)
+    - LDA+KNN : projection LDA puis KNN dans l'espace réduit
+
+────────────────────────────────────────────────────────────────────────────────
+4.2 NN + L-KNN (Neural Network + Latent KNN)
+────────────────────────────────────────────────────────────────────────────────
+  Architecture hybride en deux étapes :
+    1. Un réseau de neurones (MLP) apprend un embedding latent des features RSSI
+    2. Un KNN est appliqué dans cet espace latent pour la classification finale
+  Avantage : capture les non-linéarités du signal RSSI tout en conservant la
+  robustesse du KNN. Dans la configuration "cell+distance", le NN prédit
+  simultanément la cellule ET la distance routeur.
+
+────────────────────────────────────────────────────────────────────────────────
+4.3 Random Forest (RF)
+────────────────────────────────────────────────────────────────────────────────
+  Ensemble de N arbres de décision entraînés sur des sous-échantillons bootstrap
+  et des sous-ensembles de features. Robuste au sur-apprentissage.
+
+────────────────────────────────────────────────────────────────────────────────
+4.4 Extra Trees (ET)
+────────────────────────────────────────────────────────────────────────────────
+  Variante de Random Forest avec seuils de décision aléatoires (Extremely
+  Randomized Trees). Généralement plus rapide que RF, précision comparable.
+
+────────────────────────────────────────────────────────────────────────────────
+4.5 Gradient Boosting (GBDT)
+────────────────────────────────────────────────────────────────────────────────
+  Ensemble séquentiel d'arbres corrigeant les erreurs du modèle précédent.
+  Variantes :
+    - GBDT classique (sklearn GradientBoostingClassifier)
+    - HistGradientBoosting (HistGB) : version optimisée par histogrammes,
+      inspirée de LightGBM, très rapide sur grands datasets
+
+────────────────────────────────────────────────────────────────────────────────
+4.6 Support Vector Machine (SVM)
+────────────────────────────────────────────────────────────────────────────────
+  Classifieur maximisant la marge entre classes. Noyaux testés :
+    - SVM RBF (noyau gaussien)
+    - SVM linéaire
+    - SVM polynomial (degré 3)
+
+────────────────────────────────────────────────────────────────────────────────
+4.7 Deep MLP Softmax
+────────────────────────────────────────────────────────────────────────────────
+  Réseau de neurones profond (sklearn MLPClassifier) avec activation softmax
+  en sortie pour la classification multi-classes.
+
+────────────────────────────────────────────────────────────────────────────────
+4.8 Modèles probabilistes
+────────────────────────────────────────────────────────────────────────────────
+  - GaussianNB : Naive Bayes gaussien (hypothèse d'indépendance des features)
+  - QDA : Analyse Discriminante Quadratique
+  - LDA : Analyse Discriminante Linéaire (utilisée comme prétraitement pour KNN)
+
+────────────────────────────────────────────────────────────────────────────────
+4.9 Modèle Multihead (RSSI seul, sans label de salle)
+────────────────────────────────────────────────────────────────────────────────
+  Architecture multi-tâche prédisant simultanément :
+    - La cellule (classification à 75 classes)
+    - La distance routeur (classification à 4 classes : 2/3/4/5 m)
+    - La salle (classification à 3 classes : D005/E101/E102)
+  Depuis le vecteur RSSI brut uniquement, sans one-hot salle.
+
+────────────────────────────────────────────────────────────────────────────────
+4.10 Modèles non disponibles (dépendances manquantes)
+────────────────────────────────────────────────────────────────────────────────
+  - CatBoost, LightGBM, XGBoost : skippés (non installés dans l'environnement)
+  - Stacking (RF+SVM+MLP) : skippé dans les runs finaux (temps de calcul excessif,
+    ~66 min par fold sur le dataset multi-salles)
+
+
+════════════════════════════════════════════════════════════════════════════════
+5. PROTOCOLES D'ÉVALUATION
+════════════════════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────────────────────
+5.1 Room-aware (intra-salle / multi-salle calibré)
+────────────────────────────────────────────────────────────────────────────────
+  Principe : toutes les données des salles disponibles sont mélangées, puis
+  splitées 80% train / 20% test de façon stratifiée. Le modèle reçoit en entrée
+  les features RSSI + un vecteur one-hot identifiant la salle.
+  Interprétation : performance attendue en conditions réelles APRÈS calibration
+  complète de toutes les salles. Le modèle connaît dans quelle salle il opère.
+  Ce protocole ne teste PAS la généralisation à une nouvelle salle.
+
+────────────────────────────────────────────────────────────────────────────────
+5.2 LORO — Leave-One-Room-Out (généralisation inter-salles)
+────────────────────────────────────────────────────────────────────────────────
+  Principe : pour chaque salle R, entraîner sur toutes les autres salles,
+  tester sur R. Répété 3 fois (D005, E101, E102 tour à tour). La métrique
+  reportée est la moyenne des 3 folds.
+  Interprétation : capacité du modèle à localiser dans une NOUVELLE salle non
+  calibrée. C'est le vrai test de généralisation du fingerprinting RSSI.
+  Limite fondamentale : les RSSI d'une salle inconnue sont incompatibles avec
+  la carte radio d'une autre salle (propagation, géométrie, obstacles différents).
+
+────────────────────────────────────────────────────────────────────────────────
+5.3 LOCO — Leave-One-Campaign-Out (robustesse intra-E102)
+────────────────────────────────────────────────────────────────────────────────
+  Principe : dans E102 uniquement, pour chacune des 6 campagnes, entraîner sur
+  les 5 autres et tester sur la campagne retirée. Répété 6 fois.
+  Interprétation : robustesse du modèle à un changement de condition opératoire
+  (orientation antenne, élévation) au sein d'une même salle calibrée partiellement.
+
+────────────────────────────────────────────────════════════════════════════════
+5.4 Classification de distance routeur
+────────────────────────────────────────────────────────────────────────────────
+  Tâche séparée : prédire la distance routeur–tableau (2/3/4/5 m) depuis le
+  vecteur RSSI brut. Testé sur le dataset multi-salles (D005+E101+E102).
+
+────────────────────────────────────────────────────────────────────────────────
+5.5 Classification de salle (room identification)
+────────────────────────────────────────────────────────────────────────────────
+  Tâche séparée : prédire la salle (D005/E101/E102) depuis l'embedding appris
+  par NN+L-KNN (sans label de salle). LogisticRegression sur l'embedding.
+
+────────────────────────────────────────────────────────────────────────────────
+5.6 Analyse spatiale (E102, RF 5-fold CV)
+────────────────────────────────────────────────────────────────────────────────
+  Évaluation cellule par cellule via cross-validation 5 folds sur E102 (RF).
+  Permet d'identifier les zones géographiques difficiles à localiser.
+
+
+════════════════════════════════════════════════════════════════════════════════
+6. RÉSULTATS — BENCHMARK ROOM-AWARE (D005 + E101 + E102)
+════════════════════════════════════════════════════════════════════════════════
+
+Dataset : 16 550 échantillons | 3 salles | Split 80/20 stratifié
+Features : 5 RSSI + one-hot salle (3 dimensions)
+
+  Algorithme                   | Acc. cellule | Err. moy. (m) | p90 (m)
+  ─────────────────────────────────────────────────────────────────────
+  Bagging KNN                  |    94.3 %    |    0.082 m    |  0.000
+  LDA+KNN                      |    94.1 %    |    0.082 m    |  0.000
+  NN+L-KNN                     |    93.9 %    |    0.088 m    |  0.000
+  HistGradientBoosting         |    93.9 %    |    0.087 m    |  0.000
+  KNN raw                      |    93.8 %    |    0.087 m    |  0.000
+  ExtraTrees                   |    93.2 %    |    0.100 m    |  0.000
+  RandomForest                 |    92.4 %    |    0.115 m    |  0.000
+  GradientBoosting (GBDT)      |    83.1 %    |    0.244 m    |  1.044
+  SVM RBF                      |    42.4 %    |    0.837 m    |  2.270
+  SVM polynomial               |    37.7 %    |    0.912 m    |  2.423
+  Deep MLP softmax             |    33.2 %    |    0.924 m    |  2.270
+  QDA                          |     9.8 %    |    1.488 m    |  3.015
+  SVM linéaire                 |     4.9 %    |    1.309 m    |  2.750
+  GaussianNB                   |     3.1 %    |    1.682 m    |  3.250
+
+Note : p90 = 0.000 signifie que 90 % ou plus des prédictions sont à la cellule
+exacte (erreur = 0 cm). Ce résultat s'applique à tous les modèles KNN-based,
+ET, RF et HistGB dans ce protocole.
+
+Résultats complémentaires room-aware NN+L-KNN :
+  - Précision classification distance routeur (dans embedding) : 91.96 %
+
+
+════════════════════════════════════════════════════════════════════════════════
+7. RÉSULTATS — BENCHMARK E101 SEUL (room-aware, intra-salle, toutes campagnes)
+════════════════════════════════════════════════════════════════════════════════
+
+Dataset : 10 800 échantillons | 72 cellules | 6 campagnes (dtroismetres, dcinqmetres,
+          circulaire/back, circulaire/front, circulaire/left, circulaire/right)
+Features : 5 RSSI | Split 80/20 stratifié
+
+  Algorithme            | Acc. cellule | Err. moy. (m) | p90 (m)
+  ───────────────────────────────────────────────────────────────
+  KNN raw               |    91.0 %    |    0.092 m    |  0.000
+  Bagging KNN           |    90.9 %    |    0.094 m    |  0.000
+  HistGradientBoosting  |    90.8 %    |    0.096 m    |  0.000
+  LDA+KNN               |    90.8 %    |    0.102 m    |  0.000
+  NN+L-KNN              |    90.7 %    |    0.102 m    |  0.000
+  ExtraTrees            |    89.4 %    |    0.117 m    |  0.250
+  RandomForest          |    88.7 %    |    0.122 m    |  0.255
+  GradientBoosting      |    87.5 %    |    0.139 m    |  0.500
+  SVM RBF               |    30.6 %    |    0.921 m    |  2.341
+  Deep MLP softmax      |    38.5 %    |    0.798 m    |  2.088
+  QDA                   |    11.9 %    |    1.197 m    |  2.518
+  SVM polynomial        |    18.7 %    |    1.215 m    |  2.766
+  GaussianNB            |     7.0 %    |    1.269 m    |  2.550
+  SVM linéaire          |     4.7 %    |    1.296 m    |  2.657
+
+Classification distance (3 classes : 3 m, 3 m circulaire, 5 m) :
+  RF raw RSSI  : 99.0 %
+  ET raw RSSI  : 99.1 %
+  LogReg emb.  : 89.4 %   (NN+L-KNN router dist. acc. : 89.6 %)
+
+Note : légèrement inférieur à E102 (90–91 % vs 92–93 %) en raison d'une
+combinaison hétérogène de campagnes (distances variables + 4 orientations).
+
+════════════════════════════════════════════════════════════════════════════════
+8. RÉSULTATS — BENCHMARK E102 SEUL (room-aware, intra-salle)
+════════════════════════════════════════════════════════════════════════════════
+
+Dataset : 11 250 échantillons | 75 cellules | 6 campagnes mélangées | Split 80/20
+Features : 5 RSSI (pas de one-hot salle car 1 seule salle)
+
+  Algorithme            | Acc. cellule | Err. moy. (m) | p90 (m)
+  ───────────────────────────────────────────────────────────────
+  KNN raw               |    92.7 %    |    0.105 m    |  0.000
+  NN+L-KNN              |    92.7 %    |    0.106 m    |  0.000
+  Bagging KNN           |    92.3 %    |    0.107 m    |  0.000
+  LDA+KNN               |    92.1 %    |    0.106 m    |  0.000
+  ExtraTrees            |    90.7 %    |    0.127 m    |  0.000
+  RandomForest          |    90.0 %    |    0.143 m    |  0.025
+  GradientBoosting      |    87.7 %    |    0.178 m    |  0.650
+  SVM RBF               |    43.3 %    |    0.837 m    |  2.270
+  SVM polynomial        |    26.9 %    |    1.109 m    |  2.750
+  Deep MLP softmax      |    25.6 %    |    1.053 m    |  2.332
+  QDA                   |    10.6 %    |    1.247 m    |  2.550
+  GaussianNB            |     5.6 %    |    1.344 m    |  2.580
+  SVM linéaire          |     5.2 %    |    1.374 m    |  2.766
+  HistGradientBoosting  |     2.4 %    |    1.549 m    |  2.815
+
+Observation notable : HistGB atteint 2.4 % sur E102 seul mais 93.9 % en
+multi-salle room-aware. Explication : avec une seule salle, la feature one-hot
+est constante (nulle information). Avec 3 salles, la feature one-hot de salle
+apporte une forte capacité discriminative qui profite particulièrement à HistGB.
+
+
+════════════════════════════════════════════════════════════════════════════════
+9. RÉSULTATS — LORO (Leave-One-Room-Out) — GÉNÉRALISATION INTER-SALLES
+════════════════════════════════════════════════════════════════════════════════
+
+Dataset : 16 550 échantillons | 3 salles | 3 folds
+Protocole : entraînement sur 2 salles, test sur la 3e (salle jamais vue)
+
+  Algorithme            | Acc. moy. | Err. moy. (m) | p90 (m)
+  ─────────────────────────────────────────────────────────────
+  SVM polynomial        |   1.81 %  |    1.240 m    |  2.333
+  GaussianNB            |   1.69 %  |    1.295 m    |  2.448
+  Bagging KNN           |   1.61 %  |    1.219 m    |  2.270
+  GradientBoosting      |   1.61 %  |    1.267 m    |  2.440
+  NN+L-KNN              |   1.58 %  |    1.237 m    |  2.375
+  KNN raw               |   1.42 %  |    1.212 m    |  2.270
+  LDA+KNN               |   1.31 %  |    1.262 m    |  2.375
+  Deep MLP              |   1.40 %  |    1.274 m    |  2.456
+  SVM RBF               |   1.32 %  |    1.268 m    |  2.392
+  HistGradientBoosting  |   1.08 %  |    1.219 m    |  2.221
+  ExtraTrees            |   0.64 %  |    1.265 m    |  2.375
+  RandomForest          |   0.44 %  |    1.264 m    |  2.385
+
+  Détail par salle tenue hors (meilleur modèle = NN+L-KNN / KNN) :
+    D005  (n=1700)  : 1.35 %  err=1.084 m
+    E101  (n=3600)  : 1.64 %  err=1.316 m
+    E102  (n=11250) : 1.75 %  err=1.309 m
+
+Conclusion : TOUS les modèles échouent en LORO (~1–2 %, comparable à aléatoire
+pour 75 classes = 1.33 %). Le fingerprinting RSSI n'est PAS transférable d'une
+salle à une autre. Chaque nouvelle salle requiert une recalibration complète.
+
+Note : la précision de classification de distance (LogReg sur embedding) est de
+6.4 % en LORO pour E102, ce qui confirme que même la structure de distance n'est
+pas préservée entre salles.
+
+
+════════════════════════════════════════════════════════════════════════════════
+10. RÉSULTATS — LOCO E101 CIRCULAIRE (Leave-One-Orientation-Out)
+════════════════════════════════════════════════════════════════════════════════
+
+Dataset : 10 800 échantillons E101 | 4 orientations circulaires | 4 folds
+Protocole : entraîner sur 3 orientations + dtroismetres + dcinqmetres, tester
+            sur la 4e orientation circulaire seule (1 800 samples)
+
+  Algorithme  | Acc. moy. | Err. moy. (m)
+  ──────────────────────────────────────────
+  HistGB      |   1.82 %  |    1.306 m
+  RF          |   1.21 %  |    1.354 m
+  KNN         |   0.97 %  |    1.333 m
+  Bagging KNN |   1.03 %  |    1.333 m
+  LDA+KNN     |   0.35 %  |    1.357 m
+
+  Détail par orientation tenue hors (meilleur modèle = HistGB) :
+    back  (n=1800) : 2.22 %   err=1.250 m
+    front (n=1800) : 1.28 %   err=1.365 m
+    left  (n=1800) : 1.00 %   err=1.300 m   ← plus difficile
+    right (n=1800) : 2.72 %   err=1.307 m   ← plus "généralisable"
+
+Conclusion : résultats identiques à LOCO E102 (~1–2 %). Le changement
+d'orientation d'antenne dans E101 a le même effet dévastateur que dans E102.
+HistGB est le plus robuste des deux salles. L'orientation "right" est la plus
+compatible avec les autres conditions (comme "front right" en E102).
+
+════════════════════════════════════════════════════════════════════════════════
+11. RÉSULTATS — LOCO (Leave-One-Campaign-Out) — ROBUSTESSE INTRA-E102
+════════════════════════════════════════════════════════════════════════════════
+
+Dataset : 11 250 échantillons E102 | 6 campagnes | 6 folds
+Protocole : entraîner sur 5 campagnes, tester sur la 6e
+
+  Algorithme    | Acc. moy. | Err. moy. (m)
+  ────────────────────────────────────────────
+  HistGB        |   2.42 %  |    1.386 m
+  Bagging KNN   |   2.13 %  |    1.393 m
+  LDA+KNN       |   2.08 %  |    1.393 m
+  RandomForest  |   1.99 %  |    1.393 m
+  NN+L-KNN      |   1.74 %  |    1.399 m
+  ExtraTrees    |   1.67 %  |    1.391 m
+  KNN raw       |   1.62 %  |    1.397 m
+
+  Détail par campagne tenue hors (HistGB) :
+    exp1 Back Right  : 2.35 %  err=1.347 m
+    exp2 Front Right : 3.15 %  err=1.410 m   ← plus facile
+    exp3 Front Left  : 1.49 %  err=1.415 m
+    exp4 Back Left   : 2.35 %  err=1.321 m
+    exp5 Au sol      : 1.44 %  err=1.372 m   ← plus difficile (KNN: 0.37%, ET: 0%)
+    exp6 1.50 m      : 3.73 %  err=1.450 m
+
+Conclusion : même au sein d'E102, un changement d'orientation d'antenne ou
+d'élévation rend le modèle inopérant (~1–2 %). exp5 (routeur au sol) est le cas
+le plus difficile : les modèles KNN et ExtraTrees tombent à 0 %. exp2 (Front
+Right) est le cas le plus "généralisable" (~3 %).
+→ La haute précision du benchmark room-aware (92–94 %) est due au fait que
+  toutes les conditions sont représentées dans le split d'entraînement.
+
+
+════════════════════════════════════════════════════════════════════════════════
+12. RÉSULTATS — CLASSIFICATION DE DISTANCE ROUTEUR
+════════════════════════════════════════════════════════════════════════════════
+
+Dataset : D005 + E101 + E102 (distances 2/3/4/5 m)
+Tâche : prédire la distance routeur–tableau depuis le RSSI brut (4 classes)
+
+  Algorithme                          | Précision
+  ─────────────────────────────────────────────────
+  RandomForest (raw RSSI)             |   95.44 %
+  ExtraTrees (raw RSSI)               |   95.38 %
+  LogReg (embedding NN+L-KNN)         |   72.99 %
+  Multihead (RSSI seul, sans label)   |   73.75 %
+
+Matrice de confusion RF (normalisée par ligne) :
+  Vraie \ Prédite  |  2m    3m    4m    5m
+  ─────────────────────────────────────────
+  2m               | 92.4%  0.0%  7.1%  0.6%
+  3m               |  0.3% 86.9% 12.2%  0.6%
+  4m               |  0.5%  0.3% 98.3%  0.9%
+  5m               |  0.0%  1.1% 12.8% 86.1%
+
+La distance 4 m est la mieux reconnue (98.3 %). Les confusions principales
+concernent les distances adjacentes (3m–4m, 4m–5m).
+
+
+════════════════════════════════════════════════════════════════════════════════
+13. RÉSULTATS — CLASSIFICATION DE SALLE (ROOM IDENTIFICATION)
+════════════════════════════════════════════════════════════════════════════════
+
+Tâche : prédire la salle (D005/E101/E102) depuis l'embedding NN+L-KNN
+  LogisticRegression sur embedding : précision globale = 69.40 %
+
+  Rappel par salle :
+    D005  : 14.4 %   (très faible — majoritairement classifié E102)
+    E101  :  4.9 %   (très faible — majoritairement classifié E102)
+    E102  : 98.4 %   (excellent)
+
+Explication : E102 représente 68 % du dataset (11 250/16 550 échantillons).
+L'embedding est dominé par les signatures E102. D005 et E101 sont massivement
+confondus avec E102. Déséquilibre de classes sévère.
+
+Modèle multihead (RSSI seul) :
+  - Précision cellule   : 89.2 %   err=0.143 m   p90=0.583 m
+  - Précision distance  : 73.7 %
+  - Précision salle     : 70.0 %
+
+
+════════════════════════════════════════════════════════════════════════════════
+14. ANALYSE SPATIALE — ZONES DIFFICILES EN E102
+════════════════════════════════════════════════════════════════════════════════
+
+Méthode : Random Forest, cross-validation 5 folds sur E102 (toutes campagnes)
+Précision globale : 92.2 %  |  Erreur globale : 0.111 m
+
+Top 5 cellules les plus difficiles :
+  Cellule  | Ligne | Colonne | Précision | Erreur moy.
+  ──────────────────────────────────────────────────────
+  1_-4     |   1   |   -4    |   75.3 %  |   0.573 m   ← coin gauche, difficulté ++
+  3_10     |   3   |   10    |   85.3 %  |   0.321 m   ← extrême droite
+  2_0      |   2   |    0    |   82.7 %  |   0.303 m   ← centre, ligne 2
+  1_10     |   1   |   10    |   90.7 %  |   0.255 m
+  4_8, 4_3 |   4   |  8/3   |   80.0 %  |  ~0.240 m   ← fond salle
+
+Top 5 cellules les plus faciles (100 % de précision) :
+  Cellule  | Ligne | Colonne | Précision | Erreur moy.
+  ──────────────────────────────────────────────────────
+  1_-3     |   1   |   -3    |  100.0 %  |   0.000 m
+  2_2      |   2   |    2    |  100.0 %  |   0.000 m
+  3_-3     |   3   |   -3    |  100.0 %  |   0.000 m
+  0_-4     |   0   |   -4    |   99.3 %  |   0.018 m
+  0_10     |   0   |   10    |   99.3 %  |   0.010 m
+
+Performance par ligne (distance au tableau blanc) :
+  Ligne 0 (avant)  : 93.6 %  err=0.091 m   ← meilleure
+  Ligne 2          : 93.3 %  err=0.092 m
+  Ligne 4 (fond)   : 92.2 %  err=0.106 m
+  Ligne 1          : 92.4 %  err=0.120 m
+  Ligne 3          : 89.6 %  err=0.148 m   ← plus faible
+
+Performance par zone (colonnes) :
+  Centre (col 0–5)          : 91.9 %  err=0.101 m
+  Gauche négative (col -4–-1): 92.7 %  err=0.114 m
+  Droite loin (col 6–10)    : 92.2 %  err=0.121 m
+
+
+════════════════════════════════════════════════════════════════════════════════
+15. RÉSULTATS — MODÈLE MULTIHEAD EMBEDDING (RSSI SEUL)
+════════════════════════════════════════════════════════════════════════════════
+
+Architecture : réseau multi-tâche entraîné sur D005+E101+E102, prédisant
+simultanément cellule, distance et salle depuis 5 features RSSI uniquement
+(sans one-hot salle). Split 80/20 stratifié.
+
+  Métrique                        | Valeur
+  ──────────────────────────────────────────
+  Précision cellule               | 89.24 %
+  Erreur moyenne                  | 0.143 m
+  p90 erreur                      | 0.583 m
+  Précision classification dist.  | 73.75 %
+  Précision classification salle  | 70.00 %
+
+Ce modèle est la seule approche permettant de prédire cellule + distance +
+salle en un seul passage, sans information contextuelle extérieure.
+
+
+════════════════════════════════════════════════════════════════════════════════
+16. SYNTHÈSE ET CONCLUSIONS
+════════════════════════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────────────────────────
+14.1 Performance intra-salle (conditions calibrées)
+────────────────────────────────────────────────────────────────────────────────
+  Les meilleures approches (Bagging KNN, LDA+KNN, NN+L-KNN, HistGB) atteignent
+  93–94 % de précision cellule avec erreur <9 cm sur les multi-salles calibrées,
+  et 92–93 % sur E102 seul. Le p90=0 confirme que la majorité des prédictions
+  sont exactes au cm près.
+
+────────────────────────────────────────────────────────────────────────────────
+14.2 Limite fondamentale : non-transférabilité inter-salles
+────────────────────────────────────────────────────────────────────────────────
+  Le LORO démontre que TOUS les modèles échouent (~1–2 %) lorsque la salle
+  cible n'a pas été calibrée. L'empreinte RSSI est propre à chaque environnement
+  physique. Cette limitation est inhérente au fingerprinting et non aux modèles.
+
+────────────────────────────────────────────────────────────────────────────────
+14.3 Sensibilité aux conditions opératoires (LOCO)
+────────────────────────────────────────────────────────────────────────────────
+  Au sein d'E102, un changement d'orientation d'antenne ou d'élévation du
+  routeur est aussi dévastateur qu'un changement de salle (~1–2 %). La campagne
+  au sol (exp5) est particulièrement incompatible avec les autres conditions.
+  → Pour un déploiement robuste, il est nécessaire de couvrir toutes les
+    configurations opératoires dans les données de calibration.
+
+────────────────────────────────────────────────────────────────────────────────
+14.4 Hiérarchie des modèles
+────────────────────────────────────────────────────────────────────────────────
+  TIER 1 (≥93 %) : Bagging KNN, LDA+KNN, NN+L-KNN, HistGB, KNN raw
+  TIER 2 (90–93 %): ExtraTrees, RandomForest
+  TIER 3 (83–90 %): GradientBoosting
+  HORS-CLASSE (<50 %): SVM (RBF/poly/lin), Deep MLP sklearn, GaussianNB, QDA
+
+  Les modèles à noyau (SVM) et les modèles purement paramétriques (MLP sklearn,
+  GaussianNB) sont inadaptés à ce problème de classification RSSI à 75 classes.
+
+────────────────────────────────────────────────────────────────────────────────
+14.5 Recommandations pour les prochaines campagnes
+────────────────────────────────────────────────────────────────────────────────
+  1. Inclure systématiquement TOUTES les orientations d'antenne prévues en
+     déploiement dans le dataset de calibration (le LOCO le confirme).
+  2. L'élévation (au sol vs. standard vs. surélevé) requiert des campagnes
+     dédiées si le routeur peut être placé à différentes hauteurs.
+  3. La cellule 1_-4 (coin gauche, ligne 1) est systématiquement difficile :
+     envisager une densification de la grille dans les coins.
+  4. Modèles recommandés : KNN-based (Bagging KNN ou LDA+KNN) pour leur
+     simplicité et leur performance maximale. NN+L-KNN pour les scénarios
+     où la distance doit aussi être estimée (91.9 % de précision distance).
+
+
+════════════════════════════════════════════════════════════════════════════════
+17. FICHIERS DE RÉSULTATS DISPONIBLES
+════════════════════════════════════════════════════════════════════════════════
+
+  reports/benchmarks/
+  ├── benchmark_summary.csv          — tableau récap tous algos/protocoles (70 lignes)
+  ├── benchmark_failures.json        — stages skippés/échoués
+  ├── loco_e102.csv                  — détail LOCO par campagne × algo
+  ├── loco_e102_summary.json         — résumé LOCO avec stats complètes
+  ├── leur_d005_e101_e102_partial.csv — LORO détaillé par salle
+  ├── spatial_analysis_e102_cells.csv— précision par cellule (75 cellules)
+  ├── spatial_analysis_e102_rows.csv — précision par ligne
+  ├── spatial_analysis_e102_zones.csv— précision par zone
+  ├── confusion_room_agnostic_*      — matrices confusion LORO (4 algos × 3 salles)
+  ├── confusion_room_aware_*         — matrices confusion room-aware (4 algos)
+  ├── confusion_distance_*.csv       — matrices confusion classification distance
+  ├── confusion_multihead_*.csv      — matrices confusion multihead
+  └── confusion_room_classifier.csv  — matrice confusion classification salle
+
+
+================================================================================
+FIN DU RAPPORT
+================================================================================

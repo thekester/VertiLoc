@@ -1,0 +1,219 @@
+{
+  "KNN": {
+    "mean_cell_accuracy": 0.01617777777777778,
+    "mean_error_m": 1.397353366887315,
+    "mean_p90_m": 2.5506344978680837,
+    "per_campaign": {
+      "exp1_back_right": {
+        "cell_accuracy": 0.013866666666666666,
+        "mean_error_m": 1.3675471511672432
+      },
+      "exp2_front_right": {
+        "cell_accuracy": 0.0272,
+        "mean_error_m": 1.3547883614728717
+      },
+      "exp3_front_left": {
+        "cell_accuracy": 0.017066666666666667,
+        "mean_error_m": 1.44731352900439
+      },
+      "exp4_back_left": {
+        "cell_accuracy": 0.012266666666666667,
+        "mean_error_m": 1.4002214738402885
+      },
+      "exp5_ground": {
+        "cell_accuracy": 0.0037333333333333333,
+        "mean_error_m": 1.4453187667678207
+      },
+      "exp6_1m50": {
+        "cell_accuracy": 0.022933333333333333,
+        "mean_error_m": 1.3689309190712766
+      }
+    }
+  },
+  "Bagging KNN": {
+    "mean_cell_accuracy": 0.021333333333333333,
+    "mean_error_m": 1.3926316599515072,
+    "mean_p90_m": 2.5173011645347505,
+    "per_campaign": {
+      "exp1_back_right": {
+        "cell_accuracy": 0.013866666666666666,
+        "mean_error_m": 1.3844282075544923
+      },
+      "exp2_front_right": {
+        "cell_accuracy": 0.0368,
+        "mean_error_m": 1.3369371622999815
+      },
+      "exp3_front_left": {
+        "cell_accuracy": 0.016,
+        "mean_error_m": 1.4223402095126503
+      },
+      "exp4_back_left": {
+        "cell_accuracy": 0.012266666666666667,
+        "mean_error_m": 1.425219768471224
+      },
+      "exp5_ground": {
+        "cell_accuracy": 0.020266666666666665,
+        "mean_error_m": 1.4165921533172412
+      },
+      "exp6_1m50": {
+        "cell_accuracy": 0.0288,
+        "mean_error_m": 1.3702724585534538
+      }
+    }
+  },
+  "LDA+KNN": {
+    "mean_cell_accuracy": 0.0208,
+    "mean_error_m": 1.3930665374264148,
+    "mean_p90_m": 2.5186467584042096,
+    "per_campaign": {
+      "exp1_back_right": {
+        "cell_accuracy": 0.010133333333333333,
+        "mean_error_m": 1.4139001092287808
+      },
+      "exp2_front_right": {
+        "cell_accuracy": 0.02666666666666667,
+        "mean_error_m": 1.4316283294447831
+      },
+      "exp3_front_left": {
+        "cell_accuracy": 0.021333333333333333,
+        "mean_error_m": 1.4254120175096618
+      },
+      "exp4_back_left": {
+        "cell_accuracy": 0.028266666666666666,
+        "mean_error_m": 1.342848522090303
+      },
+      "exp5_ground": {
+        "cell_accuracy": 0.0208,
+        "mean_error_m": 1.439694064303992
+      },
+      "exp6_1m50": {
+        "cell_accuracy": 0.0176,
+        "mean_error_m": 1.3049161819809691
+      }
+    }
+  },
+  "RandomForest": {
+    "mean_cell_accuracy": 0.019911111111111112,
+    "mean_error_m": 1.3925167194929289,
+    "mean_p90_m": 2.5670838306452057,
+    "per_campaign": {
+      "exp1_back_right": {
+        "cell_accuracy": 0.0208,
+        "mean_error_m": 1.337580219381465
+      },
+      "exp2_front_right": {
+        "cell_accuracy": 0.03573333333333333,
+        "mean_error_m": 1.3415120201816313
+      },
+      "exp3_front_left": {
+        "cell_accuracy": 0.021866666666666666,
+        "mean_error_m": 1.4546671776701925
+      },
+      "exp4_back_left": {
+        "cell_accuracy": 0.0176,
+        "mean_error_m": 1.364695976317141
+      },
+      "exp5_ground": {
+        "cell_accuracy": 0.005866666666666667,
+        "mean_error_m": 1.4136080199883265
+      },
+      "exp6_1m50": {
+        "cell_accuracy": 0.0176,
+        "mean_error_m": 1.4430369034188157
+      }
+    }
+  },
+  "ExtraTrees": {
+    "mean_cell_accuracy": 0.016711111111111114,
+    "mean_error_m": 1.3909393090337936,
+    "mean_p90_m": 2.5179949634831966,
+    "per_campaign": {
+      "exp1_back_right": {
+        "cell_accuracy": 0.018666666666666668,
+        "mean_error_m": 1.3686127346829489
+      },
+      "exp2_front_right": {
+        "cell_accuracy": 0.030933333333333334,
+        "mean_error_m": 1.3617053603343563
+      },
+      "exp3_front_left": {
+        "cell_accuracy": 0.017066666666666667,
+        "mean_error_m": 1.415778784989783
+      },
+      "exp4_back_left": {
+        "cell_accuracy": 0.016,
+        "mean_error_m": 1.3311377145018797
+      },
+      "exp5_ground": {
+        "cell_accuracy": 0.0,
+        "mean_error_m": 1.4020600271972028
+      },
+      "exp6_1m50": {
+        "cell_accuracy": 0.0176,
+        "mean_error_m": 1.4663412324965912
+      }
+    }
+  },
+  "HistGB": {
+    "mean_cell_accuracy": 0.024177777777777774,
+    "mean_error_m": 1.386068326690914,
+    "mean_p90_m": 2.5506344978680837,
+    "per_campaign": {
+      "exp1_back_right": {
+        "cell_accuracy": 0.023466666666666667,
+        "mean_error_m": 1.3474635036147171
+      },
+      "exp2_front_right": {
+        "cell_accuracy": 0.031466666666666664,
+        "mean_error_m": 1.4104924915632266
+      },
+      "exp3_front_left": {
+        "cell_accuracy": 0.014933333333333333,
+        "mean_error_m": 1.4148275573717723
+      },
+      "exp4_back_left": {
+        "cell_accuracy": 0.023466666666666667,
+        "mean_error_m": 1.3214587856698927
+      },
+      "exp5_ground": {
+        "cell_accuracy": 0.0144,
+        "mean_error_m": 1.3718962499075777
+      },
+      "exp6_1m50": {
+        "cell_accuracy": 0.037333333333333336,
+        "mean_error_m": 1.4502713720182976
+      }
+    }
+  },
+  "NN+L-KNN": {
+    "mean_cell_accuracy": 0.017422222222222224,
+    "mean_error_m": 1.3992771293925041,
+    "mean_p90_m": 2.5788630983277945,
+    "per_campaign": {
+      "exp1_back_right": {
+        "cell_accuracy": 0.005333333333333333,
+        "mean_error_m": 1.384070902575788
+      },
+      "exp2_front_right": {
+        "cell_accuracy": 0.03306666666666667,
+        "mean_error_m": 1.331307037179545
+      },
+      "exp3_front_left": {
+        "cell_accuracy": 0.017066666666666667,
+        "mean_error_m": 1.4322194926818512
+      },
+      "exp4_back_left": {
+        "cell_accuracy": 0.0128,
+        "mean_error_m": 1.3945644287740597
+      },
+      "exp5_ground": {
+        "cell_accuracy": 0.0,
+        "mean_error_m": 1.448073957321559
+      },
+      "exp6_1m50": {
+        "cell_accuracy": 0.03626666666666667,
+        "mean_error_m": 1.4054269578222225
+      }
+    }
+  }
+}

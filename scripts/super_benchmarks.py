@@ -26,14 +26,15 @@ def _format_distances(distances: list[float]) -> str:
 
 def _collect_available() -> dict[str, list[float]]:
     rooms: dict[str, list[float]] = {}
-    for room, folders in bm.ROOM_CAMPAIGNS.items():
+    for room, specs in bm.ROOM_CAMPAIGNS.items():
         distances = set()
-        for folder in folders:
-            if not folder.exists():
+        for spec in specs:
+            if not spec.path.exists():
                 continue
-            inferred = infer_router_distance(folder.name)
-            if inferred is not None:
-                distances.add(float(inferred))
+            try:
+                distances.add(float(spec.resolved_distance()))
+            except ValueError:
+                pass
         if distances:
             rooms[room] = sorted(distances)
     return rooms
@@ -215,6 +216,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Run all optional models, including GPC.",
     )
     parser.add_argument(
+        "--no-stacking",
+        action="store_true",
+        help="Skip the Stacking classifier (very slow on large datasets).",
+    )
+    parser.add_argument(
         "--non-interactive",
         action="store_true",
         help="Fail if required inputs are missing instead of prompting.",
@@ -312,6 +318,8 @@ def main(argv: list[str] | None = None) -> int:
         cli_args += ["--gpc-max-samples", str(gpc_max_samples)]
     if args.all_models:
         cli_args += ["--all-models"]
+    if args.no_stacking:
+        cli_args += ["--no-stacking"]
 
     print("\nLaunching benchmarks...")
     bm.main(cli_args)

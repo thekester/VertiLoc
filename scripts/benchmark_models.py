@@ -97,14 +97,37 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 console = Console()
 
 # Campaign folders grouped by room, excluding circular trajectories.
-ROOM_CAMPAIGNS = {
+# Values are CampaignSpec objects; specify router_distance_m explicitly when
+# it cannot be inferred from the folder name (e.g. "exp1" would give 1 m
+# instead of the correct 4 m for E102).
+_E102_ROOT = PROJECT_ROOT / "data" / "E102"
+ROOM_CAMPAIGNS: dict[str, list[CampaignSpec]] = {
     "D005": [
-        PROJECT_ROOT / "data" / "D005" / "ddeuxmetres",
-        PROJECT_ROOT / "data" / "D005" / "dquatremetres",
+        CampaignSpec(PROJECT_ROOT / "data" / "D005" / "ddeuxmetres"),
+        CampaignSpec(PROJECT_ROOT / "data" / "D005" / "dquatremetres"),
     ],
     "E101": [
-        PROJECT_ROOT / "data" / "E101" / "dtroismetres",
-        PROJECT_ROOT / "data" / "E101" / "dcinqmetres",
+        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "dtroismetres"),
+        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "dcinqmetres"),
+        # Campagnes circulaires (4 orientations antenne, distance = 3 m)
+        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "circulaire" / "back",  router_distance_m=3.0),
+        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "circulaire" / "front", router_distance_m=3.0),
+        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "circulaire" / "left",  router_distance_m=3.0),
+        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "circulaire" / "right", router_distance_m=3.0),
+    ],
+    "E102": [
+        # Expérience 1 – Back Right, lignes 0-4 (fenêtres/porte variables)
+        CampaignSpec(_E102_ROOT / "exp1", router_distance_m=4.0),
+        # Expérience 2 – Front Right, lignes 1-4
+        CampaignSpec(_E102_ROOT / "exp2", router_distance_m=4.0),
+        # Expérience 3 – Front Left, lignes 0-4
+        CampaignSpec(_E102_ROOT / "exp3", router_distance_m=4.0),
+        # Expérience 4 – Back Left, lignes 0-4
+        CampaignSpec(_E102_ROOT / "exp4", router_distance_m=4.0),
+        # Expérience 5 – élévation au sol, mode Front
+        CampaignSpec(_E102_ROOT / "elevation" / "exp5", router_distance_m=4.0),
+        # Expérience 6 – élévation table/table (~1.50 m), mode Front
+        CampaignSpec(_E102_ROOT / "elevation" / "exp6", router_distance_m=4.0),
     ],
 }
 
@@ -134,7 +157,7 @@ def _distance_matches(distance: float, distance_filter: set[float]) -> bool:
 def _filter_room_campaigns(
     room_filter: list[str] | None,
     distance_filter: list[float] | None,
-) -> dict[str, list[Path]]:
+) -> dict[str, list[CampaignSpec]]:
     normalized_rooms = None
     if room_filter:
         normalized_rooms = {_normalize_room_name(room) for room in room_filter if room and room.strip()}
@@ -142,17 +165,20 @@ def _filter_room_campaigns(
             normalized_rooms = None
 
     distance_set = set(distance_filter) if distance_filter else None
-    filtered: dict[str, list[Path]] = {}
-    for room, folders in ROOM_CAMPAIGNS.items():
+    filtered: dict[str, list[CampaignSpec]] = {}
+    for room, specs in ROOM_CAMPAIGNS.items():
         if normalized_rooms and _normalize_room_name(room) not in normalized_rooms:
             continue
-        selected: list[Path] = []
-        for folder in folders:
+        selected: list[CampaignSpec] = []
+        for spec in specs:
             if distance_set:
-                inferred = infer_router_distance(folder.name)
-                if inferred is None or not _distance_matches(inferred, distance_set):
+                try:
+                    dist = spec.resolved_distance()
+                except ValueError:
                     continue
-            selected.append(folder)
+                if not _distance_matches(dist, distance_set):
+                    continue
+            selected.append(spec)
         if selected:
             filtered[room] = selected
     return filtered
@@ -277,15 +303,15 @@ def load_cross_room(
     campaigns = _filter_room_campaigns(room_filter, distance_filter)
     if not campaigns:
         raise ValueError("No campaign folders match the provided filters.")
-    for room, folders in campaigns.items():
-        for folder in folders:
-            if folder.exists():
-                df_room = load_measurements([CampaignSpec(folder)])
+    for room, specs in campaigns.items():
+        for spec in specs:
+            if spec.path.exists():
+                df_room = load_measurements([spec])
                 df_room["room"] = room
-                df_room["campaign"] = f"{room}/{folder.name}"
+                df_room["campaign"] = f"{room}/{spec.path.name}"
                 frames.append(df_room)
             else:
-                missing.append(folder)
+                missing.append(spec.path)
 
     if missing:
         raise FileNotFoundError(f"Missing campaign folders: {missing}")
@@ -371,6 +397,7 @@ def benchmark_room_agnostic(
     cell_lookup: pd.DataFrame,
     *,
     skip_optional: bool = False,
+    skip_stacking: bool = False,
     run_gpc: bool = False,
     gpc_max_samples: int | None = None,
 ) -> pd.DataFrame:
@@ -379,6 +406,8 @@ def benchmark_room_agnostic(
     label_to_idx, idx_to_label = _make_label_encoder(labels)
     rooms = sorted(df["room"].unique())
     optional_stages = {"KNN Mahalanobis", "GPC", "CatBoost", "LightGBM", "XGBoost"}
+    if skip_stacking:
+        optional_stages.add("Stacking")
 
     progress = Progress(
         SpinnerColumn(),
@@ -928,6 +957,7 @@ def benchmark_room_aware(
     cell_lookup: pd.DataFrame,
     *,
     skip_optional: bool = False,
+    skip_stacking: bool = False,
     run_gpc: bool = False,
     gpc_max_samples: int | None = None,
 ) -> dict:
@@ -946,6 +976,8 @@ def benchmark_room_aware(
         labels = sorted(df["grid_cell"].unique())
         label_to_idx, idx_to_label = _make_label_encoder(labels)
         optional_stages = {"KNN Mahalanobis", "GPC", "CatBoost", "LightGBM", "XGBoost"}
+        if skip_stacking:
+            optional_stages.add("Stacking")
 
         def log_stage(stage_name: str, fn, *, fallback=None):
             if skip_optional and stage_name in optional_stages and not (stage_name == "GPC" and run_gpc):
@@ -1674,6 +1706,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Run all optional models, including GPC.",
     )
+    parser.add_argument(
+        "--no-stacking",
+        action="store_true",
+        help="Skip the Stacking classifier (very slow on large datasets).",
+    )
     return parser.parse_args(argv)
 
 
@@ -1727,6 +1764,7 @@ def main(argv: list[str] | None = None):
                 df,
                 cell_lookup,
                 skip_optional=args.skip_optional,
+                skip_stacking=args.no_stacking,
                 run_gpc=args.run_gpc,
                 gpc_max_samples=args.gpc_max_samples,
             )
@@ -1744,6 +1782,7 @@ def main(argv: list[str] | None = None):
                 df_holdout,
                 cell_lookup,
                 skip_optional=args.skip_optional,
+                skip_stacking=args.no_stacking,
                 run_gpc=args.run_gpc,
                 gpc_max_samples=args.gpc_max_samples,
             )
@@ -1761,6 +1800,7 @@ def main(argv: list[str] | None = None):
         df,
         cell_lookup,
         skip_optional=args.skip_optional,
+        skip_stacking=args.no_stacking,
         run_gpc=args.run_gpc,
         gpc_max_samples=args.gpc_max_samples,
     )

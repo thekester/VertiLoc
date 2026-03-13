@@ -1,0 +1,19 @@
+{
+  "mode": "neighbor",
+  "metric": "hex",
+  "radius": 1,
+  "alpha": 0.35,
+  "beta": 0.9,
+  "iters": 2,
+  "max_confidence": 0.95,
+  "nn_max_iter": 260,
+  "mean_raw_cell_accuracy": 0.017422222222222224,
+  "mean_smooth_cell_accuracy": 0.017422222222222224,
+  "mean_delta_cell_accuracy": 0.0,
+  "mean_raw_mean_error_m": 1.4030141788285266,
+  "mean_smooth_mean_error_m": 1.4029972255121343,
+  "mean_delta_mean_error_m": -1.6953316392435507e-05,
+  "total_fixed": 0,
+  "total_broken": 0,
+  "total_net_fixed": 0
+}

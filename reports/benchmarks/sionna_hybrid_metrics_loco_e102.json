@@ -1,0 +1,354 @@
+{
+  "experiment": "sionna_rt_hybrid_proxy_v2",
+  "feature_columns": [
+    "Signal",
+    "Noise",
+    "signal_A1",
+    "signal_A2",
+    "signal_A3"
+  ],
+  "campaigns": [
+    "/home/test/Documents/projetretd/data/E102/exp1",
+    "/home/test/Documents/projetretd/data/E102/exp2",
+    "/home/test/Documents/projetretd/data/E102/exp3",
+    "/home/test/Documents/projetretd/data/E102/exp4",
+    "/home/test/Documents/projetretd/data/E102/elevation/exp5",
+    "/home/test/Documents/projetretd/data/E102/elevation/exp6"
+  ],
+  "config": {
+    "protocol": "loco_e102",
+    "test_size": 0.2,
+    "random_state": 42,
+    "ridge_alpha": 1.0,
+    "room_depth_m": 4.0,
+    "default_router_height_m": 1.2
+  },
+  "sionna_rt": {
+    "requested": false,
+    "available": false,
+    "reason": "disabled_by_flag"
+  },
+  "results": {
+    "protocol": "loco_e102",
+    "folds": [
+      {
+        "samples": {
+          "train": 9375,
+          "test": 1875,
+          "candidate_states": 75
+        },
+        "models": {
+          "data_driven_centroid": {
+            "cell_accuracy": 0.010666666666666666,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.4616818032569359,
+            "p90_error_m": 2.75
+          },
+          "physical_only": {
+            "cell_accuracy": 0.014933333333333333,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.5645437326933946,
+            "p90_error_m": 2.766315238724611
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy": 0.0208,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.6055065578326098,
+            "p90_error_m": 2.766315238724611
+          }
+        },
+        "delta_vs_data": {
+          "physical_only": {
+            "cell_accuracy_abs": 0.004266666666666667,
+            "mean_error_m_abs": 0.10286192943645878,
+            "p90_error_m_abs": 0.016315238724610825,
+            "router_distance_accuracy_abs": 0.0
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy_abs": 0.010133333333333333,
+            "mean_error_m_abs": 0.1438247545756739,
+            "p90_error_m_abs": 0.016315238724610825,
+            "router_distance_accuracy_abs": 0.0
+          }
+        },
+        "delta_hybrid_vs_physical": {
+          "cell_accuracy_abs": 0.005866666666666666,
+          "mean_error_m_abs": 0.04096282513921512,
+          "p90_error_m_abs": 0.0,
+          "router_distance_accuracy_abs": 0.0
+        },
+        "held_out_campaign": "exp1"
+      },
+      {
+        "samples": {
+          "train": 9375,
+          "test": 1875,
+          "candidate_states": 75
+        },
+        "models": {
+          "data_driven_centroid": {
+            "cell_accuracy": 0.0144,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.4826481202946793,
+            "p90_error_m": 2.766315238724611
+          },
+          "physical_only": {
+            "cell_accuracy": 0.0304,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.5002297906518909,
+            "p90_error_m": 2.75
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy": 0.028266666666666666,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.5498145266740992,
+            "p90_error_m": 2.75
+          }
+        },
+        "delta_vs_data": {
+          "physical_only": {
+            "cell_accuracy_abs": 0.016,
+            "mean_error_m_abs": 0.017581670357211587,
+            "p90_error_m_abs": -0.016315238724610825,
+            "router_distance_accuracy_abs": 0.0
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy_abs": 0.013866666666666666,
+            "mean_error_m_abs": 0.06716640637941995,
+            "p90_error_m_abs": -0.016315238724610825,
+            "router_distance_accuracy_abs": 0.0
+          }
+        },
+        "delta_hybrid_vs_physical": {
+          "cell_accuracy_abs": -0.0021333333333333343,
+          "mean_error_m_abs": 0.049584736022208364,
+          "p90_error_m_abs": 0.0,
+          "router_distance_accuracy_abs": 0.0
+        },
+        "held_out_campaign": "exp2"
+      },
+      {
+        "samples": {
+          "train": 9375,
+          "test": 1875,
+          "candidate_states": 75
+        },
+        "models": {
+          "data_driven_centroid": {
+            "cell_accuracy": 0.013333333333333334,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.443476772097739,
+            "p90_error_m": 2.75
+          },
+          "physical_only": {
+            "cell_accuracy": 0.021333333333333333,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.707705469867951,
+            "p90_error_m": 3.014962686336267
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy": 0.014933333333333333,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.7031483774052962,
+            "p90_error_m": 3.014962686336267
+          }
+        },
+        "delta_vs_data": {
+          "physical_only": {
+            "cell_accuracy_abs": 0.007999999999999998,
+            "mean_error_m_abs": 0.26422869777021196,
+            "p90_error_m_abs": 0.2649626863362671,
+            "router_distance_accuracy_abs": 0.0
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy_abs": 0.001599999999999999,
+            "mean_error_m_abs": 0.2596716053075572,
+            "p90_error_m_abs": 0.2649626863362671,
+            "router_distance_accuracy_abs": 0.0
+          }
+        },
+        "delta_hybrid_vs_physical": {
+          "cell_accuracy_abs": -0.0063999999999999994,
+          "mean_error_m_abs": -0.004557092462654788,
+          "p90_error_m_abs": 0.0,
+          "router_distance_accuracy_abs": 0.0
+        },
+        "held_out_campaign": "exp3"
+      },
+      {
+        "samples": {
+          "train": 9375,
+          "test": 1875,
+          "candidate_states": 75
+        },
+        "models": {
+          "data_driven_centroid": {
+            "cell_accuracy": 0.005333333333333333,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.4255201485004079,
+            "p90_error_m": 2.5
+          },
+          "physical_only": {
+            "cell_accuracy": 0.018666666666666668,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.351857393751874,
+            "p90_error_m": 2.5179356624028344
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy": 0.028266666666666666,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.3451223275124424,
+            "p90_error_m": 2.5
+          }
+        },
+        "delta_vs_data": {
+          "physical_only": {
+            "cell_accuracy_abs": 0.013333333333333336,
+            "mean_error_m_abs": -0.07366275474853379,
+            "p90_error_m_abs": 0.017935662402834396,
+            "router_distance_accuracy_abs": 0.0
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy_abs": 0.022933333333333333,
+            "mean_error_m_abs": -0.08039782098796544,
+            "p90_error_m_abs": 0.0,
+            "router_distance_accuracy_abs": 0.0
+          }
+        },
+        "delta_hybrid_vs_physical": {
+          "cell_accuracy_abs": 0.009599999999999997,
+          "mean_error_m_abs": -0.006735066239431653,
+          "p90_error_m_abs": -0.017935662402834396,
+          "router_distance_accuracy_abs": 0.0
+        },
+        "held_out_campaign": "exp4"
+      },
+      {
+        "samples": {
+          "train": 9375,
+          "test": 1875,
+          "candidate_states": 75
+        },
+        "models": {
+          "data_driven_centroid": {
+            "cell_accuracy": 0.006933333333333333,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.3809335222611192,
+            "p90_error_m": 2.5179356624028344
+          },
+          "physical_only": {
+            "cell_accuracy": 0.016533333333333334,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.4509039443264935,
+            "p90_error_m": 2.6570660511172846
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy": 0.016533333333333334,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.4485001502790622,
+            "p90_error_m": 2.6570660511172846
+          }
+        },
+        "delta_vs_data": {
+          "physical_only": {
+            "cell_accuracy_abs": 0.009600000000000001,
+            "mean_error_m_abs": 0.0699704220653743,
+            "p90_error_m_abs": 0.13913038871445016,
+            "router_distance_accuracy_abs": 0.0
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy_abs": 0.009600000000000001,
+            "mean_error_m_abs": 0.067566628017943,
+            "p90_error_m_abs": 0.13913038871445016,
+            "router_distance_accuracy_abs": 0.0
+          }
+        },
+        "delta_hybrid_vs_physical": {
+          "cell_accuracy_abs": 0.0,
+          "mean_error_m_abs": -0.0024037940474312958,
+          "p90_error_m_abs": 0.0,
+          "router_distance_accuracy_abs": 0.0
+        },
+        "held_out_campaign": "exp5"
+      },
+      {
+        "samples": {
+          "train": 9375,
+          "test": 1875,
+          "candidate_states": 75
+        },
+        "models": {
+          "data_driven_centroid": {
+            "cell_accuracy": 0.021866666666666666,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.4222117161218368,
+            "p90_error_m": 2.55
+          },
+          "physical_only": {
+            "cell_accuracy": 0.005333333333333333,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.7458913424166864,
+            "p90_error_m": 3.2310988842807022
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy": 0.0005333333333333334,
+            "router_distance_accuracy": 1.0,
+            "mean_error_m": 1.7485746037948777,
+            "p90_error_m": 3.2310988842807022
+          }
+        },
+        "delta_vs_data": {
+          "physical_only": {
+            "cell_accuracy_abs": -0.016533333333333334,
+            "mean_error_m_abs": 0.3236796262948496,
+            "p90_error_m_abs": 0.6810988842807024,
+            "router_distance_accuracy_abs": 0.0
+          },
+          "hybrid_physical_ml": {
+            "cell_accuracy_abs": -0.021333333333333333,
+            "mean_error_m_abs": 0.3263628876730409,
+            "p90_error_m_abs": 0.6810988842807024,
+            "router_distance_accuracy_abs": 0.0
+          }
+        },
+        "delta_hybrid_vs_physical": {
+          "cell_accuracy_abs": -0.0048,
+          "mean_error_m_abs": 0.002683261378191304,
+          "p90_error_m_abs": 0.0,
+          "router_distance_accuracy_abs": 0.0
+        },
+        "held_out_campaign": "exp6"
+      }
+    ],
+    "summary": {
+      "n_folds": 6,
+      "models_mean": {
+        "data_driven_centroid": {
+          "cell_accuracy": 0.01208888888888889,
+          "mean_error_m": 1.4360786804221197,
+          "p90_error_m": 2.639041816854574
+        },
+        "physical_only": {
+          "cell_accuracy": 0.017866666666666666,
+          "mean_error_m": 1.5535219456180485,
+          "p90_error_m": 2.8228964204769498
+        },
+        "hybrid_physical_ml": {
+          "cell_accuracy": 0.01822222222222222,
+          "mean_error_m": 1.5667777572497312,
+          "p90_error_m": 2.819907143409811
+        }
+      },
+      "delta_hybrid_vs_physical": {
+        "cell_accuracy_abs": 0.0003555555555555534,
+        "mean_error_m_abs": 0.013255811631682768,
+        "p90_error_m_abs": -0.002989277067138918
+      },
+      "delta_hybrid_vs_data": {
+        "cell_accuracy_abs": 0.006133333333333329,
+        "mean_error_m_abs": 0.1306990768276115,
+        "p90_error_m_abs": 0.1808653265552369
+      }
+    }
+  }
+}

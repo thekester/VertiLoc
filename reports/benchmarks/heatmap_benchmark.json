@@ -1,0 +1,20 @@
+{
+  "raw_knn_cell_acc": 0.900438596491228,
+  "raw_knn_mean_error_m": 0.11777512687701096,
+  "raw_knn_p90_error_m": 0.0,
+  "raw_mlp_cell_acc": 0.08771929824561403,
+  "raw_mlp_mean_error_m": 1.2173616275510677,
+  "raw_mlp_p90_error_m": 2.5,
+  "heatmap_knn_cell_acc": 0.9013157894736842,
+  "heatmap_knn_mean_error_m": 0.11804678741444927,
+  "heatmap_knn_p90_error_m": 0.0,
+  "heatmap_mlp_cell_acc": 0.10175438596491228,
+  "heatmap_mlp_mean_error_m": 1.1890315089068149,
+  "heatmap_mlp_p90_error_m": 2.5,
+  "heatmap_seq_mlp_cell_acc": 0.1986842105263158,
+  "heatmap_seq_mlp_mean_error_m": 1.0925084788310162,
+  "heatmap_seq_mlp_p90_error_m": 2.423324163210527,
+  "sequence_window": 5,
+  "sampling": "head12_per_(room,campaign,grid_cell)",
+  "n_samples": 11400
+}

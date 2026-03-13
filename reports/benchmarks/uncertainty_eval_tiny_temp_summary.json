@@ -1,0 +1,89 @@
+{
+  "date": "2026-03-13",
+  "seed": 21,
+  "protocols": [
+    "room_aware",
+    "loro_room",
+    "loco_e102"
+  ],
+  "models": [
+    "KNN"
+  ],
+  "calibration_modes": [
+    "none",
+    "temperature",
+    "sigmoid",
+    "isotonic"
+  ],
+  "calibrations_run": [
+    "temperature"
+  ],
+  "rows_metrics": 10,
+  "rows_curves": 210,
+  "failed_runs": 0,
+  "aggregate_mean": [
+    {
+      "protocol": "loco_e102",
+      "model": "KNN",
+      "calibration": "temperature",
+      "n_test": 300.0,
+      "top1_acc": 0.012222222222222223,
+      "top3_acc": 0.05111111111111111,
+      "top5_acc": 0.07111111111111111,
+      "mean_error_m": 1.434560167730399,
+      "p90_error_m": 2.5735190420616,
+      "top3_min_error_m": 0.7901375139199424,
+      "top5_min_error_m": 0.6118944180130045,
+      "nll": 6.395605452945546,
+      "brier_multiclass": 1.1863958648648358,
+      "ece": 0.25455778321499656,
+      "avg_confidence": 0.26678000543721875,
+      "temperature": 5.0,
+      "coverage_at_target_acc": 0.0
+    },
+    {
+      "protocol": "loro_room",
+      "model": "KNN",
+      "calibration": "temperature",
+      "n_test": 296.0,
+      "top1_acc": 0.01013888888888889,
+      "top3_acc": 0.037083333333333336,
+      "top5_acc": 0.04620370370370371,
+      "mean_error_m": 1.294608502640491,
+      "p90_error_m": 2.319237459746669,
+      "top3_min_error_m": 0.7645314305531606,
+      "top5_min_error_m": 0.5976055376152999,
+      "nll": 6.58474018573548,
+      "brier_multiclass": 1.17439188229459,
+      "ece": 0.2287187879725893,
+      "avg_confidence": 0.2388576768614782,
+      "temperature": 5.0,
+      "coverage_at_target_acc": 0.0
+    },
+    {
+      "protocol": "room_aware",
+      "model": "KNN",
+      "calibration": "temperature",
+      "n_test": 300.0,
+      "top1_acc": 0.37666666666666665,
+      "top3_acc": 0.43333333333333335,
+      "top5_acc": 0.4633333333333333,
+      "mean_error_m": 0.858915085663492,
+      "p90_error_m": 2.1290356876476797,
+      "top3_min_error_m": 0.4705788642697297,
+      "top5_min_error_m": 0.32749712991209634,
+      "nll": 3.9325017026321225,
+      "brier_multiclass": 0.7611202603308594,
+      "ece": 0.11701237551000084,
+      "avg_confidence": 0.4002245155518537,
+      "temperature": 5.0,
+      "coverage_at_target_acc": 0.0
+    }
+  ],
+  "target_selective_acc": 0.95,
+  "files": {
+    "metrics_csv": "reports/benchmarks/uncertainty_eval_tiny_temp_metrics.csv",
+    "selective_curves_csv": "reports/benchmarks/uncertainty_eval_tiny_temp_selective_curves.csv",
+    "summary_json": "reports/benchmarks/uncertainty_eval_tiny_temp_summary.json"
+  }
+}

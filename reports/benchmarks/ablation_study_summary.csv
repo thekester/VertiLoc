@@ -1,0 +1,8 @@
+scenario,features,include_room_onehot,cell_accuracy,mean_error_m,p90_error_m,n_folds
+drop_a1_no_room_ohe,"Signal,Noise,signal_A2,signal_A3",False,0.022443500363108205,1.2795747235280281,2.374644208862593,3
+all5_room_ohe,"Signal,Noise,signal_A1,signal_A2,signal_A3",True,0.018244517066085694,1.2468507453780788,2.2896455694858355,3
+all5_no_room_ohe,"Signal,Noise,signal_A1,signal_A2,signal_A3",False,0.01769905591866376,1.2815167780135583,2.374644208862593,3
+drop_noise_no_room_ohe,"Signal,signal_A1,signal_A2,signal_A3",False,0.01501851851851852,1.2611480556804298,2.346770168006168,3
+drop_a2_no_room_ohe,"Signal,Noise,signal_A1,signal_A3",False,0.01497690631808279,1.3015245319266548,2.3741249472052224,3
+drop_noise_room_ohe,"Signal,signal_A1,signal_A2,signal_A3",True,0.014278358750907771,1.2554047593424265,2.32121155574301,3
+drop_a3_no_room_ohe,"Signal,Noise,signal_A1,signal_A2",False,0.009454030501089325,1.277585831586921,2.3686656547283147,3

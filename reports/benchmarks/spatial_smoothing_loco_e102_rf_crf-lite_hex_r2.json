@@ -1,0 +1,19 @@
+{
+  "model": "RandomForest",
+  "mode": "crf-lite",
+  "alpha": 1.0,
+  "beta": 1.5,
+  "n_iters": 4,
+  "metric": "hex",
+  "radius": 2,
+  "max_confidence": 1.0,
+  "mean_raw_cell_accuracy": 0.021066666666666668,
+  "mean_smooth_cell_accuracy": 0.019911111111111112,
+  "mean_delta_cell_accuracy": -0.0011555555555555555,
+  "mean_raw_mean_error_m": 1.3929418283704533,
+  "mean_smooth_mean_error_m": 1.3935451297169017,
+  "mean_delta_mean_error_m": 0.0006033013464486666,
+  "total_fixed": 0,
+  "total_broken": 13,
+  "total_net_fixed": -13
+}

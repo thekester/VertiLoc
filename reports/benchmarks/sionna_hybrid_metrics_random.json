@@ -1,0 +1,79 @@
+{
+  "experiment": "sionna_rt_hybrid_proxy_v2",
+  "feature_columns": [
+    "Signal",
+    "Noise",
+    "signal_A1",
+    "signal_A2",
+    "signal_A3"
+  ],
+  "campaigns": [
+    "/home/test/Documents/projetretd/data/E102/exp1",
+    "/home/test/Documents/projetretd/data/E102/exp2",
+    "/home/test/Documents/projetretd/data/E102/exp3",
+    "/home/test/Documents/projetretd/data/E102/exp4",
+    "/home/test/Documents/projetretd/data/E102/elevation/exp5",
+    "/home/test/Documents/projetretd/data/E102/elevation/exp6"
+  ],
+  "config": {
+    "protocol": "random",
+    "test_size": 0.2,
+    "random_state": 42,
+    "ridge_alpha": 1.0,
+    "room_depth_m": 4.0,
+    "default_router_height_m": 1.2
+  },
+  "sionna_rt": {
+    "requested": true,
+    "available": false,
+    "reason": "import_failed: No module named 'sionna'"
+  },
+  "results": {
+    "samples": {
+      "train": 9000,
+      "test": 2250,
+      "candidate_states": 75
+    },
+    "models": {
+      "data_driven_centroid": {
+        "cell_accuracy": 0.036,
+        "router_distance_accuracy": 1.0,
+        "mean_error_m": 1.3156312344521752,
+        "p90_error_m": 2.5179356624028344
+      },
+      "physical_only": {
+        "cell_accuracy": 0.015111111111111112,
+        "router_distance_accuracy": 1.0,
+        "mean_error_m": 1.4561120261330114,
+        "p90_error_m": 2.814693589007514
+      },
+      "hybrid_physical_ml": {
+        "cell_accuracy": 0.016,
+        "router_distance_accuracy": 1.0,
+        "mean_error_m": 1.4593433801225317,
+        "p90_error_m": 2.773084924772409
+      }
+    },
+    "delta_vs_data": {
+      "physical_only": {
+        "cell_accuracy_abs": -0.020888888888888887,
+        "mean_error_m_abs": 0.14048079168083616,
+        "p90_error_m_abs": 0.2967579266046796,
+        "router_distance_accuracy_abs": 0.0
+      },
+      "hybrid_physical_ml": {
+        "cell_accuracy_abs": -0.019999999999999997,
+        "mean_error_m_abs": 0.1437121456703565,
+        "p90_error_m_abs": 0.2551492623695748,
+        "router_distance_accuracy_abs": 0.0
+      }
+    },
+    "delta_hybrid_vs_physical": {
+      "cell_accuracy_abs": 0.0008888888888888887,
+      "mean_error_m_abs": 0.003231353989520347,
+      "p90_error_m_abs": -0.041608664235104786,
+      "router_distance_accuracy_abs": 0.0
+    },
+    "protocol": "random"
+  }
+}

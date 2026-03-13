@@ -1,0 +1,55 @@
+{
+  "experiment": "sionna_rt_hybrid_proxy",
+  "feature_columns": [
+    "Signal",
+    "Noise",
+    "signal_A1",
+    "signal_A2",
+    "signal_A3"
+  ],
+  "campaigns": [
+    "/home/test/Documents/projetretd/data/E102/exp1",
+    "/home/test/Documents/projetretd/data/E102/exp2",
+    "/home/test/Documents/projetretd/data/E102/exp3",
+    "/home/test/Documents/projetretd/data/E102/exp4",
+    "/home/test/Documents/projetretd/data/E102/elevation/exp5",
+    "/home/test/Documents/projetretd/data/E102/elevation/exp6"
+  ],
+  "sionna_rt": {
+    "requested": false,
+    "available": false,
+    "reason": "disabled_by_flag"
+  },
+  "config": {
+    "test_size": 0.2,
+    "random_state": 42,
+    "ridge_alpha": 1.0,
+    "router_height_m": 1.2
+  },
+  "results": {
+    "samples": {
+      "total": 11250,
+      "train": 9000,
+      "test": 2250,
+      "candidate_states": 75
+    },
+    "physical_only": {
+      "cell_accuracy": 0.018222222222222223,
+      "router_distance_accuracy": 1.0,
+      "mean_error_m": 1.3970578725603062,
+      "p90_error_m": 2.6570660511172846
+    },
+    "hybrid_physical_ml": {
+      "cell_accuracy": 0.017333333333333333,
+      "router_distance_accuracy": 1.0,
+      "mean_error_m": 1.3966181406996099,
+      "p90_error_m": 2.6570660511172846
+    },
+    "delta": {
+      "cell_accuracy_abs": -0.0008888888888888904,
+      "mean_error_m_abs": -0.0004397318606963463,
+      "p90_error_m_abs": 0.0,
+      "router_distance_accuracy_abs": 0.0
+    }
+  }
+}

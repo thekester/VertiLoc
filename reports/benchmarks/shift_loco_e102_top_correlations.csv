@@ -1,0 +1,13 @@
+model,target,shift_metric,pearson_r,spearman_r,n_points
+et,err_increase,psi_max,0.8195390762453273,0.6571428571428573,6
+et,err_increase,psi_mean,0.7974584194057687,0.6,6
+et,err_increase,wasserstein_mean,0.7969409721021435,0.6,6
+et,err_increase,mmd_rbf,0.7876610646042675,0.4857142857142857,6
+et,err_increase,wasserstein_max,0.7740840508568374,0.4857142857142857,6
+lda_knn,err_increase,psi_mean,-0.7632641060120984,-0.7714285714285715,6
+lda_knn,err_increase,wasserstein_mean,-0.7547205211120732,-0.7714285714285715,6
+lda_knn,err_increase,wasserstein_max,-0.7542590107937704,-0.8285714285714287,6
+lda_knn,err_increase,psi_max,-0.7418509425095038,-0.6,6
+lda_knn,err_increase,mmd_rbf,-0.7244968957226329,-0.8285714285714287,6
+hgb,err_increase,psi_max,0.7048533627343614,0.7142857142857143,6
+hgb,err_increase,wasserstein_max,0.7011011718414891,0.4857142857142857,6

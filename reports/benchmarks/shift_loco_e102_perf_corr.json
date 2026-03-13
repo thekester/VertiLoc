@@ -1,0 +1,175 @@
+{
+  "perf_csv": "/home/test/Documents/projetretd/reports/benchmarks/loco_e102.csv",
+  "n_splits": 6,
+  "shift_metrics": [
+    "mmd_rbf",
+    "wasserstein_mean",
+    "wasserstein_max",
+    "psi_mean",
+    "psi_max"
+  ],
+  "top_abs_pearson": [
+    {
+      "model": "et",
+      "target": "err_increase",
+      "shift_metric": "psi_max",
+      "pearson_r": 0.8195390762453273,
+      "spearman_r": 0.6571428571428573,
+      "n_points": 6
+    },
+    {
+      "model": "et",
+      "target": "err_increase",
+      "shift_metric": "psi_mean",
+      "pearson_r": 0.7974584194057687,
+      "spearman_r": 0.6,
+      "n_points": 6
+    },
+    {
+      "model": "et",
+      "target": "err_increase",
+      "shift_metric": "wasserstein_mean",
+      "pearson_r": 0.7969409721021435,
+      "spearman_r": 0.6,
+      "n_points": 6
+    },
+    {
+      "model": "et",
+      "target": "err_increase",
+      "shift_metric": "mmd_rbf",
+      "pearson_r": 0.7876610646042675,
+      "spearman_r": 0.48571428571428577,
+      "n_points": 6
+    },
+    {
+      "model": "et",
+      "target": "err_increase",
+      "shift_metric": "wasserstein_max",
+      "pearson_r": 0.7740840508568374,
+      "spearman_r": 0.48571428571428577,
+      "n_points": 6
+    },
+    {
+      "model": "lda_knn",
+      "target": "err_increase",
+      "shift_metric": "psi_mean",
+      "pearson_r": -0.7632641060120984,
+      "spearman_r": -0.7714285714285715,
+      "n_points": 6
+    },
+    {
+      "model": "lda_knn",
+      "target": "err_increase",
+      "shift_metric": "wasserstein_mean",
+      "pearson_r": -0.7547205211120732,
+      "spearman_r": -0.7714285714285715,
+      "n_points": 6
+    },
+    {
+      "model": "lda_knn",
+      "target": "err_increase",
+      "shift_metric": "wasserstein_max",
+      "pearson_r": -0.7542590107937704,
+      "spearman_r": -0.8285714285714287,
+      "n_points": 6
+    },
+    {
+      "model": "lda_knn",
+      "target": "err_increase",
+      "shift_metric": "psi_max",
+      "pearson_r": -0.7418509425095038,
+      "spearman_r": -0.6,
+      "n_points": 6
+    },
+    {
+      "model": "lda_knn",
+      "target": "err_increase",
+      "shift_metric": "mmd_rbf",
+      "pearson_r": -0.7244968957226329,
+      "spearman_r": -0.8285714285714287,
+      "n_points": 6
+    }
+  ],
+  "top_abs_spearman": [
+    {
+      "model": "lda_knn",
+      "target": "err_increase",
+      "shift_metric": "wasserstein_max",
+      "pearson_r": -0.7542590107937704,
+      "spearman_r": -0.8285714285714287,
+      "n_points": 6
+    },
+    {
+      "model": "lda_knn",
+      "target": "err_increase",
+      "shift_metric": "mmd_rbf",
+      "pearson_r": -0.7244968957226329,
+      "spearman_r": -0.8285714285714287,
+      "n_points": 6
+    },
+    {
+      "model": "lda_knn",
+      "target": "err_increase",
+      "shift_metric": "psi_mean",
+      "pearson_r": -0.7632641060120984,
+      "spearman_r": -0.7714285714285715,
+      "n_points": 6
+    },
+    {
+      "model": "lda_knn",
+      "target": "err_increase",
+      "shift_metric": "wasserstein_mean",
+      "pearson_r": -0.7547205211120732,
+      "spearman_r": -0.7714285714285715,
+      "n_points": 6
+    },
+    {
+      "model": "hgb",
+      "target": "err_increase",
+      "shift_metric": "psi_max",
+      "pearson_r": 0.7048533627343614,
+      "spearman_r": 0.7142857142857143,
+      "n_points": 6
+    },
+    {
+      "model": "nn_lknn",
+      "target": "acc_drop",
+      "shift_metric": "psi_max",
+      "pearson_r": -0.6357643886969162,
+      "spearman_r": -0.7142857142857143,
+      "n_points": 6
+    },
+    {
+      "model": "lda_knn",
+      "target": "acc_drop",
+      "shift_metric": "wasserstein_mean",
+      "pearson_r": 0.42994959363530966,
+      "spearman_r": 0.6571428571428573,
+      "n_points": 6
+    },
+    {
+      "model": "nn_lknn",
+      "target": "acc_drop",
+      "shift_metric": "wasserstein_max",
+      "pearson_r": -0.6760920942421724,
+      "spearman_r": -0.6571428571428573,
+      "n_points": 6
+    },
+    {
+      "model": "et",
+      "target": "err_increase",
+      "shift_metric": "psi_max",
+      "pearson_r": 0.8195390762453273,
+      "spearman_r": 0.6571428571428573,
+      "n_points": 6
+    },
+    {
+      "model": "knn",
+      "target": "acc_drop",
+      "shift_metric": "psi_max",
+      "pearson_r": -0.4358199198199527,
+      "spearman_r": -0.6571428571428573,
+      "n_points": 6
+    }
+  ]
+}

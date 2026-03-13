@@ -1,0 +1,36 @@
+{
+  "mode": "cgan",
+  "target": "data/E102/exp1:4",
+  "sources": [],
+  "device": "cpu",
+  "seed": 7,
+  "params": {
+    "low_data_ratio": 0.2,
+    "test_size": 0.2,
+    "epochs": 40,
+    "batch_size": 128,
+    "lr": 0.0002,
+    "k_neighbors": 5,
+    "synthetic_per_class": 20
+  },
+  "counts": {
+    "train_low": 300,
+    "train_full": 1500,
+    "test": 375,
+    "synthetic": 1500
+  },
+  "metrics": {
+    "baseline_low_data": {
+      "cell_accuracy": 0.88,
+      "mean_error_m": 0.13962456129824724
+    },
+    "augmented_with_generative": {
+      "cell_accuracy": 0.88,
+      "mean_error_m": 0.15639629369489122
+    },
+    "upper_bound_full_train": {
+      "cell_accuracy": 0.976,
+      "mean_error_m": 0.03393766553372192
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "config": {
+    "dataset": "E102",
+    "fractions": [
+      0.2,
+      0.4,
+      0.6,
+      0.8,
+      1.0
+    ],
+    "test_size": 0.2,
+    "repeats": 10,
+    "seed": 7,
+    "models": [
+      "knn"
+    ],
+    "rf_estimators": 180,
+    "histgb_max_iter": 160,
+    "features": [
+      "Signal",
+      "Noise",
+      "signal_A1",
+      "signal_A2",
+      "signal_A3"
+    ]
+  },
+  "summary": [
+    {
+      "model": "KNN",
+      "train_fraction": 0.2,
+      "n_repeats": 10,
+      "n_train_samples_mean": 1800.0,
+      "cell_accuracy_mean": 0.7506666666666667,
+      "cell_accuracy_std": 0.01463895623944963,
+      "mean_error_m_mean": 0.34923810639626945,
+      "mean_error_m_std": 0.026046656864793728,
+      "p90_error_m_mean": 1.4853760945802479,
+      "p90_error_m_std": 0.09665435352343704
+    },
+    {
+      "model": "KNN",
+      "train_fraction": 0.4,
+      "n_repeats": 10,
+      "n_train_samples_mean": 3600.0,
+      "cell_accuracy_mean": 0.8764444444444445,
+      "cell_accuracy_std": 0.011838881792004183,
+      "mean_error_m_mean": 0.17685934915957074,
+      "mean_error_m_std": 0.015558524623534877,
+      "p90_error_m_mean": 0.6674158724678516,
+      "p90_error_m_std": 0.19407371186954192
+    },
+    {
+      "model": "KNN",
+      "train_fraction": 0.6,
+      "n_repeats": 10,
+      "n_train_samples_mean": 5400.0,
+      "cell_accuracy_mean": 0.9026222222222222,
+      "cell_accuracy_std": 0.006383964822797101,
+      "mean_error_m_mean": 0.13922001240663448,
+      "mean_error_m_std": 0.00881677161017117,
+      "p90_error_m_mean": 0.11955124837953394,
+      "p90_error_m_std": 0.1588500306399975
+    },
+    {
+      "model": "KNN",
+      "train_fraction": 0.8,
+      "n_repeats": 10,
+      "n_train_samples_mean": 7200.0,
+      "cell_accuracy_mean": 0.9150222222222222,
+      "cell_accuracy_std": 0.004468085273160153,
+      "mean_error_m_mean": 0.11989658442847753,
+      "mean_error_m_std": 0.008956540784445773,
+      "p90_error_m_mean": 0.0,
+      "p90_error_m_std": 0.0
+    },
+    {
+      "model": "KNN",
+      "train_fraction": 1.0,
+      "n_repeats": 10,
+      "n_train_samples_mean": 9000.0,
+      "cell_accuracy_mean": 0.9195555555555556,
+      "cell_accuracy_std": 0.008138715078412065,
+      "mean_error_m_mean": 0.1151286097439953,
+      "mean_error_m_std": 0.01216123563877936,
+      "p90_error_m_mean": 0.0,
+      "p90_error_m_std": 0.0
+    }
+  ]
+}

@@ -4,7 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import json
+import math
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -221,11 +224,358 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Skip the Stacking classifier (very slow on large datasets).",
     )
     parser.add_argument(
+        "--strict-anti-leakage",
+        action="store_true",
+        help="Use strict anti-leakage train/test splits in benchmark_models.",
+    )
+    parser.add_argument(
+        "--quant-step-db",
+        type=float,
+        default=0.5,
+        help="Quantization step (dB) used by strict anti-leakage signature checks.",
+    )
+    parser.add_argument(
+        "--benchmark-seeds",
+        default="21",
+        help=(
+            "Seed list for classic benchmarks (comma/space separated or ranges, "
+            "e.g. '7,13,21' or '1-10')."
+        ),
+    )
+    parser.add_argument(
         "--non-interactive",
         action="store_true",
         help="Fail if required inputs are missing instead of prompting.",
     )
+    parser.add_argument(
+        "--run-generative",
+        action="store_true",
+        help="Run GAN/CycleGAN low-data experiments after classic benchmarks.",
+    )
+    parser.add_argument(
+        "--generative-profile",
+        choices=["quick", "full"],
+        default="quick",
+        help="Preset run list for generative experiments.",
+    )
+    parser.add_argument(
+        "--generative-seeds",
+        default="7",
+        help=(
+            "Seed list for generative runs (comma/space separated or ranges, "
+            "e.g. '7,13,21' or '1-10')."
+        ),
+    )
+    parser.add_argument(
+        "--generative-device",
+        choices=["auto", "cpu", "cuda"],
+        default="cpu",
+        help="Device for generative runs.",
+    )
+    parser.add_argument(
+        "--generative-torch-threads",
+        type=int,
+        default=4,
+        help="CPU threads for torch in generative runs.",
+    )
     return parser.parse_args(argv)
+
+
+def _parse_seed_spec(seed_spec: str) -> list[int]:
+    values: list[int] = []
+    for raw in re.split(r"[,\s]+", seed_spec.strip()):
+        if not raw:
+            continue
+        if "-" in raw:
+            left, right = raw.split("-", 1)
+            start = int(left)
+            end = int(right)
+            if end < start:
+                raise ValueError(f"Invalid seed range: {raw}")
+            values.extend(range(start, end + 1))
+        else:
+            values.append(int(raw))
+    if not values:
+        raise ValueError("No valid generative seeds provided.")
+    return sorted(set(values))
+
+
+def _with_seed(run: list[str], seed: int) -> list[str]:
+    updated = list(run)
+    if "--seed" in updated:
+        idx = updated.index("--seed")
+        if idx + 1 < len(updated):
+            updated[idx + 1] = str(seed)
+            return updated
+    return [*updated, "--seed", str(seed)]
+
+
+def _generative_runs(profile: str, seeds: list[int]) -> list[list[str]]:
+    if profile == "full":
+        base_runs = [
+            [
+                "--mode", "cgan",
+                "--target", "data/E102/exp1:4",
+                "--low-data-ratio", "0.1",
+                "--epochs", "40",
+                "--synthetic-per-class", "20",
+                "--seed", "7",
+            ],
+            [
+                "--mode", "cgan",
+                "--target", "data/E102/exp1:4",
+                "--low-data-ratio", "0.1",
+                "--epochs", "40",
+                "--synthetic-per-class", "20",
+                "--seed", "42",
+            ],
+            [
+                "--mode", "cgan",
+                "--target", "data/E102/exp1:4",
+                "--low-data-ratio", "0.2",
+                "--epochs", "40",
+                "--synthetic-per-class", "20",
+                "--seed", "7",
+            ],
+            [
+                "--mode", "cgan",
+                "--target", "data/E102/exp3:4",
+                "--low-data-ratio", "0.1",
+                "--epochs", "40",
+                "--synthetic-per-class", "20",
+                "--seed", "7",
+            ],
+            [
+                "--mode", "cgan",
+                "--target", "data/E102/elevation/exp5:4",
+                "--low-data-ratio", "0.1",
+                "--epochs", "40",
+                "--synthetic-per-class", "20",
+                "--seed", "7",
+            ],
+            [
+                "--mode", "cgan",
+                "--target", "data/E102/elevation/exp5:4",
+                "--low-data-ratio", "0.2",
+                "--epochs", "40",
+                "--synthetic-per-class", "20",
+                "--seed", "7",
+            ],
+            [
+                "--mode", "cyclegan",
+                "--target", "data/E102/exp1:4",
+                "--source", "data/E102/exp2:4",
+                "--low-data-ratio", "0.1",
+                "--epochs", "20",
+                "--synthetic-per-class", "20",
+                "--seed", "7",
+            ],
+            [
+                "--mode", "cyclegan",
+                "--target", "data/E102/exp3:4",
+                "--source", "data/E102/exp2:4",
+                "--low-data-ratio", "0.1",
+                "--epochs", "20",
+                "--synthetic-per-class", "20",
+                "--seed", "7",
+            ],
+            [
+                "--mode", "cyclegan",
+                "--target", "data/E102/elevation/exp5:4",
+                "--source", "data/E102/exp2:4",
+                "--low-data-ratio", "0.1",
+                "--epochs", "20",
+                "--synthetic-per-class", "20",
+                "--seed", "7",
+            ],
+        ]
+        return [_with_seed(run, seed) for run in base_runs for seed in seeds]
+
+    base_runs = [
+        [
+            "--mode", "cgan",
+            "--target", "data/E102/exp1:4",
+            "--low-data-ratio", "0.1",
+            "--epochs", "20",
+            "--synthetic-per-class", "20",
+            "--seed", "7",
+        ],
+        [
+            "--mode", "cgan",
+            "--target", "data/E102/elevation/exp5:4",
+            "--low-data-ratio", "0.1",
+            "--epochs", "20",
+            "--synthetic-per-class", "20",
+            "--seed", "7",
+        ],
+        [
+            "--mode", "cyclegan",
+            "--target", "data/E102/exp1:4",
+            "--source", "data/E102/exp2:4",
+            "--low-data-ratio", "0.1",
+            "--epochs", "10",
+            "--synthetic-per-class", "20",
+            "--seed", "7",
+        ],
+    ]
+    return [_with_seed(run, seed) for run in base_runs for seed in seeds]
+
+
+def _write_generative_summary(report_dir: Path) -> Path:
+    rows: list[dict] = []
+    for path in sorted(report_dir.glob("generative_*_r*_e*_s*_seed*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        b = data["metrics"]["baseline_low_data"]
+        a = data["metrics"]["augmented_with_generative"]
+        u = data["metrics"]["upper_bound_full_train"]
+        rows.append(
+            {
+                "file": path.name,
+                "mode": data["mode"],
+                "target": data["target"],
+                "sources": "|".join(data.get("sources", [])),
+                "seed": data["seed"],
+                "low_data_ratio": data["params"]["low_data_ratio"],
+                "epochs": data["params"]["epochs"],
+                "synthetic_per_class": data["params"]["synthetic_per_class"],
+                "baseline_acc": b["cell_accuracy"],
+                "aug_acc": a["cell_accuracy"],
+                "delta_acc": a["cell_accuracy"] - b["cell_accuracy"],
+                "baseline_err_m": b["mean_error_m"],
+                "aug_err_m": a["mean_error_m"],
+                "delta_err_m": a["mean_error_m"] - b["mean_error_m"],
+                "upper_acc": u["cell_accuracy"],
+                "upper_err_m": u["mean_error_m"],
+            }
+        )
+
+    summary_path = report_dir / "generative_trials_summary.csv"
+    if not rows:
+        summary_path.write_text(
+            "file,mode,target,sources,seed,low_data_ratio,epochs,synthetic_per_class,"
+            "baseline_acc,aug_acc,delta_acc,baseline_err_m,aug_err_m,delta_err_m,upper_acc,upper_err_m\n",
+            encoding="utf-8",
+        )
+        _write_generative_stats_from_empty(report_dir)
+        return summary_path
+
+    import pandas as pd
+
+    df = pd.DataFrame(rows).sort_values(["mode", "target", "low_data_ratio", "seed"])
+    df.to_csv(summary_path, index=False)
+    _write_generative_stats(df, report_dir)
+    return summary_path
+
+
+def _t_critical_95(n: int) -> float:
+    """Two-sided 95% Student-t critical value (small n), normal approx otherwise."""
+    if n <= 1:
+        return float("nan")
+    # df = n - 1
+    table = {
+        1: 12.706,
+        2: 4.303,
+        3: 3.182,
+        4: 2.776,
+        5: 2.571,
+        6: 2.447,
+        7: 2.365,
+        8: 2.306,
+        9: 2.262,
+        10: 2.228,
+        11: 2.201,
+        12: 2.179,
+        13: 2.160,
+        14: 2.145,
+        15: 2.131,
+        16: 2.120,
+        17: 2.110,
+        18: 2.101,
+        19: 2.093,
+        20: 2.086,
+        21: 2.080,
+        22: 2.074,
+        23: 2.069,
+        24: 2.064,
+        25: 2.060,
+        26: 2.056,
+        27: 2.052,
+        28: 2.048,
+        29: 2.045,
+        30: 2.042,
+    }
+    return table.get(n - 1, 1.96)
+
+
+def _write_generative_stats(df, report_dir: Path) -> Path:
+    """Aggregate per protocol across seeds with mean/std and 95% CI."""
+    import pandas as pd
+
+    group_cols = ["mode", "target", "sources", "low_data_ratio", "epochs", "synthetic_per_class"]
+    metrics = ["baseline_acc", "aug_acc", "delta_acc", "baseline_err_m", "aug_err_m", "delta_err_m"]
+
+    rows: list[dict] = []
+    for key, g in df.groupby(group_cols, dropna=False):
+        n = int(len(g))
+        base = dict(zip(group_cols, key))
+        base["n_seeds"] = n
+        for metric in metrics:
+            values = g[metric].astype(float)
+            mean = float(values.mean())
+            std = float(values.std(ddof=1)) if n > 1 else 0.0
+            sem = std / math.sqrt(n) if n > 1 else 0.0
+            ci95 = _t_critical_95(n) * sem if n > 1 else 0.0
+            base[f"{metric}_mean"] = mean
+            base[f"{metric}_std"] = std
+            base[f"{metric}_ci95"] = ci95
+            base[f"{metric}_ci95_low"] = mean - ci95
+            base[f"{metric}_ci95_high"] = mean + ci95
+        rows.append(base)
+
+    stats_path = report_dir / "generative_trials_stats.csv"
+    if not rows:
+        pd.DataFrame(columns=group_cols + ["n_seeds"]).to_csv(stats_path, index=False)
+        return stats_path
+    stats_df = pd.DataFrame(rows).sort_values(["mode", "target", "low_data_ratio"])
+    stats_df.to_csv(stats_path, index=False)
+    return stats_path
+
+
+def _write_generative_stats_from_empty(report_dir: Path) -> Path:
+    import pandas as pd
+
+    group_cols = ["mode", "target", "sources", "low_data_ratio", "epochs", "synthetic_per_class"]
+    stats_path = report_dir / "generative_trials_stats.csv"
+    pd.DataFrame(columns=group_cols + ["n_seeds"]).to_csv(stats_path, index=False)
+    return stats_path
+
+
+def _launch_generative(profile: str, device: str, torch_threads: int, seeds: list[int]) -> None:
+    script = SCRIPT_DIR / "generative_radio_map.py"
+    if not script.exists():
+        print(f"Skipping generative runs: script not found at {script}")
+        return
+
+    print("\nLaunching generative experiments...")
+    runs = _generative_runs(profile, seeds)
+    for idx, run_args in enumerate(runs, start=1):
+        cmd = [
+            sys.executable,
+            str(script),
+            *run_args,
+            "--device",
+            device,
+            "--torch-threads",
+            str(max(1, int(torch_threads))),
+        ]
+        print(f"[generative {idx}/{len(runs)}] {' '.join(run_args)}")
+        subprocess.run(cmd, check=True)
+
+    report_dir = SCRIPT_DIR.parent / "reports" / "benchmarks"
+    summary_path = _write_generative_summary(report_dir)
+    stats_path = report_dir / "generative_trials_stats.csv"
+    print(f"Generative summary written: {summary_path}")
+    print(f"Generative inter-seed stats written: {stats_path}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -301,6 +651,27 @@ def main(argv: list[str] | None = None) -> int:
     print(f"- GPC: {'enabled' if run_gpc else 'disabled'}")
     if run_gpc and gpc_max_samples:
         print(f"- GPC max samples: {gpc_max_samples}")
+    print(
+        f"- strict anti-leakage: {'enabled' if args.strict_anti_leakage else 'disabled'} "
+        f"(quant_step={float(args.quant_step_db):g} dB)"
+    )
+    run_generative = args.run_generative
+    generative_profile = args.generative_profile
+    generative_device = args.generative_device
+    generative_threads = args.generative_torch_threads
+    generative_seeds = _parse_seed_spec(args.generative_seeds)
+    benchmark_seeds = _parse_seed_spec(args.benchmark_seeds)
+    if not args.non_interactive and not run_generative:
+        raw = input("Run generative GAN/CycleGAN experiments after benchmarks? [no]: ").strip().lower()
+        run_generative = raw in ("y", "yes", "o", "oui")
+    if run_generative:
+        print(
+            f"- generative: enabled ({generative_profile}, device={generative_device}, "
+            f"threads={generative_threads}, seeds={','.join(str(s) for s in generative_seeds)})"
+        )
+    else:
+        print("- generative: disabled")
+    print(f"- benchmark seeds: {','.join(str(s) for s in benchmark_seeds)}")
 
     cli_args: list[str] = []
     if not rooms_all:
@@ -320,9 +691,16 @@ def main(argv: list[str] | None = None) -> int:
         cli_args += ["--all-models"]
     if args.no_stacking:
         cli_args += ["--no-stacking"]
+    if args.strict_anti_leakage:
+        cli_args += ["--strict-anti-leakage"]
+    if float(args.quant_step_db) != 0.5:
+        cli_args += ["--quant-step-db", f"{float(args.quant_step_db):g}"]
+    cli_args += ["--seeds", args.benchmark_seeds]
 
     print("\nLaunching benchmarks...")
     bm.main(cli_args)
+    if run_generative:
+        _launch_generative(generative_profile, generative_device, generative_threads, generative_seeds)
     return 0
 
 

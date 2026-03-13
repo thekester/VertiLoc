@@ -1,0 +1,73 @@
+{
+  "rows": 9,
+  "protocols": [
+    "unknown_room",
+    "unknown_campaign_e102"
+  ],
+  "params": {
+    "id_test_size": 0.2,
+    "random_state": 42,
+    "hidden_layers": [
+      32,
+      16
+    ],
+    "activation": "relu",
+    "max_iter": 80,
+    "learning_rate": 0.001,
+    "alpha": 0.0001,
+    "k_neighbors": 5,
+    "ood_energy_percentile": 95.0,
+    "ood_distance_percentile": 95.0,
+    "ood_temperature": 1.0
+  },
+  "summary_by_protocol_mean": [
+    {
+      "protocol": "unknown_campaign_e102",
+      "n_train": 7500.0,
+      "n_id": 1875.0,
+      "n_ood": 1875.0,
+      "ood_energy_threshold": -3.6805981479685292,
+      "ood_distance_threshold": 3.8372891145914313e-07,
+      "ood_energy_percentile": 95.0,
+      "ood_distance_percentile": 95.0,
+      "ood_temperature": 1.0,
+      "rule_tpr": 0.8983111111111111,
+      "rule_fpr": 0.8827555555555556,
+      "rule_id_accept_rate": 0.11724444444444444,
+      "rule_ood_reject_rate": 0.8983111111111111,
+      "energy_auroc": 0.46927594666666667,
+      "energy_aupr_ood": 0.49506353348608173,
+      "energy_fpr95": 0.9602666666666667,
+      "distance_auroc": 0.5397374814814815,
+      "distance_aupr_ood": 0.5458783255389902,
+      "distance_fpr95": 0.9817777777777777,
+      "combo_auroc": 0.5391879111111112,
+      "combo_aupr_ood": 0.5459815386693573,
+      "combo_fpr95": 0.9421333333333334
+    },
+    {
+      "protocol": "unknown_room",
+      "n_train": 12658.333333333334,
+      "n_id": 3175.0,
+      "n_ood": 7916.666666666667,
+      "ood_energy_threshold": -3.4812532180473084,
+      "ood_distance_threshold": 3.508101751306132e-07,
+      "ood_energy_percentile": 95.0,
+      "ood_distance_percentile": 95.0,
+      "ood_temperature": 1.0,
+      "rule_tpr": 0.8761550472040668,
+      "rule_fpr": 0.8728222801680429,
+      "rule_id_accept_rate": 0.1271777198319571,
+      "rule_ood_reject_rate": 0.8761550472040668,
+      "energy_auroc": 0.4129847214024309,
+      "energy_aupr_ood": 0.6004576473166302,
+      "energy_fpr95": 0.9655554686368246,
+      "distance_auroc": 0.6030932227622546,
+      "distance_aupr_ood": 0.7099858731434247,
+      "distance_fpr95": 1.0,
+      "combo_auroc": 0.6017910471263702,
+      "combo_aupr_ood": 0.7097604646456214,
+      "combo_fpr95": 0.9617776908590469
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "date": "2026-03-13",
+  "seed": 21,
+  "protocols": [
+    "room_aware"
+  ],
+  "models": [
+    "KNN"
+  ],
+  "calibration_modes": [
+    "none",
+    "temperature",
+    "sigmoid",
+    "isotonic"
+  ],
+  "calibrations_run": [
+    "none",
+    "temperature"
+  ],
+  "rows_metrics": 2,
+  "rows_curves": 42,
+  "failed_runs": 0,
+  "aggregate_mean": [
+    {
+      "protocol": "room_aware",
+      "model": "KNN",
+      "calibration": "none",
+      "n_test": 300.0,
+      "top1_acc": 0.41333333333333333,
+      "top3_acc": 0.4766666666666667,
+      "top5_acc": 0.5033333333333333,
+      "mean_error_m": 0.7944336829178356,
+      "p90_error_m": 2.1290356876476797,
+      "top3_min_error_m": 0.42364420000974046,
+      "top5_min_error_m": 0.3113719336679687,
+      "nll": 17.980310760300746,
+      "brier_multiclass": 0.7462112805490076,
+      "ece": 0.208177989086141,
+      "avg_confidence": 0.6198446557528077,
+      "coverage_at_target_acc": 0.0,
+      "temperature": NaN
+    },
+    {
+      "protocol": "room_aware",
+      "model": "KNN",
+      "calibration": "temperature",
+      "n_test": 300.0,
+      "top1_acc": 0.37666666666666665,
+      "top3_acc": 0.43333333333333335,
+      "top5_acc": 0.4633333333333333,
+      "mean_error_m": 0.858915085663492,
+      "p90_error_m": 2.1290356876476797,
+      "top3_min_error_m": 0.4705788642697297,
+      "top5_min_error_m": 0.32749712991209634,
+      "nll": 3.9325017026321225,
+      "brier_multiclass": 0.7611202603308594,
+      "ece": 0.11701237551000084,
+      "avg_confidence": 0.4002245155518537,
+      "coverage_at_target_acc": 0.0,
+      "temperature": 5.0
+    }
+  ],
+  "target_selective_acc": 0.95,
+  "files": {
+    "metrics_csv": "reports/benchmarks/uncertainty_eval_tiny_roomaware_temp_metrics.csv",
+    "selective_curves_csv": "reports/benchmarks/uncertainty_eval_tiny_roomaware_temp_selective_curves.csv",
+    "summary_json": "reports/benchmarks/uncertainty_eval_tiny_roomaware_temp_summary.json"
+  }
+}

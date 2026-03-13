@@ -91,6 +91,63 @@ python3 scripts/benchmark_models.py
 - Any stage that is skipped (e.g., GPC for speed, missing CatBoost/LightGBM/XGBoost) or fails will be recorded with its reason in `reports/benchmarks/benchmark_failures.json`.
 - Install `catboost`, `lightgbm`, and `xgboost` to fill the corresponding rows instead of `nan`/skipped.
 
+### Embedded/edge profiling (RAM/flash/warm-up/energy)
+Use the dedicated profiler to compare deployment cost per model:
+```bash
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+PYTHONPATH=src python3 scripts/embedded_profile.py \
+  --models rf,et,mlp \
+  --room E102 --distances 4 \
+  --max-train-samples 1200 --max-test-samples 500 \
+  --warmup-runs 20 --repeats 8 --batch-size 32 \
+  --host-power-w 6.0 \
+  --esp32-current-ma 95 --esp32-inference-ms 12 \
+  --output-prefix embedded_profile_e102_quick
+```
+Outputs:
+- `reports/benchmarks/embedded_profile_e102_quick.csv`
+- `reports/benchmarks/embedded_profile_e102_quick.json`
+
+The script reports model footprint (disk/flash proxy), cold start, warm-up,
+latency percentiles, throughput, and host/ESP32 energy per inference.
+
+## Hybrid physical + ML (Sionna RT-oriented path)
+To try an EM-aware bridge between a physical model and data-driven calibration:
+```bash
+PYTHONPATH=src python scripts/sionna_rt_hybrid.py --protocol random --backend sionna \
+  --output reports/benchmarks/sionna_hybrid_metrics_random_sionna_customscene.json
+```
+LOCO across E102 campaigns:
+```bash
+PYTHONPATH=src python scripts/sionna_rt_hybrid.py --protocol loco_e102 --backend sionna \
+  --output reports/benchmarks/sionna_hybrid_metrics_loco_e102_sionna.json
+```
+The script reports 3 model families:
+- `data_driven_centroid`: nearest measured RSSI centroid (baseline);
+- `physical_only`: physical proxy from selected backend (`sionna` or `analytic`);
+- `hybrid_physical_ml`: physical prototypes calibrated via Ridge.
+
+With backend `sionna`, the script now builds a custom E102 classroom scene
+(walls, whiteboard, desk rows, and chair/table obstacles inferred from
+`data/E102/e102_pic`) and varies obstacle layout by campaign+line.
+
+Each JSON includes:
+- per-model cell accuracy + mean/p90 localization error;
+- deltas versus baseline and versus physical-only;
+- protocol metadata (`random` split or `loco_e102` folds);
+- backend metadata (`backend_requested`, `backend_effective`, `sionna_rt` import status).
+
+Optional Sionna RT availability check:
+```bash
+PYTHONPATH=src python scripts/sionna_rt_hybrid.py --protocol random --backend auto --use-sionna
+```
+If Sionna is not installed, the benchmark still runs with the analytic physical proxy and reports the import error in JSON (`sionna_rt.reason`).
+
+Optional install command for Sionna ecosystems (CUDA/TensorFlow compatibility required):
+```bash
+pip install sionna mitsuba drjit
+```
+
 ## Suggested next steps
 1. Increase dataset diversity (different router heights, obstacles, ESP32 orientation) to stress-test the embeddings.
 2. Experiment with metric-learning objectives (contrastive/triplet loss) to enhance geometric consistency and reduce the number of fingerprints needed per cell.

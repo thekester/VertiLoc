@@ -1,0 +1,14 @@
+Analyse d'erreurs qualitative (automatisée)
+Méthode: RF, validation croisée stratifiée 5 folds, E102 (6 campagnes).
+Cas concrets de cellules confondues (top):
+- 2_0 -> 1_1 (4.0 %, 6/150, d=0.391 m, campagne dominante=exp6 100.0 %)
+  Hypothèse radio: sensibilité marquée à l'élévation (exp6 dominant).
+- 0_-3 -> 1_-3 (4.0 %, 6/150, d=0.300 m, campagne dominante=exp1 100.0 %)
+  Hypothèse radio: gradient RSSI local faible entre cellules voisines; effet de bord (géométrie mur/tableau) sur la cellule vraie; sensibilité marquée à l'orientation (exp1 dominant).
+- 1_-4 -> 3_3 (10.0 %, 15/150, d=1.850 m, campagne dominante=exp4 53.3 %)
+  Hypothèse radio: aliasing multi-trajets probable (confusion non locale); effet de bord (géométrie mur/tableau) sur la cellule vraie.
+- 4_3 -> 2_9 (8.7 %, 13/150, d=1.616 m, campagne dominante=exp5 100.0 %)
+  Hypothèse radio: aliasing multi-trajets probable (confusion non locale); effet de bord (géométrie mur/tableau) sur la cellule vraie; sensibilité marquée à l'élévation (exp5 dominant).
+- 0_7 -> 4_8 (8.7 %, 13/150, d=1.226 m, campagne dominante=exp3 100.0 %)
+  Hypothèse radio: aliasing multi-trajets probable (confusion non locale); effet de bord (géométrie mur/tableau) sur la cellule vraie; sensibilité marquée à l'orientation (exp3 dominant).
+Note: les hypothèses sont des diagnostics guidés par la géométrie des cellules et la concentration des erreurs par campagne; elles doivent être validées par tests ciblés (obstruction/rotation/élévation contrôlées).

@@ -1,0 +1,4 @@
+metric_set,cell_accuracy,mean_error_m
+baseline_low_data,0.7173333333333334,0.3472049603665972
+augmented_with_generative,0.6613333333333333,0.48158227083987065
+upper_bound_full_train,0.976,0.03393766553372192

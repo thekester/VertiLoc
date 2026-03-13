@@ -1,0 +1,86 @@
+{
+  "date": "2026-03-13",
+  "seed": 21,
+  "protocols": [
+    "room_aware",
+    "loro_room",
+    "loco_e102"
+  ],
+  "models": [
+    "KNN"
+  ],
+  "calibration_modes": [
+    "none",
+    "temperature",
+    "sigmoid",
+    "isotonic"
+  ],
+  "calibrations_run": [
+    "none"
+  ],
+  "rows_metrics": 10,
+  "rows_curves": 210,
+  "failed_runs": 0,
+  "aggregate_mean": [
+    {
+      "protocol": "loco_e102",
+      "model": "KNN",
+      "calibration": "none",
+      "n_test": 300.0,
+      "top1_acc": 0.012222222222222223,
+      "top3_acc": 0.04555555555555555,
+      "top5_acc": 0.07,
+      "mean_error_m": 1.4350190896967139,
+      "p90_error_m": 2.564676314722658,
+      "top3_min_error_m": 0.8082881865722045,
+      "top5_min_error_m": 0.6290462901967036,
+      "nll": 33.88437260183979,
+      "brier_multiclass": 1.3282129538619436,
+      "ece": 0.44816951212435785,
+      "avg_confidence": 0.46039173434658015,
+      "coverage_at_target_acc": 0.0
+    },
+    {
+      "protocol": "loro_room",
+      "model": "KNN",
+      "calibration": "none",
+      "n_test": 296.0,
+      "top1_acc": 0.011250000000000001,
+      "top3_acc": 0.03263888888888889,
+      "top5_acc": 0.05513888888888888,
+      "mean_error_m": 1.2710718537410577,
+      "p90_error_m": 2.22746025264604,
+      "top3_min_error_m": 0.7781581337419224,
+      "top5_min_error_m": 0.6055469611510365,
+      "nll": 34.25936353621689,
+      "brier_multiclass": 1.280982537148543,
+      "ece": 0.39344069546463123,
+      "avg_confidence": 0.4046906954646314,
+      "coverage_at_target_acc": 0.0
+    },
+    {
+      "protocol": "room_aware",
+      "model": "KNN",
+      "calibration": "none",
+      "n_test": 300.0,
+      "top1_acc": 0.41333333333333333,
+      "top3_acc": 0.4766666666666667,
+      "top5_acc": 0.5033333333333333,
+      "mean_error_m": 0.7944336829178356,
+      "p90_error_m": 2.1290356876476797,
+      "top3_min_error_m": 0.42364420000974046,
+      "top5_min_error_m": 0.3113719336679687,
+      "nll": 17.980310760300746,
+      "brier_multiclass": 0.7462112805490076,
+      "ece": 0.208177989086141,
+      "avg_confidence": 0.6198446557528077,
+      "coverage_at_target_acc": 0.0
+    }
+  ],
+  "target_selective_acc": 0.95,
+  "files": {
+    "metrics_csv": "reports/benchmarks/uncertainty_eval_tiny_metrics.csv",
+    "selective_curves_csv": "reports/benchmarks/uncertainty_eval_tiny_selective_curves.csv",
+    "summary_json": "reports/benchmarks/uncertainty_eval_tiny_summary.json"
+  }
+}

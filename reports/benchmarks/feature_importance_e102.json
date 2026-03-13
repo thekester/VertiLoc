@@ -1,0 +1,99 @@
+{
+  "rf_importances": {
+    "Signal": 0.1497479393371441,
+    "Noise": 0.0011495093847677638,
+    "signal_A1": 0.27735486561181993,
+    "signal_A2": 0.28122149105330757,
+    "signal_A3": 0.29052619461296075
+  },
+  "subset_results": [
+    {
+      "feature_subset": "Signal only",
+      "n_features": 1,
+      "features": "Signal",
+      "RF_acc": 0.07102222222222222,
+      "KNN_acc": 0.03955555555555555,
+      "HistGB_acc": 0.07057777777777777
+    },
+    {
+      "feature_subset": "Signal+Noise",
+      "n_features": 2,
+      "features": "Signal, Noise",
+      "RF_acc": 0.0728,
+      "KNN_acc": 0.04195555555555556,
+      "HistGB_acc": 0.07057777777777777
+    },
+    {
+      "feature_subset": "Signal+A1",
+      "n_features": 2,
+      "features": "Signal, signal_A1",
+      "RF_acc": 0.2986666666666667,
+      "KNN_acc": 0.2644444444444444,
+      "HistGB_acc": 0.30008888888888885
+    },
+    {
+      "feature_subset": "Signal+A2",
+      "n_features": 2,
+      "features": "Signal, signal_A2",
+      "RF_acc": 0.2857777777777778,
+      "KNN_acc": 0.2591111111111111,
+      "HistGB_acc": 0.2855111111111111
+    },
+    {
+      "feature_subset": "Signal+A3",
+      "n_features": 2,
+      "features": "Signal, signal_A3",
+      "RF_acc": 0.30808888888888886,
+      "KNN_acc": 0.26266666666666666,
+      "HistGB_acc": 0.3066666666666667
+    },
+    {
+      "feature_subset": "Signal+A1+A2",
+      "n_features": 3,
+      "features": "Signal, signal_A1, signal_A2",
+      "RF_acc": 0.7559111111111111,
+      "KNN_acc": 0.7416,
+      "HistGB_acc": 0.7552
+    },
+    {
+      "feature_subset": "Signal+A1+A2+A3",
+      "n_features": 4,
+      "features": "Signal, signal_A1, signal_A2, signal_A3",
+      "RF_acc": 0.9225777777777777,
+      "KNN_acc": 0.9158222222222221,
+      "HistGB_acc": 0.7459555555555556
+    },
+    {
+      "feature_subset": "All 5 features",
+      "n_features": 5,
+      "features": "Signal, Noise, signal_A1, signal_A2, signal_A3",
+      "RF_acc": 0.9226666666666666,
+      "KNN_acc": 0.9158222222222221,
+      "HistGB_acc": 0.7459555555555556
+    },
+    {
+      "feature_subset": "No Noise",
+      "n_features": 4,
+      "features": "Signal, signal_A1, signal_A2, signal_A3",
+      "RF_acc": 0.9225777777777777,
+      "KNN_acc": 0.9158222222222221,
+      "HistGB_acc": 0.7459555555555556
+    },
+    {
+      "feature_subset": "No Signal (antennes only)",
+      "n_features": 4,
+      "features": "Noise, signal_A1, signal_A2, signal_A3",
+      "RF_acc": 0.9073777777777778,
+      "KNN_acc": 0.9010666666666666,
+      "HistGB_acc": 0.9071111111111112
+    },
+    {
+      "feature_subset": "Antennes only",
+      "n_features": 3,
+      "features": "signal_A1, signal_A2, signal_A3",
+      "RF_acc": 0.9073777777777778,
+      "KNN_acc": 0.9010666666666666,
+      "HistGB_acc": 0.9071111111111112
+    }
+  ]
+}

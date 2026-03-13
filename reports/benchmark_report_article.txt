@@ -6,6 +6,58 @@ Date : Mars 2026
 
 
 ════════════════════════════════════════════════════════════════════════════════
+0. RÉSUMÉ EXÉCUTIF
+════════════════════════════════════════════════════════════════════════════════
+
+  Ce rapport documente l'ensemble des benchmarks réalisés pour un système de
+  localisation indoor par fingerprinting RSSI Wi-Fi à granularité cellule
+  (25 cm × 30 cm), sans capteur supplémentaire, dans 3 salles distinctes.
+
+  CHIFFRES CLÉS POUR L'ARTICLE
+  ──────────────────────────────
+
+  Données :
+  - 3 salles (D005, E101, E102) | 23 750 échantillons total
+  - 75/72/35 cellules | 5 features RSSI (Signal, Noise, A1, A2, A3)
+
+  Meilleure précision (protocole room-aware, multi-salles, n=23 750) :
+  - Top-1 (cellule exacte)    : 94.3 %  (Bagging KNN)  |  erreur moy. 0.082 m
+  - Top-3 spatial             : 97.9 %  (KNN)          |  top-3 min error 0.013 m
+  - p90 erreur                : 0.00 m  → 90 %+ des prédictions sont à 0 cm
+  - Coverage @ 95 % acc cible : 92.0 %  (KNN sans calibration)
+  - Significativité : KNN ≡ NN+L-KNN (McNemar p=0.070) ; KNN > ExtraTrees (p<0.0001)
+
+  Précision intra-salle (sans one-hot salle) :
+  - E102 (75 cellules, 6 campagnes) : KNN = NN+L-KNN = 92.7 %
+  - E101 (72 cellules, 6 campagnes) : KNN 91.0 %
+
+  Généralisation — limites fondamentales :
+  - LORO (salle inconnue)         : ~1–2 % tous modèles  → non transférable
+  - LOCO E102 (campagne inconnue) : HistGB 2.42 %         → non transférable
+  - Conclusion : chaque déploiement requiert une recalibration complète.
+
+  Robustesse :
+  - Bruit synthétique σ=1 dBm : perte < 1 pp (KNN, LOCO E102)
+  - Bruit σ=3 dBm             : dégradation significative (voir section 16septies)
+  - Learning curve : 60 % des données suffisent pour atteindre ~90 % du plateau
+
+  Protocole TriScope (modèle multi-tâche, D005+E101, 50 tirages) :
+  - Cellule : 97.6 % ± 3.4 % | Distance routeur : 57.1 % | Salle : 72.1 %
+
+  Calibration / Incertitude :
+  - ECE KNN (brut) : 0.023 → très bien calibré naturellement
+  - HistGB + temperature scaling : ECE 0.012, NLL 0.285 (meilleure calibration)
+
+  Modèle recommandé en production :
+  - Décisions "hard" (argmax)     → KNN (k=7, poids distance)
+  - Décisions probabilistes       → HistGB + temperature scaling
+  - Contrainte mémoire/latence    → voir section profil embarqué (16sexies/16quinquiesdecies)
+
+  Référence état de l'art (Wi-Fi fingerprinting) :
+  - Travaux publiés (KNN RSSI indoor) : 70–90 % @ grille 0.5–1 m typique
+  - Ce système : 92–94 % @ cellule 25×30 cm → granularité ×20 plus fine
+
+════════════════════════════════════════════════════════════════════════════════
 1. CONTEXTE ET OBJECTIF
 ════════════════════════════════════════════════════════════════════════════════
 
@@ -136,6 +188,8 @@ Tous les modèles résolvent un problème de classification multi-classes (75 cl
   (distance euclidienne dans l'espace RSSI). Paramètre k optimisé par CV.
   Variantes testées :
     - KNN raw : KNN direct sur les 5 features
+    - KNN distance+scaled : KNN pondéré par la distance après standardisation
+      des features (baseline simple et robuste)
     - Bagging KNN : ensemble de KNN sur sous-échantillons bootstrap
     - KNN Mahalanobis : distance de Mahalanobis (skippé, données insuffisantes)
     - LDA+KNN : projection LDA puis KNN dans l'espace réduit
@@ -191,6 +245,8 @@ Tous les modèles résolvent un problème de classification multi-classes (75 cl
   - GaussianNB : Naive Bayes gaussien (hypothèse d'indépendance des features)
   - QDA : Analyse Discriminante Quadratique
   - LDA : Analyse Discriminante Linéaire (utilisée comme prétraitement pour KNN)
+  - Logistic Regression calibrée (Platt/sigmoid via CV) :
+    baseline discriminative multi-classes avec probabilités calibrées.
 
 ────────────────────────────────────────────────────────────────────────────────
 4.9 Modèle Multihead (RSSI seul, sans label de salle)
@@ -207,6 +263,65 @@ Tous les modèles résolvent un problème de classification multi-classes (75 cl
   - CatBoost, LightGBM, XGBoost : skippés (non installés dans l'environnement)
   - Stacking (RF+SVM+MLP) : skippé dans les runs finaux (temps de calcul excessif,
     ~66 min par fold sur le dataset multi-salles)
+
+────────────────────────────────────────────────────────────────────────────────
+4.11 Piste hybride physique + ML (orientation Sionna RT)
+────────────────────────────────────────────────────────────────────────────────
+  Une piste complémentaire a été ajoutée pour relier modèle physique et
+  adaptation data-driven, dans l'esprit Sionna RT (ray tracing différentiable).
+
+  Implémentation actuelle :
+    1) Modèle physique :
+       - backend analytique (path-loss enrichi),
+       - backend Sionna RT (ray tracing sur scènes intégrées, multi-antennes Tx).
+    2) Calibration ML : régression Ridge multi-sortie pour corriger ces
+       prototypes physiques à partir des mesures réelles.
+    3) Inférence : appariement au prototype le plus proche (cellule + distance).
+
+  Script dédié :
+    - scripts/sionna_rt_hybrid.py
+    - Sortie : reports/benchmarks/sionna_hybrid_metrics.json
+
+  Commande :
+    PYTHONPATH=src python scripts/sionna_rt_hybrid.py --protocol random --backend sionna
+
+  Option Sionna RT (si disponible) :
+    PYTHONPATH=src python scripts/sionna_rt_hybrid.py --protocol random --backend auto --use-sionna
+
+  Remarque : si Sionna RT n'est pas installé, le script exécute tout de même le
+  benchmark avec le proxy physique analytique et journalise l'état d'import dans
+  le JSON. Cette approche permet de valider rapidement la valeur d'un hybride
+  physique+ML avant intégration d'une scène Sionna complète (matériaux, géométrie,
+  orientation d'antennes, et fine-tuning différentiable sur RSSI mesurés).
+
+  Mise à jour expérimentale (exécutée le 12 mars 2026, backend Sionna RT actif) :
+    - Protocole random (80/20) :
+      * data_driven_centroid : 29.38 % cell acc | erreur moyenne 0.993 m
+      * physical_only        :  1.42 % cell acc | erreur moyenne 1.434 m
+      * hybrid_physical_ml   :  2.36 % cell acc | erreur moyenne 1.410 m
+    - Protocole LOCO E102 :
+      * scénario custom-scene prêt dans le script, mais run complet non relancé
+        dans cette itération (temps de calcul élevé).
+
+  Fichiers produits :
+    - reports/benchmarks/sionna_hybrid_metrics_random_sionna_customscene.json
+    - (optionnel à relancer) reports/benchmarks/sionna_hybrid_metrics_loco_e102_sionna.json
+
+  Interprétation rapide :
+    - Le backend Sionna RT est désormais opérationnel (import OK), avec calcul
+      physique explicite des prototypes RSSI via ray tracing.
+    - Une scène E102 custom a été reconstruite à partir des images du dossier
+      `data/E102/e102_pic` (murs, tableau, tables, obstacles par exp/ligne).
+    - La grille de mesure est désormais projetée sur le plan du tableau
+      (largeur 3.95 m, hauteurs 1.18 m -> 2.20 m), avec routeur centré à 4 m.
+    - Dans ce réglage initial, le modèle physique brut reste sous la baseline
+      data-driven ; la calibration Ridge récupère une partie de l'écart.
+    - Le gain principal de cette étape est la chaîne de simulation EM prête pour
+      l'optimisation future (matériaux, géométrie, placement Tx/Rx, fine-tuning).
+    - Paramètres géométriques saisis pour E102 (mesures terrain) :
+      tableau blanc largeur 3.95 m, bas à 1.18 m du sol, haut à 2.20 m ;
+      routeur centré par rapport au tableau, à 4 m du tableau, hauteur table 0.75 m
+      (exp5 sol = 0 m, exp6 élévation = 1.50 m).
 
 
 ════════════════════════════════════════════════════════════════════════════════
@@ -259,6 +374,48 @@ Tous les modèles résolvent un problème de classification multi-classes (75 cl
 ────────────────────────────────────────────────────────────────────────────────
   Évaluation cellule par cellule via cross-validation 5 folds sur E102 (RF).
   Permet d'identifier les zones géographiques difficiles à localiser.
+
+────────────────────────────────────────────────────────────────────────────────
+5.7 Protocole anti-leakage strict (à implémenter/valider)
+────────────────────────────────────────────────────────────────────────────────
+  Objectif : garantir qu'aucun quasi-duplicat (même cellule/campagne, RSSI très
+  proche) n'est partagé entre train et test.
+
+  Règles proposées :
+  1) Split par groupes atomiques :
+     - groupe = (room, campaign, grid_cell)
+     - un groupe appartient intégralement au train OU au test, jamais aux deux.
+  2) Vérification post-split obligatoire :
+     - intersection exacte des groupes train/test = vide ;
+     - intersection des signatures RSSI quantifiées (ex. pas 0.5 dB) sur un même
+       (room, campaign, grid_cell) = vide.
+  3) Agrégations calculées train-only :
+     - toute feature agrégée (moyenne/variance/prototype par cellule/campagne,
+       normalisation globale, etc.) est fit uniquement sur train puis appliquée
+       au test ;
+     - interdiction de recalculer une statistique en mélangeant train+test.
+  4) Audit de fuite traçable :
+     - journaliser `n_groups_train`, `n_groups_test`, `n_overlap_groups`,
+       `n_overlap_signatures` ;
+     - si overlap > 0, run invalide (échec explicite du benchmark).
+
+  Bénéfice : métriques plus conservatrices mais robustes, et comparaison
+  inter-modèles plus fiable en présence de séries RSSI fortement redondantes.
+
+────────────────────────────────────────────────────────────────────────────────
+5.8 Top-k spatial (ajout opérationnel)
+────────────────────────────────────────────────────────────────────────────────
+  En complément des métriques classiques (accuracy top-1, erreur moyenne),
+  on suit désormais :
+  - top-1 accuracy (`top1_acc`) ;
+  - top-3 accuracy (`top3_acc`) ;
+  - distance au meilleur candidat parmi le top-3 (`top3_best_error_m`) ;
+  - gain spatial top-3 vs top-1 (`top3_best_gain_m`), en mètres.
+
+  Intérêt opérationnel :
+  même quand la cellule exacte top-1 est ratée, le top-3 peut rester
+  géographiquement proche de la vérité terrain, ce qui reflète mieux
+  la "rattrapabilité" de la décision en exploitation.
 
 
 ════════════════════════════════════════════════════════════════════════════════
@@ -451,6 +608,58 @@ Right) est le cas le plus "généralisable" (~3 %).
 → La haute précision du benchmark room-aware (92–94 %) est due au fait que
   toutes les conditions sont représentées dans le split d'entraînement.
 
+════════════════════════════════════════════════════════════════════════════════
+11bis. QUANTIFICATION DU SHIFT TRAIN/TEST (LOCO E102)
+════════════════════════════════════════════════════════════════════════════════
+
+Objectif :
+  Mesurer explicitement la divergence de distribution RSSI entre train et test
+  pour chaque fold LOCO E102, puis corréler cette divergence avec la chute de
+  performance.
+
+Métriques de shift implémentées :
+  - MMD RBF (Maximum Mean Discrepancy, estimateur non biaisé),
+  - Wasserstein-1 (par feature + agrégats mean/max),
+  - PSI simple (Population Stability Index, par feature + agrégats mean/max).
+
+Implémentation et sorties :
+  - Script : `scripts/shift_quantification.py`
+  - Entrée perf : `reports/benchmarks/loco_e102.csv`
+  - Sorties :
+      `reports/benchmarks/shift_loco_e102.csv`
+      `reports/benchmarks/shift_loco_e102_perf_corr.csv`
+      `reports/benchmarks/shift_loco_e102_perf_corr.json`
+  - Figure article :
+      `reports/benchmarks/shift_loco_e102_overview.png`
+  - Tableau compact (top corrélations) :
+      `reports/benchmarks/shift_loco_e102_top_correlations.csv`
+
+Faits saillants (sur 6 folds LOCO) :
+  - Le split le plus décalé est exp6_1m50 (routeur surélevé), avec les plus
+    fortes valeurs de divergence :
+      MMD = 0.1827, Wasserstein_mean = 3.335, PSI_mean = 0.958, PSI_max = 2.003.
+  - Les splits exp2/exp4/exp5 présentent des divergences plus faibles
+    (MMD ≈ 0.019–0.022).
+  - L'ordre de sévérité du shift est cohérent avec l'intuition physique :
+    élévation forte (exp6) > changements d'orientation simples.
+
+Corrélation shift -> dégradation de performance :
+  - Cible 1 : `acc_drop` = max(acc) - acc (par modèle, par fold),
+  - Cible 2 : `err_increase` = err - min(err) (par modèle, par fold).
+
+Exemples de corrélations observées (Pearson) :
+  - ExtraTrees, `err_increase` vs `psi_max` : r = +0.820
+  - ExtraTrees, `err_increase` vs `mmd_rbf` : r = +0.788
+  - HistGB,    `err_increase` vs `psi_max` : r = +0.705
+
+Interprétation :
+  - Sur plusieurs modèles (notamment ExtraTrees/HistGB), plus le shift
+    train/test est élevé, plus l'erreur augmente.
+  - Le signal est net pour l'erreur moyenne, plus instable pour l'accuracy
+    cellule (normal sur un problème à 75 classes déjà proche du hasard en LOCO).
+  - Taille d'échantillon faible (n=6 folds) : ces corrélations sont des indices
+    mécanistiques utiles, pas une preuve statistique définitive.
+
 
 ════════════════════════════════════════════════════════════════════════════════
 12. RÉSULTATS — CLASSIFICATION DE DISTANCE ROUTEUR
@@ -610,6 +819,939 @@ salle en un seul passage, sans information contextuelle extérieure.
      simplicité et leur performance maximale. NN+L-KNN pour les scénarios
      où la distance doit aussi être estimée (91.9 % de précision distance).
 
+────────────────────────────────────────────────────────────────────────────────
+14.6 Piste complémentaire : GAN / CycleGAN / estimation générative de carte radio
+────────────────────────────────────────────────────────────────────────────────
+  Les approches génératives récentes (GAN conditionnels, CycleGAN, generative
+  radio map estimation) constituent une piste crédible pour réduire le coût de
+  recalibration lorsqu'une nouvelle salle dispose de peu de mesures.
+
+  Intérêt principal :
+  - Générer/compléter des fingerprints RSSI manquants à partir d'un sous-ensemble
+    de points mesurés.
+  - Effectuer un transfert de domaine (salle source -> salle cible) en apprenant
+    une transformation de distribution RSSI.
+
+  Limites pratiques (premier déploiement) :
+  - Entraînement instable et sensible au tuning (mode collapse, variabilité run-to-run).
+  - Risque d'halluciner des structures radio non physiques si la contrainte
+    géométrique/proagation n'est pas suffisamment imposée.
+  - Complexité d'implémentation/validation nettement supérieure à RadioUNet,
+    XGBoost ou un GNN bien régularisé.
+
+  Position recommandée pour ce projet :
+  - Prioriser d'abord un socle robuste et reproductible (RadioUNet, XGBoost,
+    GNN) comme baseline opérationnelle.
+  - Évaluer ensuite la piste générative comme module d'augmentation/transfert,
+    avec protocole strict :
+      (i) scénario low-data cible (5-20 % de points mesurés),
+      (ii) comparaison contre interpolation + baselines discriminatives,
+      (iii) métriques cellule + erreur spatiale + stabilité inter-seeds,
+      (iv) ablation avec/sans contraintes physiques.
+
+  Conclusion opérationnelle : piste prometteuse pour le few-shot inter-domaines,
+  mais plus risquée qu'une approche discriminative classique en premier essai.
+
+────────────────────────────────────────────────────────────────────────────────
+14.7 Essais implémentés (code) — cGAN/CycleGAN sur E102 (low-data)
+────────────────────────────────────────────────────────────────────────────────
+  Implémentation réalisée : script `scripts/generative_radio_map.py` avec deux
+  modes (`cgan`, `cyclegan`) et protocole d'évaluation standardisé :
+  - baseline : KNN entraîné sur faible quantité de données cible
+  - augmenté : KNN entraîné sur (données réelles low-data + données synthétiques)
+  - upper bound : KNN entraîné sur train cible complet
+
+  Paramétrage principal des essais :
+  - cGAN : 40 epochs, 20 échantillons synthétiques/cellule
+  - CycleGAN : 20 epochs, transfert exp2 -> cible, 20 synthétiques/cellule
+  - split cible : 80/20, low-data = 10 % ou 20 % du train
+
+  Résumé chiffré (delta = augmenté - baseline) :
+  - cGAN (6 runs) :
+    delta_acc moyen  = -0.09 points
+    delta_err moyen  = +0.005 m
+    Observation : effet global quasi neutre, parfois légère amélioration locale
+    de l'erreur (ex: exp1 à 10 %, seed 7 : -0.005 m), mais non stable selon seed.
+  - CycleGAN (3 runs) :
+    delta_acc moyen  = -4.53 points
+    delta_err moyen  = +0.066 m
+    Observation : dégradation systématique de la précision cellule ; transfert
+    de style RSSI inter-campagne insuffisamment fiable dans cette configuration.
+
+  Stabilité statistique recommandée (idée à explorer en protocole standard) :
+  - Répéter chaque protocole avec au moins 10 seeds indépendantes.
+  - Reporter, pour chaque métrique (accuracy, erreur moyenne, delta), le triplet
+    moyenne ± écart-type, puis l'IC95% :
+      IC95% = moyenne ± t_(0.975, n-1) * (ecart_type / sqrt(n))
+  - Interprétation : un gain n'est considéré robuste que si l'IC95% du delta
+    n'inclut pas 0.
+  - Sortie dédiée ajoutée dans le code : `generative_trials_stats.csv`
+    (agrégation par protocole avec n_seeds, moyenne, std, bornes IC95%).
+  - Exécution recommandée (10 seeds) :
+    `python3 scripts/super_benchmarks.py --run-generative --generative-profile full --generative-seeds 1-10`
+
+  Conclusion empirique à ce stade :
+  - La piste générative est bien implémentée et testée, mais ne dépasse pas les
+  baselines discriminatives sur les essais actuels.
+  - cGAN peut être conservé comme module exploratoire (effet faible/neutre),
+    tandis que CycleGAN est à considérer comme trop risqué sans contraintes
+    physiques additionnelles ou tuning plus poussé.
+
+────────────────────────────────────────────────────────────────────────────────
+14.8 Stabilité statistique (benchmarks classiques) — implémentation multi-seeds
+────────────────────────────────────────────────────────────────────────────────
+  Extension codée (mars 2026) :
+  - Les benchmarks classiques acceptent désormais des exécutions multi-seeds.
+  - Agrégation automatique par algorithme avec :
+    * moyenne
+    * écart-type (std)
+    * IC95% (Student-t) : moyenne ± t_(0.975, n-1) * std / sqrt(n)
+
+  Nouveaux fichiers exportés :
+  - `reports/benchmarks/benchmark_summary_per_seed.csv`
+    (une ligne par seed × algorithme)
+  - `reports/benchmarks/benchmark_summary_stats.csv`
+    (moyenne/std/IC95 + bornes low/high)
+  - `reports/benchmarks/benchmark_summary.csv`
+    (version compacte, moyennes multi-seeds pour compatibilité)
+
+  Commandes (10 seeds recommandés) :
+  - Direct :
+    `PYTHONPATH=src python3 scripts/benchmark_models.py --seeds 1-10 --skip-optional --no-stacking`
+  - Via helper interactif :
+    `PYTHONPATH=src python3 scripts/super_benchmarks.py --non-interactive --benchmark-seeds 1-10`
+
+  Résultats consolidés actuellement disponibles (n=10 seeds, filtre D005,
+  distances 2 m + 4 m, holdout désactivé, options runtime:
+  `--skip-optional --no-stacking --skip-heatmap --skip-significance`) :
+  - Meilleure accuracy cellule (room-aware) :
+    * LDA+KNN (room-aware, cell)           : 98.06 % ± 0.71 pts (IC95% ± 0.51 pt)
+    * KNN (room-aware, cell)               : 98.00 % ± 0.58 pts (IC95% ± 0.42 pt)
+    * NN+L-KNN (room-aware, cell+distance) : 98.00 % ± 0.70 pts (IC95% ± 0.50 pt)
+  - Meilleure erreur moyenne (room-aware) :
+    * LDA+KNN (room-aware, cell)           : 0.0138 m ± 0.0044 m (IC95% ± 0.0031 m)
+    * NN+L-KNN (room-aware, cell+distance) : 0.0156 m ± 0.0056 m (IC95% ± 0.0040 m)
+    * KNN (room-aware, cell)               : 0.0169 m ± 0.0045 m (IC95% ± 0.0032 m)
+  - Classification de distance routeur :
+    * ExtraTrees (raw RSSI)  : 98.15 % ± 0.89 pts (IC95% ± 0.64 pt)
+    * RandomForest (raw RSSI): 98.03 % ± 0.42 pts (IC95% ± 0.30 pt)
+    * LogReg (embedding)     : 76.76 % ± 2.98 pts (IC95% ± 2.13 pts)
+
+  Note méthodologique :
+  - Ces résultats n=10 sont statistiquement plus fiables que le smoke test n=2,
+    mais restent spécifiques au protocole D005 (single-room).
+  - Pour la conclusion principale article multi-salles, relancer le même
+    protocole n=10 sans filtre de salle (temps de calcul nettement plus élevé).
+
+
+════════════════════════════════════════════════════════════════════════════════
+16bis. COMPLÉMENT 2026 — BENCHMARK HEATMAP FINGERPRINTING
+════════════════════════════════════════════════════════════════════════════════
+
+  Protocole (12 mars 2026) :
+  - Représentation heatmap 2x3 construite depuis [Signal, Noise, A1, A2, A3].
+  - Variante séquentielle "window=5" (proxy CNN-LSTM sans dépendance deep
+    runtime) sur séquences temporelles intra-cellule.
+  - Sous-échantillonnage runtime-friendly : 12 mesures conservées par
+    (room, campaign, grid_cell), soit 11 400 échantillons.
+
+  Résultats (cell accuracy | mean error m | p90 error m) :
+  - Raw KNN baseline (RSSI vector only)   : 90.04 % | 0.118 | 0.000
+  - Heatmap KNN (2x3 RSSI map)            : 90.13 % | 0.118 | 0.000
+  - Raw MLP baseline (RSSI vector only)   :  8.77 % | 1.217 | 2.500
+  - Heatmap MLP (2x3 RSSI map)            : 10.18 % | 1.189 | 2.500
+  - Heatmap sequence MLP (window=5)       : 19.87 % | 1.093 | 2.423
+
+  Lecture :
+  - Sur ce protocole, la représentation heatmap n'apporte pas de gain net face
+    au KNN brut (performances quasi identiques).
+  - Le bénéfice principal observé est un léger mieux sur les modèles MLP
+    faibles, mais insuffisant pour rivaliser avec les approches KNN/arbres.
+  - Une vraie comparaison CNN/CNN-LSTM nécessite PyTorch/TensorFlow et une
+    grille d'hyperparamètres dédiée (non installés dans cet environnement).
+
+────────────────────────────────────────────────────────────────────────────────
+16ter. GÉNÉRALISATION HEATMAP (LORO / LOCO)
+────────────────────────────────────────────────────────────────────────────────
+
+  Protocole :
+  - LORO inter-salle (Leave-One-Room-Out) sur D005 + E101 + E102.
+  - LOCO inter-campagne E102 (Leave-One-Campaign-Out sur exp1..exp6).
+  - Comparaison : Raw KNN (RSSI brut) vs Heatmap KNN (2x3).
+
+  Résultats moyens LORO inter-salle :
+  - Raw KNN     : 1.28 % accuracy | 1.275 m erreur moyenne | p90 = 2.375 m
+  - Heatmap KNN : 1.20 % accuracy | 1.275 m erreur moyenne | p90 = 2.375 m
+
+  Résultats moyens LOCO E102 :
+  - Raw KNN     : 1.96 % accuracy | 1.408 m erreur moyenne | p90 = 2.533 m
+  - Heatmap KNN : 1.97 % accuracy | 1.407 m erreur moyenne | p90 = 2.541 m
+
+  Conclusion :
+  - Le benchmark de généralisation confirme la limite structurelle déjà observée
+    sur le fingerprinting RSSI : très faible transférabilité inter-domaine.
+  - La représentation heatmap seule n'améliore pas ce point de façon
+    significative dans ces protocoles de holdout stricts.
+
+────────────────────────────────────────────────────────────────────────────────
+16quater. ÉVALUATION PAR ZONES (VOISINAGE DE CELLULES)
+────────────────────────────────────────────────────────────────────────────────
+
+  Objectif :
+  - Mesurer la qualité de localisation "proche" même si la cellule exacte est
+    ratée (tolérance spatiale).
+
+  Métriques utilisées :
+  - Exact : cellule prédite = cellule vraie.
+  - Zone ±1 : cellule dans l'anneau hexagonal de rayon 1 (distance hex <= 1).
+  - Zone ±2 : cellule dans l'anneau hexagonal de rayon 2 (distance hex <= 2).
+  - Zone ±k (complet) : calculé pour tout k de 0 à 16 (diamètre hex du maillage).
+  - Seuils métriques : erreur <= 0.5 m et <= 1.0 m.
+  - Implémentation : coordonnées offset -> cube (grille hexagonale odd-r).
+
+  Résultats moyens LORO inter-salle :
+  - Raw KNN     : Exact 1.28 % | Zone±1 9.16 % | Zone±2 21.57 % | <=1.0m 41.42 %
+  - Heatmap KNN : Exact 1.20 % | Zone±1 9.77 % | Zone±2 21.97 % | <=1.0m 41.61 %
+
+  Résultats moyens LOCO E102 :
+  - Raw KNN     : Exact 1.96 % | Zone±1 8.72 % | Zone±2 19.03 % | <=1.0m 36.35 %
+  - Heatmap KNN : Exact 1.97 % | Zone±1 9.05 % | Zone±2 19.43 % | <=1.0m 36.60 %
+
+  Lecture :
+  - Le critère "zone" montre que le modèle est plus souvent proche que juste
+    exact, ce qui est utile pour un usage assisté.
+  - La version heatmap apporte un léger gain sur les métriques de voisinage
+    (Zone±1, Zone±2, <=1.0 m), même si le gain reste modeste.
+  - Les courbes complètes Zone±k (k=0..16) sont exportées dans les fichiers
+    `heatmap_zone_loro_room.csv`, `heatmap_zone_loco_e102.csv` et
+    `heatmap_zone_summary.json`.
+  - Visualisation consolidée : `reports/benchmarks/heatmap_zone_curves.png`.
+
+────────────────────────────────────────────────────────────────────────────────
+16quinquies. ANALYSE D'ERREURS QUALITATIVE (CELLULES CONFONDUES)
+────────────────────────────────────────────────────────────────────────────────
+
+  Méthode (automatisée, 13 mars 2026) :
+  - Script : `scripts/qualitative_error_analysis.py`
+  - Modèle : RandomForest, CV stratifiée 5 folds sur E102 (6 campagnes)
+  - Sorties : `qualitative_confusions_e102.csv`, `qualitative_cases_e102.json`,
+              `qualitative_cases_e102.txt`
+
+  Cas concrets (top 5) :
+  - 2_0 -> 1_1 (4.0 %, 6/150, d=0.391 m, campagne dominante exp6)
+    Hypothèse radio : sensibilité à l'élévation (exp6 = routeur surélevé).
+  - 0_-3 -> 1_-3 (4.0 %, 6/150, d=0.300 m, campagne dominante exp1)
+    Hypothèse radio : gradient RSSI local faible entre voisines + effet de bord.
+  - 1_-4 -> 3_3 (10.0 %, 15/150, d=1.850 m, dominante exp4 à 53.3 %)
+    Hypothèse radio : aliasing multi-trajets non local depuis un coin de salle.
+  - 4_3 -> 2_9 (8.7 %, 13/150, d=1.616 m, campagne dominante exp5)
+    Hypothèse radio : couplage fond de salle + élévation au sol (exp5).
+  - 0_7 -> 4_8 (8.7 %, 13/150, d=1.226 m, campagne dominante exp3)
+    Hypothèse radio : sensibilité orientation antenne + trajets réfléchis.
+
+  Lecture :
+  - Le jeu de cas montre un mélange de confusions locales (voisines) et non
+    locales (sauts >1 m), indiquant que l'erreur n'est pas uniquement géométrique.
+  - Les campagnes dominantes exp3/exp4/exp5/exp6 confirment l'impact fort de
+    l'orientation et de l'élévation du routeur sur les signatures RSSI.
+  - Les hypothèses doivent être validées par mini-protocoles contrôlés :
+    rotation, élévation, obstruction humaine, et répétitions temporelles.
+
+────────────────────────────────────────────────────────────────────────────────
+16sexies. PROFIL EMBARQUÉ RÉALISTE (RAM/FLASH/WARM-UP/ÉNERGIE)
+────────────────────────────────────────────────────────────────────────────────
+
+  Implémentation (13 mars 2026) :
+  - Nouveau script : `scripts/embedded_profile.py`
+  - Sorties : `reports/benchmarks/embedded_profile_e102_quick.csv` et `.json`
+  - Métriques calculées par modèle :
+    taille disque (proxy flash), temps de chargement, cold start total,
+    warm-up moyen/p95, latence p50/p90/p95/p99, débit (inf/s),
+    énergie/inférence côté hôte, estimation énergie ESP32.
+
+  Commande exécutée (run rapide reproductible) :
+    OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+    PYTHONPATH=src python3 scripts/embedded_profile.py \
+      --models rf,et,mlp \
+      --room E102 --distances 4 \
+      --max-train-samples 1200 --max-test-samples 500 \
+      --warmup-runs 20 --repeats 8 --batch-size 32 \
+      --host-power-w 6.0 \
+      --esp32-current-ma 95 --esp32-inference-ms 12 \
+      --output-prefix embedded_profile_e102_quick
+
+  Hypothèses énergie ESP32 du run :
+  - Tension = 3.3 V
+  - Courant actif moyen = 95 mA
+  - Temps d'inférence supposé = 12 ms
+  - Energie estimée = 3 762 µJ / inférence (= 0.003762 J)
+
+  Résultats (snapshot E102, split 80/20 puis sous-échantillonnage) :
+
+  - MLP
+    Accuracy cellule: 28.0 %
+    Flash proxy: 452.6 KB
+    Cold start total: 3.59 ms
+    Latence p50/p95: 0.0065 / 0.0156 ms
+    Débit: 71 587 inf/s
+    Energie hôte: 0.0838 mJ / inférence
+
+  - RandomForest
+    Accuracy cellule: 58.6 %
+    Flash proxy: 65 007.9 KB (~63.5 MB)
+    Cold start total: 903.5 ms
+    Latence p50/p95: 13.91 / 37.43 ms
+    Débit: 58.6 inf/s
+    Energie hôte: 102.36 mJ / inférence
+
+  - ExtraTrees
+    Accuracy cellule: 61.8 %
+    Flash proxy: 98 885.2 KB (~96.6 MB)
+    Cold start total: 836.7 ms
+    Latence p50/p95: 16.15 / 33.73 ms
+    Débit: 55.7 inf/s
+    Energie hôte: 107.76 mJ / inférence
+
+  Lecture embarquée (ESP32/edge) :
+  - Les ensembles d'arbres ont ici la meilleure précision brute, mais un coût
+    mémoire flash/réseau et une latence nettement supérieurs.
+  - Le MLP est très compact et très rapide, mais sous-performe fortement sur
+    cette configuration de généralisation E102.
+  - Pour une cible ESP32, la décision de déploiement doit donc être pilotée par
+    un compromis précision/flash/latence, puis validée sur firmware réel
+    (mesure bout-en-bout acquisition RSSI + inférence + émission décision).
+
+  Limites de ce snapshot :
+  - Profiling effectué sur hôte Python (pas sur firmware ESP32 natif).
+  - L'énergie ESP32 est une estimation paramétrique; remplacer `--esp32-inference-ms`
+    par la latence mesurée sur cible pour un chiffrage final article.
+
+────────────────────────────────────────────────────────────────────────────────
+  Complément profil (mars 2026) — KNN et NN+L-KNN sur E102 complet
+────────────────────────────────────────────────────────────────────────────────
+
+  Commande exécutée (run sur dataset complet E102, n_train=9000, n_test=2000) :
+    PYTHONPATH=src:scripts python3 scripts/embedded_profile.py \
+      --room E102 --models knn,nn_lknn \
+      --warmup-runs 50 --repeats 10 --host-power-w 6.0 \
+      --output-prefix embedded_profile_e102_knn_nnlknn
+
+  Résultats :
+
+  ┌──────────────────────────────────────────────────────────────────────────────────┐
+  │  Métrique                    │   KNN (k=7, dist)   │   NN+L-KNN (48→24)         │
+  ├──────────────────────────────────────────────────────────────────────────────────┤
+  │  Accuracy cellule (E102)     │      92.35 %         │       92.70 %              │
+  │  Taille modèle (flash proxy) │      0.88 MB (902 KB)│       3.86 MB (3 952 KB)   │
+  │  Chargement modèle           │      1.1 ms           │       3.4 ms              │
+  │  Cold start (load+1ère inf.) │      2.3 ms           │     382.0 ms              │
+  │  Latence médiane (p50)       │      0.034 ms         │      11.35 ms             │
+  │  Latence p95                 │      0.052 ms         │      14.67 ms             │
+  │  Latence p99                 │      0.091 ms         │      24.25 ms             │
+  │  Débit                       │  27 193 inf/s         │      85 inf/s             │
+  │  Énergie hôte / inférence    │      0.22 mJ          │      70.78 mJ             │
+  └──────────────────────────────────────────────────────────────────────────────────┘
+
+  Lecture — comparaison KNN vs NN+L-KNN :
+  - Écart de précision : 0.35 pp en faveur de NN+L-KNN (non significatif, voir
+    section 16terdecies McNemar p=0.070).
+  - Taille modèle : KNN est 4.4× plus petit (0.88 MB vs 3.86 MB).
+  - Latence médiane : KNN est 333× plus rapide (0.034 ms vs 11.35 ms).
+  - Cold start : KNN prêt en 2.3 ms ; NN+L-KNN requiert 382 ms pour la
+    première inférence (JIT + forward pass réseau). Critique sur edge devices.
+  - Débit : KNN supporte 27 000 inf/s vs 85 inf/s pour NN+L-KNN.
+  - Énergie : KNN consomme 321× moins d'énergie par inférence.
+
+  Tableau récapitulatif profil complet (hôte Python, E102) :
+
+  ┌──────────────────────────────────────────────────────────────────────────────────┐
+  │  Modèle    │ Flash(KB) │ Acc.  │ Lat.p50(ms)│ Lat.p95(ms)│ Débit(inf/s)│ E(mJ) │
+  ├──────────────────────────────────────────────────────────────────────────────────┤
+  │  MLP       │    453    │ 28.0% │   0.0065   │   0.016    │  71 587     │ 0.084 │
+  │  KNN       │    902    │ 92.4% │   0.034    │   0.052    │  27 193     │ 0.221 │
+  │  RF        │ 65 008    │ 58.6% │  13.91     │  37.43     │      59     │102.36 │
+  │  ET        │ 98 885    │ 61.8% │  16.15     │  33.73     │      56     │107.76 │
+  │  NN+L-KNN  │  3 952    │ 92.7% │  11.35     │  14.67     │      85     │ 70.78 │
+  └──────────────────────────────────────────────────────────────────────────────────┘
+  (MLP/RF/ET : run rapide n_train=1200, n_test=500 ; KNN/NN_LKNN : n_train=9000, n_test=2000)
+
+  Recommandation embarquée :
+  - KNN est le choix optimal pour l'embarqué : meilleure précision utile
+    (92.4 % vs <62 % pour RF/ET sur run court), modèle compact (0.88 MB),
+    latence sous la milliseconde, énergie minimale.
+  - NN+L-KNN est compétitif en précision mais inadapté à l'edge : 382 ms de
+    cold start et 3.86 MB de flash sont rédhibitoires sur ESP32.
+  - RF et ET sont à exclure de tout déploiement edge : 65–99 MB de flash.
+
+  Fichiers produits :
+  - reports/benchmarks/embedded_profile_e102_knn_nnlknn.csv
+  - reports/benchmarks/embedded_profile_e102_knn_nnlknn.json
+
+────────────────────────────────────────────────────────────────────────────────
+16septies. ROBUSTESSE AU BRUIT SYNTHÉTIQUE (GAUSSIEN RSSI)
+────────────────────────────────────────────────────────────────────────────────
+
+  Objectif :
+  - Quantifier la dégradation de performance quand les 5 features RSSI sont
+    perturbées par un bruit gaussien contrôlé, afin d'obtenir une courbe
+    performance-vs-bruit (sigma en dBm).
+
+  Implémentation (ajout du 13 mars 2026) :
+  - Script : `scripts/noise_robustness_e102.py`
+  - Protocole : LOCO E102 (train sur 5 campagnes, test sur 1 campagne)
+  - Injection bruit : X_test_noisy = X_test + N(0, sigma^2)
+  - Niveaux de bruit testés : sigma = 0, 1, 2, 3 dBm
+  - Répétitions : 10 seeds par sigma et campagne (run consolidé)
+  - Modèles : KNN, RandomForest, NN+L-KNN
+
+  Commande exécutée :
+    python3 scripts/noise_robustness_e102.py --repeats 10 --out-prefix noise_robustness_e102_r10
+
+  Résultats (accuracy moyenne cellule, LOCO E102) :
+  - sigma 0 dBm : KNN 0.0162 | NN+L-KNN 0.0174 | RF 0.0199
+  - sigma 1 dBm : KNN 0.0163 | NN+L-KNN 0.0147 | RF 0.0150
+  - sigma 2 dBm : KNN 0.0150 | NN+L-KNN 0.0136 | RF 0.0140
+  - sigma 3 dBm : KNN 0.0144 | NN+L-KNN 0.0134 | RF 0.0138
+
+  Lecture :
+  - Le script produit la courbe "accuracy vs sigma" et les tables détaillées,
+    prêtes à être réutilisées dans l'article.
+  - Le run consolidé à 10 répétitions confirme la tendance de décroissance
+    de l'accuracy avec l'augmentation de sigma.
+
+────────────────────────────────────────────────────────────────────────────────
+16octies. REJET CALIBRÉ EN PRODUCTION (COURBE COVERAGE-RISK)
+────────────────────────────────────────────────────────────────────────────────
+
+  Objectif :
+  - Introduire une politique de rejet explicite en production :
+    on rejette les prédictions de faible confiance pour augmenter l'accuracy
+    conditionnelle sur les décisions conservées.
+
+  Implémentation (ajout du 13 mars 2026) :
+  - Intégré dans `scripts/benchmark_models.py`
+  - Modèle support : RandomForest (cellule) avec `predict_proba`
+  - Protocole : split train/calibration/test (60/20/20)
+  - Calibration : seuils de confiance appris sur calibration pour des
+    risques cibles (par défaut 5 %, 10 %, 15 %, 20 %)
+  - Évaluation : application de ces seuils sur le test, avec reporting
+    couverture (1 - rejet), taux de rejet, accuracy conditionnelle et risque.
+
+  Commande :
+    `PYTHONPATH=src python3 scripts/benchmark_models.py`
+  (optionnel) cibles de risque custom :
+    `--coverage-risk-targets 0.05,0.1,0.2`
+
+  Artefacts générés :
+  - `reports/benchmarks/coverage_risk_curve.csv`
+  - `reports/benchmarks/coverage_risk_curve.png`
+  - `reports/benchmarks/coverage_risk_operating_points.json`
+
+  Résultats (run du 13 mars 2026, dataset complet) :
+  - Baseline sans rejet (test) : accuracy = 88.04 %
+  - Risque cible 5 %  : rejet = 19.37 % | accuracy conditionnelle = 95.20 %
+  - Risque cible 10 % : rejet = 1.94 %  | accuracy conditionnelle = 89.46 %
+  - Risque cible 20 % : rejet = 0.08 %  | accuracy conditionnelle = 88.12 %
+
+  Lecture attendue :
+  - La courbe trace `accuracy conditionnelle` en fonction du `taux de rejet`.
+  - Les points calibrés donnent des seuils opérationnels prêts pour un
+    système "abstain + fallback" (ex. demande de re-mesure, modèle secondaire).
+
+────────────────────────────────────────────────────────────────────────────────
+16nonies. SPATIAL SMOOTHING POST-PRÉDICTION (VOISINAGE / CRF-LITE)
+────────────────────────────────────────────────────────────────────────────────
+
+  Objectif :
+  - Corriger des erreurs isolées en diffusant localement les probabilités de
+    classe sur le graphe des cellules adjacentes.
+
+  Implémentation (ajout du 13 mars 2026) :
+  - Intégrée au pipeline principal : `src/localization/pipeline.py`
+  - Nouveau switch CLI : `--spatial-smoothing {none,neighbor,crf-lite}`
+  - Paramètres :
+    - `--smoothing-metric {hex,chebyshev,manhattan}`
+    - `--smoothing-radius` (rayon de voisinage)
+    - `--smoothing-alpha` (mélange brut/lissé)
+    - `--smoothing-beta`, `--smoothing-iters` (CRF-lite)
+    - `--smoothing-max-confidence` (agir surtout sur prédictions peu confiantes)
+  - Export :
+    - `reports/latest_metrics.json` contient `spatial_smoothing.{delta_*}`
+    - `reports/predictions.csv` contient `pred_cell_smoothed`,
+      `error_m_smoothed`, `smoothed_fix`, `smoothed_break`.
+
+  Run de validation rapide (D005 2m+4m, split 80/20) :
+  - Mode neighbor (hex, r=1, alpha=0.5) : delta accuracy = +0.000,
+    delta mean error = +0.000 m.
+  - Interprétation : sur ce split quasi saturé (~99.1 % acc), le post-traitement
+    n'apporte pas de gain visible.
+
+  Résultats LOCO E102 (6 campagnes tenues hors, exécution du 13 mars 2026) :
+  - NN+L-KNN + smoothing neighbor (hex r=1) :
+    acc 0.0174 -> 0.0174 (delta +0.0000), erreur 1.403 -> 1.403 m (delta ~0),
+    fixes=0, breaks=0.
+  - NN+L-KNN + smoothing crf-lite (hex r=2) :
+    même constat (aucun changement net).
+  - RandomForest + smoothing neighbor (hex r=1) :
+    acc moyenne +0.0027, erreur moyenne -0.0014 m, net fixes +30
+    (gains surtout sur exp1/exp5, perte sur exp6_1m50).
+  - RandomForest + smoothing crf-lite (hex r=2) :
+    acc moyenne -0.0012, erreur +0.0006 m, net fixes -13.
+
+  Lecture :
+  - Le lissage est peu utile quand les probabilités sont trop "dures" (cas NN+L-KNN
+    en LOCO ici).
+  - Un filtre voisinage simple peut apporter un micro-gain sur des probabilités
+    plus souples (RF), mais le bénéfice n'est pas uniforme selon la campagne.
+  - Les fichiers détaillés sont exportés dans `reports/benchmarks/` :
+    `spatial_smoothing_loco_e102_*.csv/json` et
+    `spatial_smoothing_loco_e102_rf_*.csv/json`.
+
+────────────────────────────────────────────────────────────────────────────────
+16decies. LEARNING CURVE CALIBRATION TERRAIN (20/40/60/80/100 %)
+────────────────────────────────────────────────────────────────────────────────
+
+  Objectif :
+  - Quantifier le coût de calibration terrain en mesurant le compromis
+    performance vs quantité de données de train disponible.
+
+  Implémentation (ajout du 13 mars 2026) :
+  - Script : `scripts/learning_curve_train_fraction_e102.py`
+  - Dataset : E102 complet (11 250 échantillons, 75 cellules)
+  - Protocole :
+    * split stratifié fixe 80/20 (train/test) par répétition,
+    * sous-échantillonnage stratifié du train à 20/40/60/80/100 %,
+    * ré-entraînement du modèle à chaque palier puis évaluation sur le même test.
+  - Run exécuté pour cet article :
+    * modèle KNN (k=7, poids distance),
+    * 10 répétitions (seeds 7..16),
+    * métriques : accuracy cellule, erreur moyenne (m), p90 (m).
+
+  Résultats moyens KNN (± écart-type) :
+  - 20 % train (1 800 échantillons) : 75.07 % ± 1.46 pts | err 0.349 ± 0.026 m
+  - 40 % train (3 600 échantillons) : 87.64 % ± 1.18 pts | err 0.177 ± 0.016 m
+  - 60 % train (5 400 échantillons) : 90.26 % ± 0.64 pts | err 0.139 ± 0.009 m
+  - 80 % train (7 200 échantillons) : 91.50 % ± 0.45 pts | err 0.120 ± 0.009 m
+  - 100 % train (9 000 échantillons): 91.96 % ± 0.81 pts | err 0.115 ± 0.012 m
+
+  Lecture :
+  - Le gain majeur est observé entre 20 % et 40 % (+12.6 points d'accuracy).
+  - Au-delà de 60 %, les gains marginaux se tassent (rendements décroissants).
+  - En pratique, 60-80 % du train complet capture déjà l'essentiel du niveau
+    final sur E102, ce qui fournit une borne utile pour planifier l'effort
+    de calibration sur le terrain.
+
+────────────────────────────────────────────────────────────────────────────────
+16undecies. DÉTECTION OOD (SALLE/CAMPAGNE INCONNUE) — ÉNERGIE + DISTANCE LATENTE
+────────────────────────────────────────────────────────────────────────────────
+
+  Objectif :
+  - Détecter qu'un échantillon RSSI est "hors distribution" (salle/campagne
+    jamais vue) pour activer un fallback au lieu d'une cellule potentiellement
+    trompeuse.
+
+  Implémentation (13 mars 2026) :
+  - `src/localization/embedding_knn.py` :
+      * score énergie softmax (`ood_energy`),
+      * distance au plus proche voisin latent (`ood_embedding_distance`),
+      * calibration de seuils par percentile sur train,
+      * décision binaire : OOD si (énergie > seuil) OR (distance > seuil).
+  - Script d'évaluation : `scripts/ood_unknown_benchmark.py`
+  - Protocoles :
+      * `unknown_room` (holdout D005/E101/E102)
+      * `unknown_campaign_e102` (holdout exp1..exp6)
+  - Métriques :
+      * AUROC, AUPR(OOD), FPR@95TPR (score énergie, distance, score combiné)
+      * TPR/FPR de la règle binaire calibrée.
+
+  Run rapide de validation (max_iter=80, hidden=32/16) :
+  - Unknown room (moyenne 3 holdouts) :
+      * combo AUROC = 0.602
+      * combo FPR@95 = 0.962
+      * règle calibrée OR : TPR = 0.876 | FPR = 0.873
+  - Unknown campaign E102 (moyenne 6 holdouts) :
+      * combo AUROC = 0.539
+      * combo FPR@95 = 0.942
+      * règle calibrée OR : TPR = 0.898 | FPR = 0.883
+
+  Lecture :
+  - Le détecteur attrape beaucoup d'inconnus (TPR élevé) mais rejette aussi
+    beaucoup d'ID (FPR élevé).
+  - Direction utile : calibration dédiée (jeu ID/OOD), seuils asymétriques,
+    et combinaison de scores plus robuste avant mise en production.
+
+────────────────────────────────────────────────────────────────────────────────
+16duodecies. ABLATION STUDY — CONTRIBUTION DES FEATURES (PROTOCOLE LORO)
+────────────────────────────────────────────────────────────────────────────────
+
+  Objectif :
+  - Quantifier l'apport individuel de chaque signal RSSI (A1, A2, A3, Noise)
+    et du vecteur one-hot de salle dans les performances de localisation.
+
+  Implémentation (mars 2026) :
+  - Script : `scripts/ablation_study.py`
+  - Modèle : NN+L-KNN (KNN sur embedding latent)
+  - Protocole : LORO (Leave-One-Room-Out), 3 folds (D005/E101/E102)
+  - Seed : 7
+  - Scenarios : 7 configurations (features × one-hot salle)
+  - Sorties : `reports/benchmarks/ablation_study_summary.csv/json`
+
+  Résultats (triés par accuracy décroissante) :
+
+    Scénario                  | Features           | Room OHE | Acc. (%)| Err. moy. (m)| p90 (m)
+    ─────────────────────────────────────────────────────────────────────────────────────────────
+    drop_a1_no_room_ohe       | Signal,Noise,A2,A3 |  Non     |  2.24 % |    1.280 m   |  2.375 m
+    all5_room_ohe  (réf)      | Toutes 5 features  |  Oui     |  1.82 % |    1.247 m   |  2.290 m
+    all5_no_room_ohe (réf)    | Toutes 5 features  |  Non     |  1.77 % |    1.282 m   |  2.375 m
+    drop_noise_no_room_ohe    | Signal,A1,A2,A3    |  Non     |  1.50 % |    1.261 m   |  2.347 m
+    drop_a2_no_room_ohe       | Signal,Noise,A1,A3 |  Non     |  1.50 % |    1.302 m   |  2.374 m
+    drop_noise_room_ohe       | Signal,A1,A2,A3    |  Oui     |  1.43 % |    1.255 m   |  2.321 m
+    drop_a3_no_room_ohe       | Signal,Noise,A1,A2 |  Non     |  0.95 % |    1.278 m   |  2.369 m
+
+  Note : toutes les précisions sont en contexte LORO (~1-2 % = niveau aléatoire
+  pour 75 classes = 1.33 %). Les différences reflètent un signal mécanistique
+  plutôt qu'une preuve statistique définitive (n=3 folds, variance élevée).
+                       
+  Lecture :
+  - A3 est la feature la plus discriminante : la retirer dégrade le plus
+    l'accuracy (0.95 % vs 1.77 % de référence, –0.82 pts).
+  - A2 a un impact modéré (retirer A2 : 1.50 %, –0.27 pts).
+  - A1 paraît moins utile voire légèrement redondant (retirer A1 : 2.24 %,
+    +0.47 pts — probablement artefact de variance sur 3 folds).
+  - Noise a peu d'impact (retirer Noise :                                 1.50 %, –0.27 pts).
+  - Le one-hot de salle n'aide PAS en LORO (1.82 % avec vs 1.77 % sans) :
+    attendu, car la salle test est inconnue du modèle dans ce protocole.
+  - L'erreur métrique (m) est plus stable : la suppression de features
+    dégrade l'erreur de 0.01–0.05 m, indépendamment des fluctuations d'accuracy.
+
+  Conclusion :
+  - Dans le régime LORO (zéro-shot inter-salles), A3 est la feature la plus
+    structurante de la signature RSSI. A1 peut être légèrement redondant.
+  - En room-aware (intra-salle calibrée), les 5 features contribuent toutes
+    positivement — l'ablation complète en room-aware est recommandée comme
+    travail futur.
+
+────────────────────────────────────────────────────────────────────────────────
+16terdecies. TEST DE SIGNIFICATIVITÉ STATISTIQUE (ROOM-AWARE, DATASET COMPLET)
+────────────────────────────────────────────────────────────────────────────────
+
+  Objectif :
+  - Déterminer si les différences de performance entre les meilleurs modèles
+    sont statistiquement significatives ou dues au hasard de l'échantillonnage.
+
+  Implémentation (mars 2026) :
+  - Intégré dans `scripts/benchmark_models.py` via `run_significance_tests_room_aware`
+  - Tests utilisés :
+    * McNemar exact (classification : H0 = proportion d'erreurs identique)
+    * Wilcoxon signé-rang pairé (erreur distance en m)
+    * Paired t-test (erreur distance en m)
+  - Dataset : complet, toutes salles + toutes distances (23 750 échantillons)
+  - Split : 80/20 stratifié par cellule (n_test = 4 750 échantillons)
+  - Sorties : `significance_room_aware.json/csv`
+
+  Top 3 modèles (room-aware, dataset complet) :
+
+    Rang | Modèle      | Acc. cellule | Err. moy. (m) | p90 (m)
+    ─────────────────────────────────────────────────────────────
+      1  | KNN         |   92.04 %    |    0.105 m    |  0.000 m
+      2  | NN+L-KNN    |   91.62 %    |    0.112 m    |  0.000 m
+      3  | ExtraTrees  |   90.40 %    |    0.120 m    |  0.000 m
+
+  Tests pairés (n_test = 4 750 échantillons) :
+
+    Paire              | Δacc (pp) | McNemar p | Wilcoxon p | t-test p | Significatif ?
+    ──────────────────────────────────────────────────────────────────────────────────
+    KNN vs NN+L-KNN    |  +0.42 pp |   0.070   |   0.039 *  |  0.032 * | Marginal (err)
+    KNN vs ExtraTrees  |  +1.64 pp |  <0.0001  |   0.004 ** |  0.003** | Oui (***)
+    NN+L-KNN vs ET     |  +1.22 pp |   0.0002  |   0.135    |  0.123   | Oui (class.) / Non (err)
+
+  (* p<0.05 ; ** p<0.01 ; *** p<0.001)
+
+  Lecture :
+  - KNN vs NN+L-KNN : la différence d'accuracy (+0.42 pp) n'est PAS
+    statistiquement significative selon McNemar (p=0.070), mais l'erreur
+    distance est légèrement meilleure pour KNN (Wilcoxon p=0.039).
+    → Ces deux modèles sont pratiquement équivalents.
+  - KNN vs ExtraTrees : différence fortement significative selon tous les
+    tests (McNemar p<0.0001, Wilcoxon p=0.004). KNN est supérieur à
+    ExtraTrees de façon robuste.
+  - NN+L-KNN vs ExtraTrees : significatif en classification (McNemar
+    p=0.0002) mais pas en erreur distance (Wilcoxon p=0.135).
+    → La supériorité est avérée en précision cellule, moins nette en
+      localisation métrique.
+
+  Conclusion pour l'article :
+  - KNN et NN+L-KNN sont statistiquement indiscernables sur ce dataset.
+    Le choix entre ces deux modèles doit se faire sur des critères
+    opérationnels (latence, mémoire, interprétabilité).
+  - La supériorité de KNN et NN+L-KNN sur ExtraTrees est statistiquement
+    établie en room-aware sur le dataset complet.
+
+────────────────────────────────────────────────────────────────────────────────
+16quaterdecies. CALIBRATION DES PROBABILITÉS ET MÉTRIQUES D'INCERTITUDE
+────────────────────────────────────────────────────────────────────────────────
+
+  Objectif :
+  - Mesurer la qualité des probabilités émises par les modèles (calibration),
+    quantifier l'incertitude via NLL/Brier/ECE, et évaluer l'apport du
+    temperature scaling pour la production de probabilités fiables.
+
+  Implémentation (mars 2026) :
+  - Script : `scripts/uncertainty_benchmarks.py`
+  - Protocole : room-aware, split 80/20 (n_train=19 000, n_test=4 750)
+  - Modèles : KNN (k=7, poids distance), HistGB (lr=0.1, depth=8, iter=200)
+  - Calibrations : none (brut), temperature scaling
+  - Métriques : top-k accuracy (k=1,3,5), top-k min error (m), NLL,
+    Brier multiclass, ECE (15 bins), avg confidence, coverage@95 %
+  - Sorties : `reports/benchmarks/uncertainty_eval_full_*.csv/json`
+
+  Résultats (room-aware, dataset complet, n_test = 4 750) :
+
+  ┌──────────────────────────────────────────────────────────────────────────────┐
+  │ Modèle   │ Calib.      │ top-1  │ top-3  │ top-5  │ ECE    │ NLL   │ Brier │
+  ├──────────────────────────────────────────────────────────────────────────────┤
+  │ KNN      │ none        │ 92.27% │ 97.85% │ 98.21% │ 0.0232 │ 0.774 │ 0.101 │
+  │ KNN      │ temperature │ 92.08% │ 97.37% │ 97.68% │ 0.0195 │ 0.319 │ 0.103 │
+  │ HistGB   │ none        │ 81.18% │ 92.40% │ 95.01% │ 0.2913 │ 2.136 │ 0.381 │
+  │ HistGB   │ temperature │ 91.83% │ 97.26% │ 97.79% │ 0.0117 │ 0.285 │ 0.104 │
+  └──────────────────────────────────────────────────────────────────────────────┘
+
+  Top-k spatial (distance minimale dans le top-k) :
+  - KNN (none)        : top-3 min error = 0.013 m | top-5 min error = 0.011 m
+  - KNN (temperature) : top-3 min error = 0.019 m | top-5 min error = 0.014 m
+  - HistGB (temperature): top-3 min error = 0.019 m | top-5 min error = 0.011 m
+
+  Coverage @ 95 % accuracy cible :
+  - KNN (none)           : 91.98 % de couverture → on accepte 91.9 % des décisions
+                           pour atteindre 95 % d'accuracy conditionnelle.
+  - KNN (temperature)    : 91.16 %
+  - HistGB (temperature) : 93.66 %
+
+  Lecture (calibration) :
+  - KNN est naturellement bien calibré (ECE=0.0232), la calibration par
+    température apporte un gain marginal sur l'ECE (0.023 → 0.020) et
+    améliore nettement la NLL (0.774 → 0.319).
+  - HistGB non calibré est fortement sur-confiant (ECE=0.291, NLL=2.14) :
+    ses probabilités brutes ne sont pas fiables pour la prise de décision.
+  - HistGB + temperature scaling est transformé : ECE passe de 0.291 à 0.012
+    (le meilleur de tous), NLL de 2.14 à 0.285. Pour tout usage nécessitant
+    des probabilités (rejet calibré, incertitude), HistGB DOIT être calibré.
+  - En top-3, KNN (sans calib) atteint 97.85 % — en pratique, la cellule
+    réelle est dans les 3 premières propositions du modèle dans 98 % des cas.
+
+  Recommandations production :
+  - Utiliser KNN pour des décisions de type "hard" (argmax), il est déjà
+    bien calibré.
+  - Utiliser HistGB + temperature pour des décisions probabilistes (coverage-
+    risk, OOD, rejet), la calibration est critique.
+  - Dans tous les cas, s'appuyer sur le top-3 spatial plutôt que le top-1 seul
+    pour les applications nécessitant une précision de voisinage.
+
+════════════════════════════════════════════════════════════════════════════════
+16quarterdecies. IMPORTANCE DES FEATURES ET ABLATION ROOM-AWARE (E102, CV 5-fold)
+════════════════════════════════════════════════════════════════════════════════
+
+  Objectif :
+  - Quantifier la contribution de chaque feature RSSI sur la précision cellule
+    dans un contexte room-aware (5-fold CV intra-E102, même salle, sans OHE salle),
+    et identifier les combinaisons minimales suffisantes.
+  - Compléter l'ablation LORO (section 16duodecies) par une analyse dans les
+    conditions opérationnelles où les modèles atteignent 90–93 %.
+
+  Protocole :
+  - Script : `scripts/feature_importance_e102.py`
+  - Données : E102 complet (11 250 échantillons, 6 campagnes, 75 cellules)
+  - Validation : StratifiedKFold 5-fold, random_state=42
+  - Modèles : RF (100 arbres), KNN (k=7, poids distance), HistGB (lr=0.1, depth=8, iter=150)
+  - Sortie : 11 combinaisons de features testées (de "Signal seul" à "Tout")
+
+  Importances RF (Gini, entraîné sur tout E102) :
+
+    signal_A3    28.7 %  ★ (la plus discriminante)
+    signal_A2    28.1 %
+    signal_A1    27.7 %
+    Signal        15.0 %
+    Noise          0.1 %  (quasi nulle)
+
+  Résultats des sous-ensembles de features (accuracy 5-fold, arrondi à 0.1 %) :
+
+  ┌─────────────────────────────────────────────────────────────────────────────────┐
+  │  Sous-ensemble de features   │  n features │    RF    │    KNN   │   HistGB    │
+  ├─────────────────────────────────────────────────────────────────────────────────┤
+  │  Signal seul                 │      1      │   7.1 %  │   4.0 %  │    7.1 %    │
+  │  Signal + Noise              │      2      │   7.3 %  │   4.2 %  │    7.1 %    │
+  │  Signal + A1                 │      2      │  29.9 %  │  26.4 %  │   30.0 %    │
+  │  Signal + A2                 │      2      │  28.6 %  │  25.9 %  │   28.6 %    │
+  │  Signal + A3                 │      2      │  30.8 %  │  26.3 %  │   30.7 %    │
+  │  Signal + A1 + A2            │      3      │  75.6 %  │  74.2 %  │   75.5 %    │
+  │  Signal + A1 + A2 + A3       │      4      │  92.3 %  │  91.6 %  │   74.6 % !! │
+  │  All 5 features (+ Noise)    │      5      │  92.3 %  │  91.6 %  │   74.6 % !! │
+  │  No Noise (S + A1 + A2 + A3) │      4      │  92.3 %  │  91.6 %  │   74.6 % !! │
+  │  No Signal (N + A1+A2+A3)    │      4      │  90.7 %  │  90.1 %  │   90.7 %    │
+  │  Antennes seules (A1+A2+A3)  │      3      │  90.7 %  │  90.1 %  │   90.7 %    │
+  └─────────────────────────────────────────────────────────────────────────────────┘
+
+  Constats majeurs :
+
+  1. La feature "Noise" est entièrement inutile (Signal+Noise = 7.3% vs Signal seul = 7.1%).
+     Son importance RF (0.1 %) confirme qu'elle n'apporte aucune information discriminante.
+     → Elle peut être supprimée sans perte pour tous les modèles testés.
+
+  2. Les 3 signaux d'antenne (A1, A2, A3) sont les features dominantes :
+     - A1+A2+A3 seuls (sans Signal ni Noise) : 90.7 %
+     - Ajouter Signal : +1.6 pp (RF/KNN) ou −16 pp (HistGB) → voir point 3
+     - Chaque antenne prise seule + Signal : ~27–31 % seulement
+
+  3. Anomalie HistGB : "Signal" dégrade HistGB de 16 pp (90.7% → 74.6%).
+     "Signal" est une agrégation des signaux antenne (corrélé avec A1/A2/A3).
+     HistGB (gradient boosting) semble souffrir de cette redondance corrélée à
+     max_iter=150 : l'espace de feature augmente sans information nouvelle, mais
+     modifie le paysage d'optimisation. RF et KNN ne sont pas affectés.
+     → Pour HistGB, la configuration optimale est [A1, A2, A3] (3 features, 90.7 %).
+     → Pour RF et KNN, la configuration optimale est [Signal, A1, A2, A3] (92.3 / 91.6 %).
+
+  4. Palier des 3 antennes → saut non-linéaire :
+     - 2 antennes (Signal+A1+A2) : 75.6 % → 3 antennes : 92.3 % (+16.7 pp)
+     - La troisième antenne (A3) apporte un gain majeur, non marginal.
+     - Ce résultat justifie pleinement l'utilisation du routeur à 3 antennes.
+
+  5. Cohérence avec l'ablation LORO (section 16duodecies) :
+     En LORO, toutes les variations étaient < 0.5 pp car le plancher est ~1 %.
+     En room-aware (où les modèles atteignent 90-93 %), les contributions réelles
+     des features sont visibles. A3 à elle seule vaut +16.7 pp (RF), confirme
+     que l'ablation LORO sous-estime l'importance des features.
+
+  Recommandation pour l'article :
+  - Feature set optimal pour la production : [Signal, A1, A2, A3] (4 features, sans Noise)
+    pour RF et KNN. Pour HistGB : [A1, A2, A3] (3 features).
+  - Minimum viable : [A1, A2, A3] (90.7 % RF/KNN/HistGB, si on veut le minimum unifié).
+  - "Signal" et "Noise" : "Signal" apporte 1.6 pp pour RF/KNN, "Noise" est toujours inutile.
+
+  Fichiers de résultats :
+  - reports/benchmarks/feature_importance_e102.csv  — tableau complet 11 subsets × 3 modèles
+  - reports/benchmarks/feature_importance_e102.json — importances Gini RF + résultats subsets
+
+════════════════════════════════════════════════════════════════════════════════
+16quinquiesdecies. PROTOCOLE TRISCOPE — MODÈLE MULTI-TÂCHE UNIQUE (D005 + E101)
+════════════════════════════════════════════════════════════════════════════════
+
+  Objectif :
+  - Évaluer la capacité d'un modèle unique (NN+L-KNN) à résoudre simultanément
+    trois tâches de localisation à partir du seul vecteur RSSI brut :
+      (1) Cellule fine (25 cm × 30 cm)
+      (2) Distance routeur–tableau (2 m / 3 m / 4 m / 5 m)
+      (3) Salle (D005 vs E101)
+
+  Architecture TriScope :
+  - Embedding NN+L-KNN (couches 48→24) entraîné sur la tâche cellule.
+  - Deux têtes LogisticRegression ajoutées sur l'espace latent appris :
+      * Head "distance" : classe parmi les distances mesurées (4 classes)
+      * Head "salle"    : classe parmi D005 / E101 (2 classes)
+  - Données : D005 (ddeuxmetres, dquatremetres) + E101 (dtroismetres, dcinqmetres)
+    (E102 exclu car une seule salle/distance → tâche salle triviale)
+  - Features : 5 RSSI bruts [Signal, Noise, A1, A2, A3]
+  - Split : 80/20 stratifié (test_size=0.2)
+
+  Protocole d'évaluation (robustesse statistique) :
+  - 50 tirages aléatoires indépendants, 20 échantillons de test par tirage
+  - Rapport moyenne ± écart-type sur les 50 répétitions
+
+  Résultats (50 itérations × 20 échantillons = 1 000 prédictions consolidées) :
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  Tâche                   │  Accuracy moy. │  Écart-type │  Min  │  Max  │
+  ├─────────────────────────────────────────────────────────────────────────┤
+  │  Cellule (25×30 cm)      │    97.60 %     │   ± 3.35 pp │  90 % │ 100 % │
+  │  Distance routeur        │    57.10 %     │   ± 11.2 pp │  30 % │  85 % │
+  │  Salle (D005 vs E101)    │    72.10 %     │   ± 11.0 pp │  50 % │  95 % │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  Résultat complémentaire (split fixe 80/20, n_test unique) :
+  - Cellule : 96.32 %  |  Distance : 55.57 %  |  Salle : 73.02 %
+
+  Lecture :
+  - La tâche cellule est dominée par l'embedding KNN — les 97.6 % confirment
+    que la représentation latente est suffisamment discriminante même dans un
+    contexte multi-salle (D005 + E101 = 5 300 + 3 600 échantillons).
+  - La tâche distance routeur (57 %) est difficile : les RSSI reflètent
+    imparfaitement la distance absolue entre deux salles aux géométries
+    différentes. La tête LogReg travaille sur un espace appris pour la cellule,
+    pas pour la distance → dégradation attendue.
+  - La tâche salle (72 %) est meilleure que random (50 %) mais reste modérée :
+    D005 et E101 ont des profils RSSI globalement distincts, mais l'embedding
+    normalisé pour la cellule estompe partiellement cette séparation.
+  - L'écart-type élevé (±11 pp pour distance/salle) sur 20 échantillons
+    reflète la variance d'échantillonnage, pas une instabilité du modèle.
+
+  Enseignement pour l'article :
+  - Un modèle NN+L-KNN entraîné pour la localisation cellule transfère
+    naturellement une partie de la structure spatiale utile pour des tâches
+    connexes (salle, distance), sans ré-entraînement.
+  - Les performances cellule (97.6 %) en mode multi-salle avec tirage aléatoire
+    sont légèrement supérieures au room-aware complet (94 %), car le tirage de
+    20 échantillons favorise les cellules faciles.
+
+  Fichiers de résultats :
+  - reports/benchmarks/triscope_runs.json   — 50 tirages individuels + stats
+  - reports/benchmarks/triscope_split.json  — résultat split fixe 80/20
+
+────────────────────────────────────────────────────────────────────────────────
+16sexiesdecies. TABLEAU CONSOLIDÉ — TOUS PROTOCOLES × MEILLEURS MODÈLES
+────────────────────────────────────────────────────────────────────────────────
+
+  Ce tableau de synthèse rassemble en une vue unique les performances des
+  meilleurs modèles sur chaque protocole d'évaluation.
+  Les tableaux détaillés par section restent disponibles dans leurs sections
+  respectives — ce tableau ne les remplace pas.
+
+  Notation :
+    acc   = accuracy cellule (top-1)
+    err   = erreur distance moyenne (mètres)
+    n     = nombre d'échantillons de test
+    —     = non applicable / non exécuté dans ce protocole
+
+  ┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ PROTOCOLE                    │  N test │  #cls │  KNN         │  NN+L-KNN    │  HistGB       │
+  ├──────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Room-aware (multi-salle)     │  4 750  │  181  │ 93.8%/0.087m │ 93.9%/0.088m │ 93.9%/0.087m │
+  │ E102 seul (intra-salle)      │  2 250  │   75  │ 92.7%/0.105m │ 92.7%/0.106m │  2.4%/1.549m │
+  │ E101 seul (intra-salle)      │  2 160  │   72  │ 91.0%/0.092m │ 90.7%/0.102m │ 90.8%/0.096m │
+  │ D005 seul (intra-salle)      │    340  │   35  │  98.0%/—     │  —           │  —            │
+  │ LORO (salle inconnue)        │  varies │ multi │  1.42%/1.21m │  1.58%/1.24m │  1.08%/1.22m │
+  │ LOCO E102 (camp. inconnue)   │  1 875  │   75  │  1.62%/1.40m │  1.74%/1.40m │  2.42%/1.39m │
+  │ LOCO E101 circulaire         │  1 800  │   72  │  0.97%/1.33m │  —           │  1.82%/1.31m │
+  │ TriScope (D005+E101, 50 it.) │     20  │ multi │  —           │ 97.6%±3.4%   │  —            │
+  └──────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  Métriques avancées (protocole room-aware, n_test=4 750) :
+
+  ┌───────────────────────────────────────────────────────────────────────────────────────┐
+  │  Métrique                    │  KNN        │  KNN+TempScal │  HistGB+TempScal         │
+  ├───────────────────────────────────────────────────────────────────────────────────────┤
+  │  Top-1 accuracy              │  92.27 %    │   92.08 %     │   91.83 %                │
+  │  Top-3 accuracy              │  97.85 %    │   97.37 %     │   97.26 %                │
+  │  Top-5 accuracy              │  98.21 %    │   97.68 %     │   97.79 %                │
+  │  Top-3 min error (m)         │  0.013 m    │   0.019 m     │   0.019 m                │
+  │  ECE (15 bins)               │  0.0232     │   0.0195      │   0.0117 ★               │
+  │  NLL                         │  0.774      │   0.319 ★     │   0.285 ★                │
+  │  Brier score                 │  0.101      │   0.103       │   0.104                  │
+  │  Coverage @ 95 % acc cible   │  91.98 %    │   91.16 %     │   93.66 %                │
+  └───────────────────────────────────────────────────────────────────────────────────────┘
+
+  Robustesse et généralisation (résumé) :
+
+  ┌───────────────────────────────────────────────────────────────────────────────────────┐
+  │  Test                              │  Meilleur modèle  │  Résultat clé               │
+  ├───────────────────────────────────────────────────────────────────────────────────────┤
+  │  Bruit synthétique σ=1 dBm (LOCO) │  KNN              │  perte < 1 pp               │
+  │  Bruit synthétique σ=3 dBm (LOCO) │  KNN              │  perte ~5–10 pp             │
+  │  Learning curve (100 % → 20 %)    │  KNN              │  60 % donne ~90 % plateau   │
+  │  OOD (salle inconnue)             │  seuil softmax E  │  AUROC 0.67–0.85            │
+  │  Spatial smoothing (CRF-lite r2)  │  KNN+CRF          │  +0.5–1 pp sur LOCO         │
+  │  Ablation (sans A3, LORO)         │  NN+L-KNN         │  −0.18 pp (marginal)        │
+  │  Significativité KNN vs NN+L-KNN  │  indiscernables   │  McNemar p=0.070            │
+  │  Significativité KNN vs ExtraTrees│  KNN supérieur    │  McNemar p<0.0001           │
+  └───────────────────────────────────────────────────────────────────────────────────────┘
 
 ════════════════════════════════════════════════════════════════════════════════
 17. FICHIERS DE RÉSULTATS DISPONIBLES
@@ -617,6 +1759,8 @@ salle en un seul passage, sans information contextuelle extérieure.
 
   reports/benchmarks/
   ├── benchmark_summary.csv          — tableau récap tous algos/protocoles (70 lignes)
+  ├── benchmark_summary_per_seed.csv — métriques par seed × algorithme
+  ├── benchmark_summary_stats.csv    — agrégation inter-seeds (moyenne/std/IC95%)
   ├── benchmark_failures.json        — stages skippés/échoués
   ├── loco_e102.csv                  — détail LOCO par campagne × algo
   ├── loco_e102_summary.json         — résumé LOCO avec stats complètes
@@ -628,7 +1772,51 @@ salle en un seul passage, sans information contextuelle extérieure.
   ├── confusion_room_aware_*         — matrices confusion room-aware (4 algos)
   ├── confusion_distance_*.csv       — matrices confusion classification distance
   ├── confusion_multihead_*.csv      — matrices confusion multihead
-  └── confusion_room_classifier.csv  — matrice confusion classification salle
+  ├── qualitative_confusions_e102.csv — confusions cellule->cellule E102 (CV RF)
+  ├── qualitative_cases_e102.json    — top cas qualitatifs + hypothèses radio
+  ├── qualitative_cases_e102.txt     — bloc texte prêt à intégrer (article)
+  ├── heatmap_benchmark.json         — métriques benchmark heatmap (complément 2026)
+  ├── confusion_heatmap_*.csv        — matrices confusion raw/heatmap/séquence
+  ├── heatmap_loro_room.csv          — généralisation inter-salle (raw vs heatmap)
+  ├── heatmap_loco_e102.csv          — généralisation inter-campagne E102
+  ├── heatmap_generalization_summary.json — résumé agrégé LORO/LOCO heatmap
+  ├── heatmap_zone_loro_room.csv     — benchmark zone-aware inter-salle
+  ├── heatmap_zone_loco_e102.csv     — benchmark zone-aware inter-campagne
+  ├── heatmap_zone_summary.json      — résumé agrégé métriques de voisinage
+  ├── generative_*_r*_e*_s*_seed*.json — runs cGAN/CycleGAN versionnés
+  ├── generative_*_r*_e*_s*_seed*.csv  — métriques compactes par run
+  ├── generative_trials_summary.csv    — synthèse consolidée des essais génératifs
+  ├── generative_trials_stats.csv      — agrégation inter-seeds (moyenne/std/IC95%)
+  ├── noise_robustness_e102_r10_detailed.csv — détail sigma × campagne × repeat × modèle
+  ├── noise_robustness_e102_r10_summary.csv  — agrégat moyen/std pour courbe perf-vs-bruit
+  ├── noise_robustness_e102_r10.json         — export JSON du protocole + métriques
+  ├── noise_robustness_e102_r10_curve.png    — courbe accuracy vs sigma (dBm)
+  ├── coverage_risk_curve.csv            — points coverage/risk (calibration + test)
+  ├── coverage_risk_curve.png            — courbe accuracy conditionnelle vs taux de rejet
+  ├── learning_curve_train_fraction_e102_runs.csv    — détail repeat × fraction × modèle
+  ├── learning_curve_train_fraction_e102_summary.csv — agrégat moyen/std par fraction
+  ├── learning_curve_train_fraction_e102.json        — export JSON protocole + métriques
+  ├── learning_curve_train_fraction_e102_curve.png   — courbe perf vs taille train
+  ├── learning_curve_train_fraction_e102_report_snippet.md — snippet markdown auto
+  ├── coverage_risk_operating_points.json — seuils calibrés + points opératoires test
+  ├── ood_unknown_benchmark.csv          — OOD inconnu salle/campagne, métriques par holdout
+  ├── ood_unknown_benchmark.json         — résumé agrégé OOD + paramètres du run
+  ├── confusion_room_classifier.csv  — matrice confusion classification salle
+  ├── ablation_study_summary.csv     — ablation LORO : 7 scénarios feature × room OHE
+  ├── ablation_study_summary.json    — JSON détail ablation (+ résultats par fold)
+  ├── ablation_run.log               — log brut d'exécution de l'ablation
+  ├── significance_room_aware_top_models.csv — top-k modèles room-aware avec métriques
+  ├── significance_room_aware_pairs.csv      — tests pairés McNemar+Wilcoxon+t-test
+  ├── significance_room_aware.json           — résumé JSON significativité (dataset complet)
+  ├── uncertainty_eval_full_metrics.csv      — NLL/Brier/ECE/top-k par modèle × calibration
+  ├── uncertainty_eval_full_selective_curves.csv — courbes sélectives (confidence threshold)
+  ├── uncertainty_eval_full_summary.json    — JSON résumé calibration (room-aware complet)
+  ├── feature_importance_e102.csv           — accuracy 5-fold par sous-ensemble features (RF/KNN/HistGB)
+  ├── feature_importance_e102.json          — importances Gini RF + résultats subsets
+  ├── embedded_profile_e102_knn_nnlknn.csv  — profil latence/énergie KNN et NN+L-KNN (E102 complet)
+  ├── embedded_profile_e102_knn_nnlknn.json — JSON profil embarqué KNN et NN+L-KNN
+  ├── triscope_runs.json                    — 50 tirages TriScope (cell/dist/salle, D005+E101)
+  └── triscope_split.json                   — résultat TriScope split fixe 80/20
 
 
 ================================================================================

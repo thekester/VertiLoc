@@ -59,6 +59,128 @@ def parse_campaign_args(entries: Iterable[str]) -> list[CampaignSpec]:
     return specs
 
 
+def _row_softmax(scores: np.ndarray) -> np.ndarray:
+    shifted = scores - scores.max(axis=1, keepdims=True)
+    exp = np.exp(shifted)
+    return exp / exp.sum(axis=1, keepdims=True)
+
+
+def _odd_r_to_cube(rows: np.ndarray, cols: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    cube_x = cols - ((rows - (rows & 1)) // 2)
+    cube_z = rows
+    cube_y = -cube_x - cube_z
+    return cube_x, cube_y, cube_z
+
+
+def _build_label_transition_matrix(
+    class_order: list[str],
+    cell_lookup: pd.DataFrame,
+    *,
+    metric: str,
+    radius: int,
+    self_weight: float = 1.0,
+) -> np.ndarray:
+    if radius < 1:
+        raise ValueError("radius must be >= 1.")
+    if self_weight < 0:
+        raise ValueError("self_weight must be >= 0.")
+
+    meta = cell_lookup.loc[class_order]
+    gx = meta["grid_x"].to_numpy(dtype=int)
+    gy = meta["grid_y"].to_numpy(dtype=int)
+
+    n = len(class_order)
+    transition = np.zeros((n, n), dtype=float)
+
+    if metric == "hex":
+        cx, cy, cz = _odd_r_to_cube(gx, gy)
+        for i in range(n):
+            dist = np.maximum.reduce([np.abs(cx[i] - cx), np.abs(cy[i] - cy), np.abs(cz[i] - cz)])
+            mask = (dist > 0) & (dist <= radius)
+            transition[i, mask] = 1.0
+    else:
+        dx = np.abs(gx[:, None] - gx[None, :])
+        dy = np.abs(gy[:, None] - gy[None, :])
+        if metric == "manhattan":
+            dist = dx + dy
+        elif metric == "chebyshev":
+            dist = np.maximum(dx, dy)
+        else:
+            raise ValueError(f"Unsupported smoothing metric: {metric}")
+        transition[(dist > 0) & (dist <= radius)] = 1.0
+
+    if self_weight > 0:
+        np.fill_diagonal(transition, self_weight)
+    else:
+        np.fill_diagonal(transition, 0.0)
+
+    row_sums = transition.sum(axis=1, keepdims=True)
+    # Fallback for isolated classes: keep identity to avoid NaNs.
+    isolated = row_sums.squeeze(1) == 0
+    if np.any(isolated):
+        transition[isolated, :] = 0.0
+        transition[isolated, np.where(isolated)[0]] = 1.0
+        row_sums = transition.sum(axis=1, keepdims=True)
+    return transition / row_sums
+
+
+def apply_spatial_smoothing(
+    y_proba: np.ndarray,
+    class_order: list[str],
+    cell_lookup: pd.DataFrame,
+    *,
+    mode: str,
+    alpha: float,
+    beta: float,
+    n_iters: int,
+    metric: str,
+    radius: int,
+    max_confidence: float,
+) -> np.ndarray:
+    if mode == "none":
+        return y_proba
+    if not (0.0 <= alpha <= 1.0):
+        raise ValueError("alpha must be in [0, 1].")
+    if beta < 0:
+        raise ValueError("beta must be >= 0.")
+    if n_iters < 1:
+        raise ValueError("n_iters must be >= 1.")
+    if not (0.0 <= max_confidence <= 1.0):
+        raise ValueError("max_confidence must be in [0, 1].")
+
+    transition = _build_label_transition_matrix(
+        class_order,
+        cell_lookup,
+        metric=metric,
+        radius=radius,
+        self_weight=1.0,
+    )
+    out = y_proba.copy()
+    confidences = out.max(axis=1)
+    mask = confidences <= max_confidence
+    if not np.any(mask):
+        return out
+
+    selected = out[mask]
+    if mode == "neighbor":
+        neighbor_mix = selected @ transition
+        selected = (1.0 - alpha) * selected + alpha * neighbor_mix
+    elif mode == "crf-lite":
+        unary = np.log(np.clip(selected, 1e-9, 1.0))
+        q = selected.copy()
+        for _ in range(n_iters):
+            pairwise = q @ transition
+            scores = unary + beta * pairwise
+            q = _row_softmax(scores)
+        selected = (1.0 - alpha) * selected + alpha * q
+    else:
+        raise ValueError(f"Unsupported smoothing mode: {mode}")
+
+    selected = selected / selected.sum(axis=1, keepdims=True)
+    out[mask] = selected
+    return out
+
+
 def compute_metrics(
     y_true,
     y_pred,
@@ -211,8 +333,15 @@ def save_prediction_report(
     true_distances,
     pred_distances,
     pred_distance_proba,
-    out_path: Path,
+    ood_energy,
+    ood_embedding_distance,
+    ood_is_unknown,
+    y_pred_smoothed=None,
+    y_proba_smoothed=None,
+    out_path: Path | None = None,
 ) -> None:
+    if out_path is None:
+        raise ValueError("out_path is required to save prediction report.")
     confidences = y_proba.max(axis=1)
     if y_proba.shape[1] > 1:
         sorted_proba = np.sort(y_proba, axis=1)
@@ -243,8 +372,42 @@ def save_prediction_report(
             "true_router_distance_m": true_distances,
             "pred_router_distance_m": pred_distances,
             "distance_confidence": pred_distance_proba,
+            "ood_energy": ood_energy,
+            "ood_embedding_distance": ood_embedding_distance,
+            "ood_is_unknown": ood_is_unknown.astype(int),
         }
     )
+
+    if y_pred_smoothed is not None:
+        y_pred_smoothed = np.asarray(y_pred_smoothed).reshape(-1)
+        if y_pred_smoothed.shape[0] != report_df.shape[0]:
+            raise ValueError(
+                "y_pred_smoothed length mismatch: "
+                f"{y_pred_smoothed.shape[0]} vs {report_df.shape[0]}"
+            )
+        pred_meta_s = cell_lookup.loc[y_pred_smoothed]
+        pred_coords_s = pred_meta_s[["coord_x_m", "coord_y_m"]].to_numpy()
+        errors_m_s = np.linalg.norm(true_coords - pred_coords_s, axis=1)
+        report_df["pred_cell_smoothed"] = y_pred_smoothed
+        report_df["pred_grid_x_smoothed"] = pred_meta_s["grid_x"].to_numpy()
+        report_df["pred_grid_y_smoothed"] = pred_meta_s["grid_y"].to_numpy()
+        report_df["error_m_smoothed"] = errors_m_s
+        report_df["smoothed_fix"] = (
+            (report_df["pred_cell"] != report_df["true_cell"])
+            & (report_df["pred_cell_smoothed"] == report_df["true_cell"])
+        )
+        report_df["smoothed_break"] = (
+            (report_df["pred_cell"] == report_df["true_cell"])
+            & (report_df["pred_cell_smoothed"] != report_df["true_cell"])
+        )
+    if y_proba_smoothed is not None:
+        y_proba_smoothed = np.asarray(y_proba_smoothed)
+        if y_proba_smoothed.ndim != 2 or y_proba_smoothed.shape[0] != report_df.shape[0]:
+            raise ValueError(
+                "y_proba_smoothed shape mismatch: "
+                f"{y_proba_smoothed.shape} vs ({report_df.shape[0]}, n_classes)"
+            )
+        report_df["confidence_smoothed"] = y_proba_smoothed.max(axis=1)
 
     if neighbor_distances is not None and neighbor_labels is not None:
         for k in range(neighbor_labels.shape[1]):
@@ -347,6 +510,11 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     # Fit the encoder + KNN. The embeddings for the training set are cached and
     # reused later when we call explain() for every test point.
     localizer = EmbeddingKnnLocalizer(config=config).fit(X_train, y_train)
+    ood_cfg = localizer.calibrate_ood(
+        energy_percentile=args.ood_energy_percentile,
+        distance_percentile=args.ood_distance_percentile,
+        temperature=args.ood_temperature,
+    )
     _log_embedding_preview(localizer, test_idx if len(test_idx) > 0 else train_idx, feature_df, labels)
 
     # Auxiliary head: predict router distance (campagne 2 m vs 4 m) à partir des embeddings.
@@ -364,9 +532,13 @@ def run_pipeline(args: argparse.Namespace) -> dict:
 
     y_pred = localizer.predict(X_test)
     y_proba = localizer.predict_proba(X_test)
+    ood_scores = localizer.ood_scores(X_test)
+    ood_unknown = localizer.is_ood(X_test, scores=ood_scores)
     class_order = list(localizer.knn_.classes_)
     y_test_binarized = label_binarize(y_test, classes=class_order)
     neighbor_distances, neighbor_labels = localizer.explain(X_test, top_k=args.explain_k)
+    y_pred_raw = y_pred.copy()
+    y_proba_raw = y_proba.copy()
 
     # Baseline: distance = mode observée pour la cellule prédite (calculée sur le train).
     train_distance_mode = (
@@ -386,21 +558,80 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     )
     metrics = compute_metrics(
         y_test,
-        y_pred,
+        y_pred_raw,
         meta_test,
         cell_lookup,
-        y_proba=y_proba,
+        y_proba=y_proba_raw,
         class_order=class_order,
         y_true_binarized=y_test_binarized,
     )
+    y_pred_smoothed = None
+    y_proba_smoothed = None
+    if args.spatial_smoothing != "none":
+        y_proba_smoothed = apply_spatial_smoothing(
+            y_proba_raw,
+            class_order,
+            cell_lookup,
+            mode=args.spatial_smoothing,
+            alpha=args.smoothing_alpha,
+            beta=args.smoothing_beta,
+            n_iters=args.smoothing_iters,
+            metric=args.smoothing_metric,
+            radius=args.smoothing_radius,
+            max_confidence=args.smoothing_max_confidence,
+        )
+        smooth_idx = np.argmax(y_proba_smoothed, axis=1)
+        y_pred_smoothed = np.array([class_order[i] for i in smooth_idx], dtype=object)
+        smoothed_metrics = compute_metrics(
+            y_test,
+            y_pred_smoothed,
+            meta_test,
+            cell_lookup,
+            y_proba=y_proba_smoothed,
+            class_order=class_order,
+            y_true_binarized=y_test_binarized,
+        )
+        metrics["spatial_smoothing"] = {
+            "mode": args.spatial_smoothing,
+            "metric": args.smoothing_metric,
+            "radius": int(args.smoothing_radius),
+            "alpha": float(args.smoothing_alpha),
+            "beta": float(args.smoothing_beta),
+            "iters": int(args.smoothing_iters),
+            "max_confidence": float(args.smoothing_max_confidence),
+            "smoothed_accuracy": float(smoothed_metrics["accuracy"]),
+            "raw_accuracy": float(metrics["accuracy"]),
+            "delta_accuracy": float(smoothed_metrics["accuracy"] - metrics["accuracy"]),
+            "smoothed_mean_distance_m": float(smoothed_metrics["mean_distance_m"]),
+            "raw_mean_distance_m": float(metrics["mean_distance_m"]),
+            "delta_mean_distance_m": float(smoothed_metrics["mean_distance_m"] - metrics["mean_distance_m"]),
+        }
+
     metrics["router_distance_accuracy"] = float(accuracy_score(distance_test, distance_pred))
     metrics["router_distance_accuracy_baseline"] = float(accuracy_score(distance_test, distance_pred_baseline))
     metrics["router_distance_classes"] = [float(c) for c in sorted(np.unique(distances))]
+    metrics.update(ood_cfg)
+    metrics["ood_unknown_rate"] = float(np.mean(ood_unknown))
+    wrong_pred = y_pred_raw != y_test
+    if np.any(wrong_pred):
+        metrics["ood_recall_on_errors"] = float(np.mean(ood_unknown[wrong_pred]))
+    if np.any(~wrong_pred):
+        metrics["ood_flag_rate_on_correct"] = float(np.mean(ood_unknown[~wrong_pred]))
     print(json.dumps(metrics, indent=2))
     print(
         f"Router distance accuracy (LogReg on embeddings): {metrics['router_distance_accuracy']:.3f} | "
         f"baseline (mode per predicted cell): {metrics['router_distance_accuracy_baseline']:.3f}"
     )
+    if "spatial_smoothing" in metrics:
+        smooth = metrics["spatial_smoothing"]
+        print(
+            "Spatial smoothing "
+            f"({smooth['mode']}, metric={smooth['metric']}, r={smooth['radius']}): "
+            f"acc {smooth['raw_accuracy']:.3f}->{smooth['smoothed_accuracy']:.3f} "
+            f"(delta={smooth['delta_accuracy']:+.3f}), "
+            f"mean_err {smooth['raw_mean_distance_m']:.3f}->{smooth['smoothed_mean_distance_m']:.3f} m "
+            f"(delta={smooth['delta_mean_distance_m']:+.3f} m)"
+        )
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     save_metrics(metrics, REPORT_DIR / "latest_metrics.json")
@@ -430,8 +661,8 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     save_roc_curves(y_test_binarized, y_proba, class_order, Path(args.roc_curve))
     save_prediction_report(
         y_test,
-        y_pred,
-        y_proba,
+        y_pred_raw,
+        y_proba_raw,
         meta_test,
         cell_lookup,
         neighbor_distances,
@@ -439,7 +670,12 @@ def run_pipeline(args: argparse.Namespace) -> dict:
         distance_test,
         distance_pred,
         distance_confidence,
-        Path(args.predictions_report),
+        ood_scores["ood_energy"],
+        ood_scores["ood_embedding_distance"],
+        ood_unknown,
+        y_pred_smoothed=y_pred_smoothed,
+        y_proba_smoothed=y_proba_smoothed,
+        out_path=Path(args.predictions_report),
     )
     save_model(localizer, Path(args.model_output))
     return metrics
@@ -465,6 +701,50 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--learning-rate", type=float, default=1e-3)
     parser.add_argument("--alpha", type=float, default=1e-4, help="L2 regularization for the encoder.")
     parser.add_argument("--explain-k", type=int, default=3, help="Number of nearest neighbors to log for explainability.")
+    parser.add_argument(
+        "--spatial-smoothing",
+        type=str,
+        default="none",
+        choices=["none", "neighbor", "crf-lite"],
+        help="Optional post-prediction spatial smoothing over the cell graph.",
+    )
+    parser.add_argument(
+        "--smoothing-alpha",
+        type=float,
+        default=0.35,
+        help="Blend factor between raw probabilities and smoothed probabilities.",
+    )
+    parser.add_argument(
+        "--smoothing-beta",
+        type=float,
+        default=0.9,
+        help="Pairwise weight used by the crf-lite smoother.",
+    )
+    parser.add_argument(
+        "--smoothing-iters",
+        type=int,
+        default=2,
+        help="Number of mean-field style iterations for crf-lite smoothing.",
+    )
+    parser.add_argument(
+        "--smoothing-metric",
+        type=str,
+        default="hex",
+        choices=["hex", "chebyshev", "manhattan"],
+        help="Neighborhood metric used to connect adjacent cells.",
+    )
+    parser.add_argument(
+        "--smoothing-radius",
+        type=int,
+        default=1,
+        help="Neighborhood radius (in cell graph distance) for smoothing.",
+    )
+    parser.add_argument(
+        "--smoothing-max-confidence",
+        type=float,
+        default=0.95,
+        help="Only smooth samples with confidence <= this threshold.",
+    )
     parser.add_argument(
         "--model-output",
         type=Path,
@@ -500,6 +780,24 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=PREDICTIONS_PATH,
         help="CSV file containing per-sample predictions with confidences and neighbor details.",
+    )
+    parser.add_argument(
+        "--ood-energy-percentile",
+        type=float,
+        default=95.0,
+        help="Percentile used to calibrate the softmax-energy OOD threshold on train data.",
+    )
+    parser.add_argument(
+        "--ood-distance-percentile",
+        type=float,
+        default=95.0,
+        help="Percentile used to calibrate the embedding-distance OOD threshold on train data.",
+    )
+    parser.add_argument(
+        "--ood-temperature",
+        type=float,
+        default=1.0,
+        help="Temperature used in softmax-energy computation.",
     )
     return parser
 

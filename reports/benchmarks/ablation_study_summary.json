@@ -1,0 +1,72 @@
+{
+  "filters": {
+    "rooms": "all",
+    "distances": "all"
+  },
+  "seed": 7,
+  "results": [
+    {
+      "scenario": "all5_room_ohe",
+      "features": "Signal,Noise,signal_A1,signal_A2,signal_A3",
+      "include_room_onehot": true,
+      "cell_accuracy": 0.018244517066085694,
+      "mean_error_m": 1.2468507453780788,
+      "p90_error_m": 2.2896455694858355,
+      "n_folds": 3
+    },
+    {
+      "scenario": "drop_noise_room_ohe",
+      "features": "Signal,signal_A1,signal_A2,signal_A3",
+      "include_room_onehot": true,
+      "cell_accuracy": 0.014278358750907771,
+      "mean_error_m": 1.2554047593424265,
+      "p90_error_m": 2.32121155574301,
+      "n_folds": 3
+    },
+    {
+      "scenario": "all5_no_room_ohe",
+      "features": "Signal,Noise,signal_A1,signal_A2,signal_A3",
+      "include_room_onehot": false,
+      "cell_accuracy": 0.01769905591866376,
+      "mean_error_m": 1.2815167780135583,
+      "p90_error_m": 2.374644208862593,
+      "n_folds": 3
+    },
+    {
+      "scenario": "drop_noise_no_room_ohe",
+      "features": "Signal,signal_A1,signal_A2,signal_A3",
+      "include_room_onehot": false,
+      "cell_accuracy": 0.01501851851851852,
+      "mean_error_m": 1.2611480556804298,
+      "p90_error_m": 2.346770168006168,
+      "n_folds": 3
+    },
+    {
+      "scenario": "drop_a1_no_room_ohe",
+      "features": "Signal,Noise,signal_A2,signal_A3",
+      "include_room_onehot": false,
+      "cell_accuracy": 0.022443500363108205,
+      "mean_error_m": 1.2795747235280281,
+      "p90_error_m": 2.374644208862593,
+      "n_folds": 3
+    },
+    {
+      "scenario": "drop_a2_no_room_ohe",
+      "features": "Signal,Noise,signal_A1,signal_A3",
+      "include_room_onehot": false,
+      "cell_accuracy": 0.01497690631808279,
+      "mean_error_m": 1.3015245319266548,
+      "p90_error_m": 2.3741249472052224,
+      "n_folds": 3
+    },
+    {
+      "scenario": "drop_a3_no_room_ohe",
+      "features": "Signal,Noise,signal_A1,signal_A2",
+      "include_room_onehot": false,
+      "cell_accuracy": 0.009454030501089325,
+      "mean_error_m": 1.277585831586921,
+      "p90_error_m": 2.3686656547283147,
+      "n_folds": 3
+    }
+  ]
+}

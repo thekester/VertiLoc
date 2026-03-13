@@ -1,0 +1,63 @@
+{
+  "baseline_test_accuracy_no_reject": 0.9529411764705882,
+  "n_train": 1020,
+  "n_calibration": 340,
+  "n_test": 340,
+  "include_room_feature": true,
+  "target_risks": [
+    0.05,
+    0.1,
+    0.15,
+    0.2
+  ],
+  "operating_points_test": [
+    {
+      "target_risk": 0.05,
+      "threshold_from_calibration": 0.2018442775173544,
+      "target_attained_on_calibration": true,
+      "coverage_test": 1.0,
+      "rejection_rate_test": 0.0,
+      "conditional_accuracy_test": 0.9529411764705882,
+      "risk_test": 0.04705882352941182,
+      "n_selected_test": 340,
+      "n_test": 340
+    },
+    {
+      "target_risk": 0.1,
+      "threshold_from_calibration": 0.2018442775173544,
+      "target_attained_on_calibration": true,
+      "coverage_test": 1.0,
+      "rejection_rate_test": 0.0,
+      "conditional_accuracy_test": 0.9529411764705882,
+      "risk_test": 0.04705882352941182,
+      "n_selected_test": 340,
+      "n_test": 340
+    },
+    {
+      "target_risk": 0.15,
+      "threshold_from_calibration": 0.2018442775173544,
+      "target_attained_on_calibration": true,
+      "coverage_test": 1.0,
+      "rejection_rate_test": 0.0,
+      "conditional_accuracy_test": 0.9529411764705882,
+      "risk_test": 0.04705882352941182,
+      "n_selected_test": 340,
+      "n_test": 340
+    },
+    {
+      "target_risk": 0.2,
+      "threshold_from_calibration": 0.2018442775173544,
+      "target_attained_on_calibration": true,
+      "coverage_test": 1.0,
+      "rejection_rate_test": 0.0,
+      "conditional_accuracy_test": 0.9529411764705882,
+      "risk_test": 0.04705882352941182,
+      "n_selected_test": 340,
+      "n_test": 340
+    }
+  ],
+  "artifacts": {
+    "curve_csv": "/home/test/Documents/projetretd/reports/benchmarks/coverage_risk_curve.csv",
+    "curve_png": "/home/test/Documents/projetretd/reports/benchmarks/coverage_risk_curve.png"
+  }
+}

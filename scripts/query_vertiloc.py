@@ -116,6 +116,22 @@ def main() -> None:
     for rank, (cell, dist) in enumerate(zip(neighbors[0], distances[0]), start=1):
         print(f"  #{rank}: cell={cell} | embedding_distance={dist:.4f}")
 
+    has_ood = (
+        getattr(localizer, "ood_energy_threshold_", None) is not None
+        and getattr(localizer, "ood_distance_threshold_", None) is not None
+    )
+    if has_ood:
+        ood_scores = localizer.ood_scores(sample)
+        ood_unknown = bool(localizer.is_ood(sample, scores=ood_scores)[0])
+        print(
+            "OOD detector: "
+            f"{'UNKNOWN' if ood_unknown else 'KNOWN'} "
+            f"(energy={ood_scores['ood_energy'][0]:.4f} / thr={localizer.ood_energy_threshold_:.4f}, "
+            f"nn_dist={ood_scores['ood_embedding_distance'][0]:.4f} / thr={localizer.ood_distance_threshold_:.4f})"
+        )
+    else:
+        print("OOD detector not available in the loaded model (rerun localization.pipeline to calibrate thresholds).")
+
     # If available, use the embedded LogisticRegression head to infer router distance for this sample.
     dist_clf = getattr(localizer, "distance_clf_", None)
     if dist_clf is not None:

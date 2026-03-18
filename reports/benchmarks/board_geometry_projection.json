@@ -1,0 +1,38 @@
+{
+  "rooms": [
+    "D005",
+    "E101",
+    "E102"
+  ],
+  "geometry": {
+    "board_width_m": 3.95,
+    "board_bottom_height_m": 1.18,
+    "board_top_height_m": 2.2,
+    "board_height_m": 1.0200000000000002,
+    "cell_width_m": 0.25,
+    "cell_height_m": 0.3,
+    "table_height_m": 0.75
+  },
+  "router_heights_m": {
+    "D005": 0.75,
+    "E101": 0.75,
+    "E102": 0.75
+  },
+  "board_z_range_m": {
+    "min": 0.8500000000000003,
+    "max": 2.0500000000000003
+  },
+  "within_board_ratio": 0.47157894736842104,
+  "projection_distance_m": {
+    "mean": 0.16620300902497465,
+    "max": 0.9351604140467024
+  },
+  "router_esp_3d_range_m": {
+    "min": 2.0420577856662137,
+    "max": 5.841446738608511
+  },
+  "router_esp_3d_clamped_range_m": {
+    "min": 2.048145502643794,
+    "max": 5.530879224861089
+  }
+}

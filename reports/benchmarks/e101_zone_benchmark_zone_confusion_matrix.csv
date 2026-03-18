@@ -1,0 +1,10 @@
+,bottom_center,bottom_left,bottom_right,middle_center,middle_left,middle_right,top_center,top_left,top_right
+bottom_center,947,1,4,0,13,2,13,18,2
+bottom_left,5,848,2,13,16,0,0,16,0
+bottom_right,4,18,933,0,1,19,4,12,9
+middle_center,0,2,1,447,0,50,0,0,0
+middle_left,0,0,5,16,369,10,0,0,0
+middle_right,0,0,0,75,0,425,0,0,0
+top_center,11,0,7,3,1,6,941,15,16
+top_left,5,8,5,0,18,0,16,839,9
+top_right,6,8,3,10,0,0,0,0,973

@@ -46,6 +46,14 @@ The pipeline produces:
 - `reports/predictions.csv`: per-sample explainability file (true/pred cell, error, confidence, nearest neighbors, predicted router distance + confidence). Les colonnes `neighbor_i_embedding_distance` sont les distances dans l'espace latent (pas des distances physiques) : elles n'ont rien à voir avec la distance routeur (2 m ou 4 m) prédite séparément.
 - `reports/localizer.joblib`: serialized model ready for offline inference.
 
+The exported inference run name is `vertiloc-beacon-v1` by default. Override it at training time with:
+```bash
+PYTHONPATH=src python -m localization.pipeline \
+  --campaign ddeuxmetres:2 \
+  --campaign dquatremetres:4 \
+  --run-name vertiloc-beacon-v2
+```
+
 ## Continuous Integration
 GitHub Actions runs two smoke tests on every push/PR (`.github/workflows/ci.yml`):
 1. `python -m localization.pipeline ...` trains/evaluates on both campaigns to validate the CLI pipeline.
@@ -53,6 +61,9 @@ GitHub Actions runs two smoke tests on every push/PR (`.github/workflows/ci.yml`
 3. `python scripts/query_vertiloc.py ...` runs twice (one 2 m sample, one 4 m sample) to confirm the query CLI returns a plausible cell prediction and logs the top-K neighbors.
 
 ## Querying VertiLoc with custom RSSI readings
+In practice, to run inference you call the CLI script `scripts/query_vertiloc.py`.
+It loads the trained artifact `reports/localizer.joblib` through `localization.VertiLocInferenceModel`.
+
 After training (`python -m localization.pipeline ...`), you can ask the model to localize a custom RSSI vector using:
 ```bash
 PYTHONPATH=src python scripts/query_vertiloc.py \
@@ -61,7 +72,33 @@ PYTHONPATH=src python scripts/query_vertiloc.py \
 PYTHONPATH=src python scripts/query_vertiloc.py --vector "-42,-95,-44,-41,-43"
 ```
 Arguments correspond to `[Signal, Noise, signal_A1, signal_A2, signal_A3]`.  
-The script loads `reports/localizer.joblib`, prints the predicted `grid_cell`, and lists the top-K neighbors used in the vote.
+The script loads `reports/localizer.joblib` through `localization.VertiLocInferenceModel`, then predicts:
+- the most likely `grid_cell`;
+- the inferred router distance;
+- a board-relative macro-zone (`top_left`, `middle_center`, etc.);
+- the clamped board coordinates and OOD indicators.
+
+For machine-readable output:
+```bash
+PYTHONPATH=src python scripts/query_vertiloc.py \
+  --vector "-42,-95,-44,-41,-43" \
+  --format json
+```
+
+To display usage examples directly from the CLI:
+```bash
+PYTHONPATH=src python3 scripts/query_vertiloc.py --example
+```
+
+For real-condition batch testing from a CSV:
+```bash
+PYTHONPATH=src python scripts/query_vertiloc.py \
+  --input-csv reports/benchmarks/query_batch_example.csv \
+  --output-csv reports/benchmarks/query_batch_predictions.csv \
+  --output-json reports/benchmarks/query_batch_predictions.json
+```
+The input CSV must contain the columns:
+`Signal`, `Noise`, `signal_A1`, `signal_A2`, `signal_A3`.
 
 ## Current results (80/20 split)
 ```
@@ -82,6 +119,21 @@ localizer = joblib.load("reports/localizer.joblib")
 proba = localizer.predict_proba(new_feature_array)
 ```
 
+Using the dedicated inference wrapper:
+```python
+from localization import VertiLocInferenceModel
+
+model = VertiLocInferenceModel.load(
+    model_path="reports/localizer.joblib",
+    metrics_path="reports/latest_metrics.json",
+)
+predictions = model.predict_dataframe(
+    df_with_signal_noise_columns,
+    top_k=3,
+    room="E102",
+)
+```
+
 ## Benchmarks and optional models
 Run the full benchmark suite (room-agnostic LORO, room-aware split, router distance/room heads, stacking):
 ```bash
@@ -90,6 +142,26 @@ python3 scripts/benchmark_models.py
 - Results are written to `reports/benchmarks/benchmark_summary.csv`, with confusions in the same folder.
 - Any stage that is skipped (e.g., GPC for speed, missing CatBoost/LightGBM/XGBoost) or fails will be recorded with its reason in `reports/benchmarks/benchmark_failures.json`.
 - Install `catboost`, `lightgbm`, and `xgboost` to fill the corresponding rows instead of `nan`/skipped.
+
+### Circular orientation model
+To train an orientation model that respects circular geometry (`back=0°`, `right=90°`, `front=180°`, `left=270°`, `back_right=45°`, etc.), use:
+```bash
+PYTHONPATH=src python3 scripts/train_orientation_model.py --datasets E102 --exclude-e102-elevation
+```
+By default, the script trains a classifier on the orientation modes, then reconstructs the angle through a circular mean of class probabilities. The regression variant remains available with `--approach circular_regression`. It writes:
+- `reports/benchmarks/orientation_circular_model*.joblib`: serialized model bundle.
+- `reports/benchmarks/orientation_circular_metrics*.json`: angular error + snapped-label accuracy.
+- `reports/benchmarks/orientation_circular_predictions*.csv`: per-sample true/predicted angle and angular error.
+
+Available orientation labels and degrees:
+- `back` = `0`
+- `back_right` = `45`
+- `right` = `90`
+- `front_right` = `135`
+- `front` = `180`
+- `front_left` = `225`
+- `left` = `270`
+- `back_left` = `315`
 
 ### Embedded/edge profiling (RAM/flash/warm-up/energy)
 Use the dedicated profiler to compare deployment cost per model:

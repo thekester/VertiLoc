@@ -1,0 +1,83 @@
+{
+  "dataset": {
+    "samples": 1440,
+    "test_predictions_total": 7200,
+    "seeds": [
+      7,
+      17,
+      27,
+      37,
+      47
+    ],
+    "orientation_labels": [
+      "back",
+      "right",
+      "front",
+      "left"
+    ],
+    "orientation_degrees": {
+      "back": 0.0,
+      "right": 90.0,
+      "front": 180.0,
+      "left": 270.0
+    }
+  },
+  "orientation_task": {
+    "orient_only_accuracy_mean": 0.6609722222222222,
+    "orient_only_accuracy_std": 0.005614273036502129,
+    "orient_only_f1_macro_mean": 0.6632364219308327,
+    "orient_only_mean_angular_error_deg": 42.56905986734236,
+    "multitask_accuracy_mean": 0.6659722222222222,
+    "multitask_accuracy_std": 0.0069026520221051,
+    "multitask_f1_macro_mean": 0.6681856336678772,
+    "multitask_mean_angular_error_deg": 42.54671072590774,
+    "accuracy_delta_abs_mean": 0.0050000000000000044,
+    "angular_error_delta_deg_mean": -0.022349141434632715,
+    "confusion_matrix_multitask_circular": [
+      [
+        1179,
+        125,
+        252,
+        244
+      ],
+      [
+        246,
+        1285,
+        123,
+        146
+      ],
+      [
+        224,
+        44,
+        1238,
+        294
+      ],
+      [
+        292,
+        79,
+        336,
+        1093
+      ]
+    ]
+  },
+  "cell_task": {
+    "multitask_cell_accuracy_mean": 0.1309722222222222,
+    "multitask_cell_accuracy_std": 0.004226423348528596,
+    "multitask_cell_f1_macro_mean": 0.09761932614987553
+  },
+  "per_room": [
+    {
+      "room": "E101",
+      "samples": 7200,
+      "orient_only_accuracy": 0.6609722222222222,
+      "multitask_orientation_accuracy": 0.6659722222222222,
+      "multitask_cell_accuracy": 0.1309722222222222,
+      "orient_only_mean_angular_error_deg": 42.56905986734237,
+      "multitask_mean_angular_error_deg": 42.54671072590773
+    }
+  ],
+  "cell_weight": 0.05,
+  "rooms": [
+    "E101"
+  ]
+}

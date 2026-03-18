@@ -1,0 +1,200 @@
+{
+  "dataset": {
+    "room": "E101",
+    "samples": 7200,
+    "cells": 72,
+    "zones": 9,
+    "zone_rows": 3,
+    "zone_cols": 3,
+    "router_height_m": 0.75,
+    "zone_labels": [
+      "bottom_center",
+      "bottom_left",
+      "bottom_right",
+      "middle_center",
+      "middle_left",
+      "middle_right",
+      "top_center",
+      "top_left",
+      "top_right"
+    ]
+  },
+  "cell_task": {
+    "accuracy_mean": 0.8990277777777778,
+    "accuracy_std": 0.0019934305686676768,
+    "f1_macro_mean": 0.9069146296997888,
+    "mean_distance_m": 0.10809637535198095
+  },
+  "zone_task": {
+    "accuracy_mean": 0.9336111111111111,
+    "accuracy_std": 0.0016782008296659066,
+    "f1_macro_mean": 0.9215883566944634,
+    "neighbor_accuracy_mean": 0.9761111111111109,
+    "confusion_matrix": [
+      [
+        947,
+        1,
+        4,
+        0,
+        13,
+        2,
+        13,
+        18,
+        2
+      ],
+      [
+        5,
+        848,
+        2,
+        13,
+        16,
+        0,
+        0,
+        16,
+        0
+      ],
+      [
+        4,
+        18,
+        933,
+        0,
+        1,
+        19,
+        4,
+        12,
+        9
+      ],
+      [
+        0,
+        2,
+        1,
+        447,
+        0,
+        50,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        5,
+        16,
+        369,
+        10,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        75,
+        0,
+        425,
+        0,
+        0,
+        0
+      ],
+      [
+        11,
+        0,
+        7,
+        3,
+        1,
+        6,
+        941,
+        15,
+        16
+      ],
+      [
+        5,
+        8,
+        5,
+        0,
+        18,
+        0,
+        16,
+        839,
+        9
+      ],
+      [
+        6,
+        8,
+        3,
+        10,
+        0,
+        0,
+        0,
+        0,
+        973
+      ]
+    ]
+  },
+  "per_zone": [
+    {
+      "zone_id": "bottom_center",
+      "samples": 1000.0,
+      "zone_accuracy": 0.947,
+      "cell_accuracy": 0.952,
+      "cell_mean_distance_m": 0.05054949079043361
+    },
+    {
+      "zone_id": "bottom_left",
+      "samples": 900.0,
+      "zone_accuracy": 0.9422222222222222,
+      "cell_accuracy": 0.8522222222222222,
+      "cell_mean_distance_m": 0.09821032311437623
+    },
+    {
+      "zone_id": "bottom_right",
+      "samples": 1000.0,
+      "zone_accuracy": 0.933,
+      "cell_accuracy": 0.938,
+      "cell_mean_distance_m": 0.09276358933289428
+    },
+    {
+      "zone_id": "middle_center",
+      "samples": 500.0,
+      "zone_accuracy": 0.894,
+      "cell_accuracy": 0.754,
+      "cell_mean_distance_m": 0.24017252408878012
+    },
+    {
+      "zone_id": "middle_left",
+      "samples": 400.0,
+      "zone_accuracy": 0.9225,
+      "cell_accuracy": 0.8625,
+      "cell_mean_distance_m": 0.1343814989884407
+    },
+    {
+      "zone_id": "middle_right",
+      "samples": 500.0,
+      "zone_accuracy": 0.85,
+      "cell_accuracy": 0.75,
+      "cell_mean_distance_m": 0.272
+    },
+    {
+      "zone_id": "top_center",
+      "samples": 1000.0,
+      "zone_accuracy": 0.941,
+      "cell_accuracy": 0.925,
+      "cell_mean_distance_m": 0.09341569930162934
+    },
+    {
+      "zone_id": "top_left",
+      "samples": 900.0,
+      "zone_accuracy": 0.9322222222222222,
+      "cell_accuracy": 0.93,
+      "cell_mean_distance_m": 0.11297799355917593
+    },
+    {
+      "zone_id": "top_right",
+      "samples": 1000.0,
+      "zone_accuracy": 0.973,
+      "cell_accuracy": 0.957,
+      "cell_mean_distance_m": 0.041656776463342524
+    }
+  ]
+}

@@ -108,6 +108,11 @@ console = Console()
 # instead of the correct 4 m for E102).
 _E102_ROOT = PROJECT_ROOT / "data" / "E102"
 ROOM_CAMPAIGNS: dict[str, list[CampaignSpec]] = {
+    "B121": [
+        CampaignSpec(PROJECT_ROOT / "data" / "B121" / "dtroismetres" / "routeurcentretableau", router_distance_m=3.0),
+        CampaignSpec(PROJECT_ROOT / "data" / "B121" / "dtroismetres" / "routeurgauche", router_distance_m=3.0),
+        CampaignSpec(PROJECT_ROOT / "data" / "B121" / "dtroismetres" / "routeuradroitedutableau", router_distance_m=3.0),
+    ],
     "D005": [
         CampaignSpec(PROJECT_ROOT / "data" / "D005" / "ddeuxmetres"),
         CampaignSpec(PROJECT_ROOT / "data" / "D005" / "dquatremetres"),

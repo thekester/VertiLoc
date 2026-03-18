@@ -1,0 +1,137 @@
+{
+  "dataset": {
+    "room": "E101",
+    "samples": 1440,
+    "test_predictions_total": 7200,
+    "seeds": [
+      7,
+      17,
+      27,
+      37,
+      47
+    ],
+    "campaigns": [
+      "E101/back",
+      "E101/front",
+      "E101/left",
+      "E101/right"
+    ],
+    "router_height_m": 0.75,
+    "orientation_labels": [
+      "back",
+      "right",
+      "front",
+      "left"
+    ],
+    "orientation_degrees": {
+      "back": 0.0,
+      "right": 90.0,
+      "front": 180.0,
+      "left": 270.0
+    },
+    "height_note": "Elevation target is geometric ESP height derived from board projection; both raw and clamped errors are reported."
+  },
+  "cell_task": {
+    "accuracy_mean": 0.23819444444444443,
+    "accuracy_std": 0.008795077888326426,
+    "f1_macro_mean": 0.22060580188479267,
+    "f1_macro_std": 0.013187283652455202,
+    "mean_distance_m": 0.9903245970731762,
+    "mean_distance_std_m": 0.016903728156786885
+  },
+  "orientation_task": {
+    "accuracy_mean": 0.6809722222222222,
+    "accuracy_std": 0.009982623792259128,
+    "f1_macro_mean": 0.6834208726747355,
+    "f1_macro_std": 0.01042759764493808,
+    "mean_angular_error_deg": 40.58188439830692,
+    "mean_angular_error_std_deg": 0.3134138066702869,
+    "confusion_matrix": [
+      [
+        1156,
+        116,
+        242,
+        286
+      ],
+      [
+        209,
+        1342,
+        96,
+        153
+      ],
+      [
+        210,
+        48,
+        1223,
+        319
+      ],
+      [
+        262,
+        47,
+        309,
+        1182
+      ]
+    ]
+  },
+  "height_task": {
+    "mae_raw_m_mean": 0.22461938437034457,
+    "mae_raw_m_std": 0.003435919992813026,
+    "mae_clamped_m_mean": 0.22461938437034457,
+    "mae_clamped_m_std": 0.003435919992813026
+  },
+  "per_campaign": [
+    {
+      "campaign": "E101/back",
+      "samples": 1800,
+      "cell_accuracy": 0.21444444444444444,
+      "cell_mean_distance_m": 1.0245066507008045,
+      "orientation_accuracy": 0.6422222222222222,
+      "orientation_f1_macro": 0.1955345060893099,
+      "orientation_mean_angular_error_deg": 46.78943367668086,
+      "height_mae_raw_m": 0.23098065084117664,
+      "height_mae_clamped_m": 0.23098065084117664,
+      "within_board_ratio": 1.0
+    },
+    {
+      "campaign": "E101/front",
+      "samples": 1800,
+      "cell_accuracy": 0.19166666666666668,
+      "cell_mean_distance_m": 1.137332208953594,
+      "orientation_accuracy": 0.6794444444444444,
+      "orientation_f1_macro": 0.20228250082699306,
+      "orientation_mean_angular_error_deg": 45.67277542966802,
+      "height_mae_raw_m": 0.2185657577331349,
+      "height_mae_clamped_m": 0.2185657577331349,
+      "within_board_ratio": 1.0
+    },
+    {
+      "campaign": "E101/left",
+      "samples": 1800,
+      "cell_accuracy": 0.2827777777777778,
+      "cell_mean_distance_m": 0.8037833184549554,
+      "orientation_accuracy": 0.6566666666666666,
+      "orientation_f1_macro": 0.1981891348088531,
+      "orientation_mean_angular_error_deg": 38.057343953349005,
+      "height_mae_raw_m": 0.22685508464209572,
+      "height_mae_clamped_m": 0.22685508464209572,
+      "within_board_ratio": 1.0
+    },
+    {
+      "campaign": "E101/right",
+      "samples": 1800,
+      "cell_accuracy": 0.2638888888888889,
+      "cell_mean_distance_m": 0.9956762101833511,
+      "orientation_accuracy": 0.7455555555555555,
+      "orientation_f1_macro": 0.2135582431572247,
+      "orientation_mean_angular_error_deg": 31.80798453352981,
+      "height_mae_raw_m": 0.2220760442649711,
+      "height_mae_clamped_m": 0.2220760442649711,
+      "within_board_ratio": 1.0
+    }
+  ],
+  "weights": {
+    "cell_weight": 0.2,
+    "orientation_weight": 1.0,
+    "height_weight": 0.35
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "dataset": {
+    "room": "E102",
+    "samples": 2250,
+    "test_predictions_total": 11250,
+    "seeds": [
+      7,
+      17,
+      27,
+      37,
+      47
+    ],
+    "campaigns": [
+      "exp1_back_right",
+      "exp2_front_right",
+      "exp3_front_left",
+      "exp4_back_left",
+      "exp5_ground",
+      "exp6_1m50"
+    ],
+    "orientation_labels": [
+      "back_right",
+      "front_right",
+      "front",
+      "front_left",
+      "back_left"
+    ],
+    "orientation_degrees": {
+      "back_right": 45.0,
+      "front_right": 135.0,
+      "front": 180.0,
+      "front_left": 225.0,
+      "back_left": 315.0
+    },
+    "elevation_labels": [
+      "0.00m",
+      "0.75m",
+      "1.50m"
+    ],
+    "orientation_note": "exp5_ground and exp6_1m50 reuse the repo convention orientation=front."
+  },
+  "cell_task": {
+    "accuracy_mean": 0.2065777777777778,
+    "accuracy_std": 0.003989121008411885,
+    "f1_macro_mean": 0.19189033145428563,
+    "f1_macro_std": 0.0049511056069295924,
+    "mean_distance_m": 1.1471712530145481,
+    "mean_distance_std_m": 0.011986152023264661
+  },
+  "orientation_task": {
+    "accuracy_mean": 0.45199999999999996,
+    "accuracy_std": 0.006616104556774547,
+    "f1_macro_mean": 0.41409827517658526,
+    "f1_macro_std": 0.006028641647171681,
+    "mean_angular_error_deg": 50.282335112028626,
+    "mean_angular_error_std_deg": 0.37260330655681784,
+    "confusion_matrix": [
+      [
+        653,
+        511,
+        371,
+        194,
+        146
+      ],
+      [
+        92,
+        654,
+        839,
+        209,
+        81
+      ],
+      [
+        155,
+        471,
+        2517,
+        502,
+        105
+      ],
+      [
+        106,
+        157,
+        748,
+        773,
+        91
+      ],
+      [
+        164,
+        227,
+        441,
+        555,
+        488
+      ]
+    ]
+  },
+  "elevation_task": {
+    "accuracy_mean": 0.7321777777777777,
+    "accuracy_std": 0.001145253220153328,
+    "f1_macro_mean": 0.5435800140477116,
+    "f1_macro_std": 0.00762448695668009,
+    "mean_abs_error_m": 0.21933333333333332,
+    "mean_abs_error_std_m": 0.0018257418583505613,
+    "confusion_matrix": [
+      [
+        309,
+        1354,
+        212
+      ],
+      [
+        160,
+        7054,
+        286
+      ],
+      [
+        65,
+        936,
+        874
+      ]
+    ]
+  },
+  "per_campaign": [
+    {
+      "campaign": "exp1_back_right",
+      "samples": 1875,
+      "cell_accuracy": 0.2256,
+      "cell_mean_distance_m": 1.0972784469871437,
+      "orientation_accuracy": 0.34826666666666667,
+      "orientation_f1_macro": 0.10332278481012658,
+      "orientation_mean_angular_error_deg": 77.95997675980894,
+      "elevation_accuracy": 0.9648,
+      "elevation_f1_macro": 0.3273615635179153,
+      "elevation_mean_abs_error_m": 0.0264
+    },
+    {
+      "campaign": "exp2_front_right",
+      "samples": 1875,
+      "cell_accuracy": 0.26293333333333335,
+      "cell_mean_distance_m": 1.0404867324424014,
+      "orientation_accuracy": 0.3488,
+      "orientation_f1_macro": 0.10344009489916964,
+      "orientation_mean_angular_error_deg": 44.13940362800541,
+      "elevation_accuracy": 0.9066666666666666,
+      "elevation_f1_macro": 0.317016317016317,
+      "elevation_mean_abs_error_m": 0.07
+    },
+    {
+      "campaign": "exp3_front_left",
+      "samples": 1875,
+      "cell_accuracy": 0.17333333333333334,
+      "cell_mean_distance_m": 1.2762197146277428,
+      "orientation_accuracy": 0.41226666666666667,
+      "orientation_f1_macro": 0.11676737160120847,
+      "orientation_mean_angular_error_deg": 41.93413201515937,
+      "elevation_accuracy": 0.9296,
+      "elevation_f1_macro": 0.3211719181868436,
+      "elevation_mean_abs_error_m": 0.0528
+    },
+    {
+      "campaign": "exp4_back_left",
+      "samples": 1875,
+      "cell_accuracy": 0.18026666666666666,
+      "cell_mean_distance_m": 1.1440049198670599,
+      "orientation_accuracy": 0.26026666666666665,
+      "orientation_f1_macro": 0.08260685569191706,
+      "orientation_mean_angular_error_deg": 88.88041170667077,
+      "elevation_accuracy": 0.9610666666666666,
+      "elevation_f1_macro": 0.3267156196174417,
+      "elevation_mean_abs_error_m": 0.0292
+    },
+    {
+      "campaign": "exp5_ground",
+      "samples": 1875,
+      "cell_accuracy": 0.21653333333333333,
+      "cell_mean_distance_m": 1.1386424521745313,
+      "orientation_accuracy": 0.6330666666666667,
+      "orientation_f1_macro": 0.1550620509470934,
+      "orientation_mean_angular_error_deg": 25.14903919433153,
+      "elevation_accuracy": 0.1648,
+      "elevation_f1_macro": 0.09432234432234432,
+      "elevation_mean_abs_error_m": 0.7112
+    },
+    {
+      "campaign": "exp6_1m50",
+      "samples": 1875,
+      "cell_accuracy": 0.1808,
+      "cell_mean_distance_m": 1.1863952519884087,
+      "orientation_accuracy": 0.7093333333333334,
+      "orientation_f1_macro": 0.16599063962558502,
+      "orientation_mean_angular_error_deg": 23.631047368195723,
+      "elevation_accuracy": 0.46613333333333334,
+      "elevation_f1_macro": 0.21195586273796532,
+      "elevation_mean_abs_error_m": 0.4264
+    }
+  ],
+  "weights": {
+    "cell_weight": 0.25,
+    "orientation_weight": 1.0,
+    "elevation_weight": 0.35
+  }
+}

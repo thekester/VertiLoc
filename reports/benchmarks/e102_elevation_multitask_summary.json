@@ -1,0 +1,101 @@
+{
+  "dataset": {
+    "samples": 2250,
+    "test_predictions_total": 11250,
+    "seeds": [
+      7,
+      17,
+      27,
+      37,
+      47
+    ],
+    "elevation_labels": [
+      "0.00m",
+      "0.75m",
+      "1.50m"
+    ]
+  },
+  "elevation_task": {
+    "accuracy_mean": 0.7010666666666667,
+    "accuracy_std": 0.00587339681304241,
+    "f1_macro_mean": 0.45765013509041613,
+    "f1_macro_std": 0.018937478462277123,
+    "confusion_matrix": [
+      [
+        95,
+        1628,
+        152
+      ],
+      [
+        59,
+        7058,
+        383
+      ],
+      [
+        17,
+        1124,
+        734
+      ]
+    ]
+  },
+  "cell_task_impact": {
+    "baseline_cell_accuracy_mean": 0.16142222222222222,
+    "baseline_cell_accuracy_std": 0.005838315332861516,
+    "multitask_cell_accuracy_mean": 0.16328888888888887,
+    "multitask_cell_accuracy_std": 0.013798121181818498,
+    "cell_accuracy_delta_abs_mean": 0.0018666666666666664,
+    "baseline_cell_f1_macro_mean": 0.1455610645800049,
+    "multitask_cell_f1_macro_mean": 0.14735463908371554,
+    "cell_f1_delta_abs_mean": 0.00179357450371061
+  },
+  "per_campaign": [
+    {
+      "campaign": "exp1_back_right",
+      "samples": 1851,
+      "elevation_accuracy": 0.9864937871420854,
+      "elevation_f1_macro": 0.33106699301967185,
+      "baseline_cell_accuracy": 0.17450027012425715,
+      "multitask_cell_accuracy": 0.1836844948676391
+    },
+    {
+      "campaign": "exp2_front_right",
+      "samples": 1882,
+      "elevation_accuracy": 0.873538788522848,
+      "elevation_f1_macro": 0.31083380601247873,
+      "baseline_cell_accuracy": 0.21147715196599362,
+      "multitask_cell_accuracy": 0.2035069075451647
+    },
+    {
+      "campaign": "exp3_front_left",
+      "samples": 1897,
+      "elevation_accuracy": 0.9230363732208751,
+      "elevation_f1_macro": 0.3199926900584795,
+      "baseline_cell_accuracy": 0.15023721665788087,
+      "multitask_cell_accuracy": 0.12862414338429098
+    },
+    {
+      "campaign": "exp4_back_left",
+      "samples": 1870,
+      "elevation_accuracy": 0.9823529411764705,
+      "elevation_f1_macro": 0.3303659742828882,
+      "baseline_cell_accuracy": 0.11818181818181818,
+      "multitask_cell_accuracy": 0.1518716577540107
+    },
+    {
+      "campaign": "exp5_ground",
+      "samples": 1875,
+      "elevation_accuracy": 0.050666666666666665,
+      "elevation_f1_macro": 0.032148900169204735,
+      "baseline_cell_accuracy": 0.17226666666666668,
+      "multitask_cell_accuracy": 0.17066666666666666
+    },
+    {
+      "campaign": "exp6_1m50",
+      "samples": 1875,
+      "elevation_accuracy": 0.3914666666666667,
+      "elevation_f1_macro": 0.18755589625654787,
+      "baseline_cell_accuracy": 0.14186666666666667,
+      "multitask_cell_accuracy": 0.14186666666666667
+    }
+  ]
+}

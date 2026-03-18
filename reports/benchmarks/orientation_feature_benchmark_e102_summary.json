@@ -1,0 +1,66 @@
+{
+  "dataset": "E102",
+  "seeds": [
+    7,
+    17,
+    27,
+    37,
+    47
+  ],
+  "configs": [
+    "raw_rf",
+    "signal_vs_ant_rf",
+    "raw_plus_deltas_rf",
+    "signal_vs_ant_extratrees"
+  ],
+  "ranking": [
+    {
+      "config": "signal_vs_ant_rf",
+      "feature_set": "signal_vs_ant",
+      "model_family": "rf",
+      "accuracy_mean": 0.358,
+      "accuracy_std": 0.028905977851571726,
+      "f1_macro_mean": 0.3560109650764225,
+      "mean_angular_error_deg_mean": 76.76730524344217,
+      "mean_angular_error_deg_std": 3.3499120616387255,
+      "median_angular_error_deg_mean": 80.80019808070293,
+      "p90_angular_error_deg_mean": 165.22266778704503
+    },
+    {
+      "config": "signal_vs_ant_extratrees",
+      "feature_set": "signal_vs_ant",
+      "model_family": "extratrees",
+      "accuracy_mean": 0.3514666666666667,
+      "accuracy_std": 0.02495061789482044,
+      "f1_macro_mean": 0.3486093991557527,
+      "mean_angular_error_deg_mean": 77.34427470834346,
+      "mean_angular_error_deg_std": 1.9762461159594478,
+      "median_angular_error_deg_mean": 78.20224279820164,
+      "p90_angular_error_deg_mean": 164.62055295847978
+    },
+    {
+      "config": "raw_rf",
+      "feature_set": "raw",
+      "model_family": "rf",
+      "accuracy_mean": 0.3425333333333333,
+      "accuracy_std": 0.03844881156955454,
+      "f1_macro_mean": 0.34087285049002297,
+      "mean_angular_error_deg_mean": 76.06004557736497,
+      "mean_angular_error_deg_std": 3.5295054501761314,
+      "median_angular_error_deg_mean": 78.68994662651917,
+      "p90_angular_error_deg_mean": 165.31369883611598
+    },
+    {
+      "config": "raw_plus_deltas_rf",
+      "feature_set": "raw_plus_deltas",
+      "model_family": "rf",
+      "accuracy_mean": 0.33186666666666664,
+      "accuracy_std": 0.030519210707720193,
+      "f1_macro_mean": 0.32885001149439935,
+      "mean_angular_error_deg_mean": 77.76800476022406,
+      "mean_angular_error_deg_std": 3.561223691639639,
+      "median_angular_error_deg_mean": 78.62612144020594,
+      "p90_angular_error_deg_mean": 166.9275770665276
+    }
+  ]
+}

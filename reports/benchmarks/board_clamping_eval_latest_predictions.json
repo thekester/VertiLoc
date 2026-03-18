@@ -1,0 +1,12 @@
+{
+  "predictions_csv": "reports/predictions.csv",
+  "router_height_m": 0.75,
+  "n_samples": 340,
+  "raw_board_error_mean_m": 0.007482443090856044,
+  "clamped_board_error_mean_m": 0.007482443090856044,
+  "raw_board_error_p90_m": 0.0,
+  "clamped_board_error_p90_m": 0.0,
+  "mean_error_gain_m": 0.0,
+  "pred_outside_board_ratio": 0.23529411764705882,
+  "true_outside_board_ratio": 0.23529411764705882
+}

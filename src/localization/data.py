@@ -92,11 +92,14 @@ def load_measurements(
             if csv_path.suffix.lower() != ".csv":
                 continue
 
-            # Filenames follow the pattern "<grid_x>_<grid_y>.csv".
-            grid_part = csv_path.stem.split("_")
-            if len(grid_part) != 2:
+            # Filenames usually follow "<grid_x>_<grid_y>.csv", but some
+            # campaigns include a harmless trailing underscore such as
+            # "4_2_.csv". Extract the leading grid coordinates defensively.
+            match = re.match(r"^\s*(-?\d+)_(-?\d+)", csv_path.stem)
+            if match is None:
                 raise ValueError(f"Unexpected filename format for {csv_path}")
-            grid_x, grid_y = map(int, grid_part)
+            grid_x = int(match.group(1))
+            grid_y = int(match.group(2))
 
             df = pd.read_csv(csv_path)
 

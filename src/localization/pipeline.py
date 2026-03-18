@@ -30,7 +30,9 @@ from .data import (
     default_campaign_specs,
     load_measurements,
 )
+from .board_geometry import BoardGeometry, add_board_geometry, add_board_zones
 from .embedding_knn import EmbeddingKnnConfig, EmbeddingKnnLocalizer
+from .inference import DEFAULT_RUN_NAME
 
 # Only use RSSI-derived signals as inputs. Router distance stays out of features to
 # avoid leaking the target context; the model must infer distance implicitly.
@@ -338,8 +340,10 @@ def save_prediction_report(
     ood_is_unknown,
     y_pred_smoothed=None,
     y_proba_smoothed=None,
+    board_geometry: BoardGeometry | None = None,
+    router_height_m: float | None = None,
     out_path: Path | None = None,
-) -> None:
+) -> pd.DataFrame:
     if out_path is None:
         raise ValueError("out_path is required to save prediction report.")
     confidences = y_proba.max(axis=1)
@@ -414,8 +418,84 @@ def save_prediction_report(
             report_df[f"neighbor_{k+1}_cell"] = neighbor_labels[:, k]
             report_df[f"neighbor_{k+1}_embedding_distance"] = neighbor_distances[:, k]
 
+    if board_geometry is not None:
+        if router_height_m is None:
+            raise ValueError("router_height_m is required when board_geometry is provided.")
+
+        true_board = add_board_geometry(
+            pd.DataFrame(
+                {
+                    "grid_x": report_df["true_grid_x"].to_numpy(),
+                    "grid_y": report_df["true_grid_y"].to_numpy(),
+                    "router_distance_m": report_df["true_router_distance_m"].to_numpy(),
+                }
+            ),
+            geometry=board_geometry,
+            router_height_m=float(router_height_m),
+            grid_x_top_is_zero=True,
+        )
+        pred_board = add_board_geometry(
+            pd.DataFrame(
+                {
+                    "grid_x": report_df["pred_grid_x"].to_numpy(),
+                    "grid_y": report_df["pred_grid_y"].to_numpy(),
+                    "router_distance_m": report_df["pred_router_distance_m"].to_numpy(),
+                }
+            ),
+            geometry=board_geometry,
+            router_height_m=float(router_height_m),
+            grid_x_top_is_zero=True,
+        )
+        board_cols = [
+            "board_x_m",
+            "board_z_m",
+            "board_x_clamped_m",
+            "board_z_clamped_m",
+            "is_within_board",
+            "board_projection_distance_m",
+            "router_esp_3d_m",
+            "router_esp_3d_clamped_m",
+        ]
+        for col in board_cols:
+            report_df[f"true_{col}"] = true_board[col].to_numpy()
+            report_df[f"pred_{col}"] = pred_board[col].to_numpy()
+        true_board = add_board_zones(
+            true_board,
+            geometry=board_geometry,
+            n_cols=3,
+            n_rows=3,
+            use_clamped_coordinates=True,
+            label_language="en",
+        )
+        pred_board = add_board_zones(
+            pred_board,
+            geometry=board_geometry,
+            n_cols=3,
+            n_rows=3,
+            use_clamped_coordinates=True,
+            label_language="en",
+        )
+        report_df["true_zone_id"] = true_board["zone_id"].to_numpy()
+        report_df["pred_zone_id"] = pred_board["zone_id"].to_numpy()
+        report_df["true_zone_row"] = true_board["zone_row"].to_numpy()
+        report_df["true_zone_col"] = true_board["zone_col"].to_numpy()
+        report_df["pred_zone_row"] = pred_board["zone_row"].to_numpy()
+        report_df["pred_zone_col"] = pred_board["zone_col"].to_numpy()
+        report_df["board_error_raw_m"] = np.sqrt(
+            np.square(report_df["true_board_x_m"] - report_df["pred_board_x_m"])
+            + np.square(report_df["true_board_z_m"] - report_df["pred_board_z_m"])
+        )
+        report_df["board_error_clamped_m"] = np.sqrt(
+            np.square(report_df["true_board_x_clamped_m"] - report_df["pred_board_x_clamped_m"])
+            + np.square(report_df["true_board_z_clamped_m"] - report_df["pred_board_z_clamped_m"])
+        )
+        report_df["pred_outside_board"] = (~report_df["pred_is_within_board"]).astype(int)
+        report_df["true_outside_board"] = (~report_df["true_is_within_board"]).astype(int)
+        report_df["board_error_gain_m"] = report_df["board_error_raw_m"] - report_df["board_error_clamped_m"]
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
     report_df.to_csv(out_path, index=False)
+    return report_df
 
 
 def save_model(localizer: EmbeddingKnnLocalizer, path: Path) -> None:
@@ -510,6 +590,7 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     # Fit the encoder + KNN. The embeddings for the training set are cached and
     # reused later when we call explain() for every test point.
     localizer = EmbeddingKnnLocalizer(config=config).fit(X_train, y_train)
+    localizer.run_name_ = str(args.run_name)
     ood_cfg = localizer.calibrate_ood(
         energy_percentile=args.ood_energy_percentile,
         distance_percentile=args.ood_distance_percentile,
@@ -610,6 +691,7 @@ def run_pipeline(args: argparse.Namespace) -> dict:
     metrics["router_distance_accuracy"] = float(accuracy_score(distance_test, distance_pred))
     metrics["router_distance_accuracy_baseline"] = float(accuracy_score(distance_test, distance_pred_baseline))
     metrics["router_distance_classes"] = [float(c) for c in sorted(np.unique(distances))]
+    metrics["run_name"] = str(args.run_name)
     metrics.update(ood_cfg)
     metrics["ood_unknown_rate"] = float(np.mean(ood_unknown))
     wrong_pred = y_pred_raw != y_test
@@ -632,6 +714,11 @@ def run_pipeline(args: argparse.Namespace) -> dict:
             f"mean_err {smooth['raw_mean_distance_m']:.3f}->{smooth['smoothed_mean_distance_m']:.3f} m "
             f"(delta={smooth['delta_mean_distance_m']:+.3f} m)"
         )
+
+    board_geometry = BoardGeometry(
+        cell_width_m=args.cell_width_m,
+        cell_height_m=args.cell_height_m,
+    )
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     save_metrics(metrics, REPORT_DIR / "latest_metrics.json")
@@ -659,7 +746,7 @@ def run_pipeline(args: argparse.Namespace) -> dict:
         title="Confusion matrix (cell + router distance baseline)",
     )
     save_roc_curves(y_test_binarized, y_proba, class_order, Path(args.roc_curve))
-    save_prediction_report(
+    prediction_report = save_prediction_report(
         y_test,
         y_pred_raw,
         y_proba_raw,
@@ -675,8 +762,29 @@ def run_pipeline(args: argparse.Namespace) -> dict:
         ood_unknown,
         y_pred_smoothed=y_pred_smoothed,
         y_proba_smoothed=y_proba_smoothed,
+        board_geometry=board_geometry,
+        router_height_m=args.router_height_m,
         out_path=Path(args.predictions_report),
     )
+    if "board_error_raw_m" in prediction_report.columns:
+        metrics["board_projection"] = {
+            "router_height_m": float(args.router_height_m),
+            "raw_board_error_mean_m": float(prediction_report["board_error_raw_m"].mean()),
+            "raw_board_error_p90_m": float(np.percentile(prediction_report["board_error_raw_m"], 90)),
+            "clamped_board_error_mean_m": float(prediction_report["board_error_clamped_m"].mean()),
+            "clamped_board_error_p90_m": float(np.percentile(prediction_report["board_error_clamped_m"], 90)),
+            "mean_error_gain_m": float(prediction_report["board_error_gain_m"].mean()),
+            "pred_outside_board_ratio": float(prediction_report["pred_outside_board"].mean()),
+            "true_outside_board_ratio": float(prediction_report["true_outside_board"].mean()),
+            "zone_accuracy": float((prediction_report["true_zone_id"] == prediction_report["pred_zone_id"]).mean()),
+            "zone_neighbor_accuracy": float(
+                (
+                    (np.abs(prediction_report["true_zone_row"] - prediction_report["pred_zone_row"]) <= 1)
+                    & (np.abs(prediction_report["true_zone_col"] - prediction_report["pred_zone_col"]) <= 1)
+                ).mean()
+            ),
+        }
+        save_metrics(metrics, REPORT_DIR / "latest_metrics.json")
     save_model(localizer, Path(args.model_output))
     return metrics
 
@@ -692,6 +800,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--cell-width-m", type=float, default=DEFAULT_CELL_WIDTH_M)
     parser.add_argument("--cell-height-m", type=float, default=DEFAULT_CELL_HEIGHT_M)
+    parser.add_argument(
+        "--router-height-m",
+        type=float,
+        default=0.75,
+        help="Router height used when projecting predictions onto the physical board.",
+    )
     parser.add_argument("--test-size", type=float, default=0.2)
     parser.add_argument("--random-state", type=int, default=42)
     parser.add_argument("--hidden-layers", type=int, nargs="+", default=[64, 32])
@@ -750,6 +864,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=MODEL_PATH,
         help="Path where the trained localizer will be serialized.",
+    )
+    parser.add_argument(
+        "--run-name",
+        type=str,
+        default=DEFAULT_RUN_NAME,
+        help="Human-readable/stable name attached to the exported inference model.",
     )
     parser.add_argument(
         "--confusion-matrix",

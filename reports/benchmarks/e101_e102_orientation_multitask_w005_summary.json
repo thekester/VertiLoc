@@ -1,0 +1,157 @@
+{
+  "dataset": {
+    "samples": 2940,
+    "test_predictions_total": 14700,
+    "seeds": [
+      7,
+      17,
+      27,
+      37,
+      47
+    ],
+    "orientation_labels": [
+      "back",
+      "back_right",
+      "right",
+      "front_right",
+      "front",
+      "front_left",
+      "left",
+      "back_left"
+    ],
+    "orientation_degrees": {
+      "back": 0.0,
+      "back_right": 45.0,
+      "right": 90.0,
+      "front_right": 135.0,
+      "front": 180.0,
+      "front_left": 225.0,
+      "left": 270.0,
+      "back_left": 315.0
+    }
+  },
+  "orientation_task": {
+    "orient_only_accuracy_mean": 0.3746938775510204,
+    "orient_only_accuracy_std": 0.006885886199795681,
+    "orient_only_f1_macro_mean": 0.3659292473069262,
+    "orient_only_mean_angular_error_deg": 56.16856035344115,
+    "multitask_accuracy_mean": 0.37,
+    "multitask_accuracy_std": 0.00861128838010704,
+    "multitask_f1_macro_mean": 0.3603205448337955,
+    "multitask_mean_angular_error_deg": 56.556292698067125,
+    "accuracy_delta_abs_mean": -0.00469387755102042,
+    "angular_error_delta_deg_mean": 0.3877323446259723,
+    "confusion_matrix_multitask_circular": [
+      [
+        681,
+        271,
+        142,
+        47,
+        158,
+        101,
+        169,
+        231
+      ],
+      [
+        214,
+        672,
+        223,
+        135,
+        98,
+        170,
+        190,
+        173
+      ],
+      [
+        143,
+        149,
+        1179,
+        16,
+        57,
+        62,
+        134,
+        60
+      ],
+      [
+        183,
+        234,
+        255,
+        293,
+        256,
+        365,
+        196,
+        93
+      ],
+      [
+        117,
+        113,
+        88,
+        57,
+        762,
+        472,
+        128,
+        63
+      ],
+      [
+        65,
+        151,
+        57,
+        71,
+        242,
+        754,
+        378,
+        157
+      ],
+      [
+        157,
+        85,
+        78,
+        47,
+        159,
+        295,
+        783,
+        196
+      ],
+      [
+        318,
+        207,
+        71,
+        58,
+        147,
+        367,
+        392,
+        315
+      ]
+    ]
+  },
+  "cell_task": {
+    "multitask_cell_accuracy_mean": 0.08863945578231291,
+    "multitask_cell_accuracy_std": 0.003343729449644764,
+    "multitask_cell_f1_macro_mean": 0.07136719988074353
+  },
+  "per_room": [
+    {
+      "room": "E101",
+      "samples": 7200,
+      "orient_only_accuracy": 0.4741666666666667,
+      "multitask_orientation_accuracy": 0.47291666666666665,
+      "multitask_cell_accuracy": 0.08194444444444444,
+      "orient_only_mean_angular_error_deg": 48.15495234079782,
+      "multitask_mean_angular_error_deg": 48.300460182011186
+    },
+    {
+      "room": "E102",
+      "samples": 7500,
+      "orient_only_accuracy": 0.2792,
+      "multitask_orientation_accuracy": 0.2712,
+      "multitask_cell_accuracy": 0.09506666666666666,
+      "orient_only_mean_angular_error_deg": 63.86162404557875,
+      "multitask_mean_angular_error_deg": 64.48189191348082
+    }
+  ],
+  "cell_weight": 0.05,
+  "rooms": [
+    "E101",
+    "E102"
+  ]
+}

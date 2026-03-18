@@ -1,0 +1,135 @@
+{
+  "KNN": {
+    "mean_cell_accuracy": 0.005166666666666667,
+    "mean_error_m": 1.4188036540013276,
+    "mean_p90_m": 2.60300325955151,
+    "per_campaign": {
+      "routeur_centre": {
+        "cell_accuracy": 0.0085,
+        "mean_error_m": 1.416701493634907
+      },
+      "routeur_gauche": {
+        "cell_accuracy": 0.0,
+        "mean_error_m": 1.4531318159869593
+      },
+      "routeur_droite": {
+        "cell_accuracy": 0.007,
+        "mean_error_m": 1.3865776523821163
+      }
+    }
+  },
+  "Bagging KNN": {
+    "mean_cell_accuracy": 0.005166666666666667,
+    "mean_error_m": 1.4284056219666896,
+    "mean_p90_m": 2.663231767509211,
+    "per_campaign": {
+      "routeur_centre": {
+        "cell_accuracy": 0.0085,
+        "mean_error_m": 1.4454296924879684
+      },
+      "routeur_gauche": {
+        "cell_accuracy": 0.0,
+        "mean_error_m": 1.4559260376325265
+      },
+      "routeur_droite": {
+        "cell_accuracy": 0.007,
+        "mean_error_m": 1.3838611357795745
+      }
+    }
+  },
+  "LDA+KNN": {
+    "mean_cell_accuracy": 0.005999999999999999,
+    "mean_error_m": 1.3511036541298609,
+    "mean_p90_m": 2.662221826673955,
+    "per_campaign": {
+      "routeur_centre": {
+        "cell_accuracy": 0.018,
+        "mean_error_m": 1.376665278086219
+      },
+      "routeur_gauche": {
+        "cell_accuracy": 0.0,
+        "mean_error_m": 1.3383784721581595
+      },
+      "routeur_droite": {
+        "cell_accuracy": 0.0,
+        "mean_error_m": 1.3382672121452042
+      }
+    }
+  },
+  "RandomForest": {
+    "mean_cell_accuracy": 0.0038569023569023572,
+    "mean_error_m": 1.4239909016941583,
+    "mean_p90_m": 2.7621510763774375,
+    "per_campaign": {
+      "routeur_centre": {
+        "cell_accuracy": 0.0045,
+        "mean_error_m": 1.4215756425518196
+      },
+      "routeur_gauche": {
+        "cell_accuracy": 0.007070707070707071,
+        "mean_error_m": 1.4193544233802204
+      },
+      "routeur_droite": {
+        "cell_accuracy": 0.0,
+        "mean_error_m": 1.431042639150435
+      }
+    }
+  },
+  "ExtraTrees": {
+    "mean_cell_accuracy": 0.0030067340067340066,
+    "mean_error_m": 1.415464106497174,
+    "mean_p90_m": 2.7460249596164696,
+    "per_campaign": {
+      "routeur_centre": {
+        "cell_accuracy": 0.001,
+        "mean_error_m": 1.3683176986149865
+      },
+      "routeur_gauche": {
+        "cell_accuracy": 0.00202020202020202,
+        "mean_error_m": 1.4009948909021697
+      },
+      "routeur_droite": {
+        "cell_accuracy": 0.006,
+        "mean_error_m": 1.477079729974366
+      }
+    }
+  },
+  "HistGB": {
+    "mean_cell_accuracy": 0.02336195286195286,
+    "mean_error_m": 1.4481780990047468,
+    "mean_p90_m": 2.8437237827601565,
+    "per_campaign": {
+      "routeur_centre": {
+        "cell_accuracy": 0.0105,
+        "mean_error_m": 1.4096113257923033
+      },
+      "routeur_gauche": {
+        "cell_accuracy": 0.008585858585858586,
+        "mean_error_m": 1.4114291310076357
+      },
+      "routeur_droite": {
+        "cell_accuracy": 0.051,
+        "mean_error_m": 1.5234938402143008
+      }
+    }
+  },
+  "NN+L-KNN": {
+    "mean_cell_accuracy": 0.002356902356902357,
+    "mean_error_m": 1.4018702294111318,
+    "mean_p90_m": 2.6647911054261275,
+    "per_campaign": {
+      "routeur_centre": {
+        "cell_accuracy": 0.0,
+        "mean_error_m": 1.3698247928261094
+      },
+      "routeur_gauche": {
+        "cell_accuracy": 0.007070707070707071,
+        "mean_error_m": 1.342333325079689
+      },
+      "routeur_droite": {
+        "cell_accuracy": 0.0,
+        "mean_error_m": 1.4934525703275967
+      }
+    }
+  }
+}

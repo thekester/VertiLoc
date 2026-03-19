@@ -1,0 +1,17 @@
+trace_name,trace_kind,description,n_samples,target_cell,dominant_pred_cell,dominant_pred_share,n_unique_pred_cells,compressed_path,compressed_path_len,mean_confidence,median_confidence,ood_reject_rate,mean_ood_energy,mean_ood_embedding_distance,pred_router_distance_mode_m,within_board_rate,target_known_in_training_labels,exact_match_rate,dominant_cell_error_m
+0_15,static_cell,Static hold-out point.,25,0_15,0_7,0.4,4,2_5 -> 2_1 -> 0_7 -> 2_2,4,0.7683024975531028,1.0,1.0,-23.15836389254244,11.991479331678102,2.0,1.0,False,0.0,2.0
+2_-3,static_cell,Static hold-out point.,25,2_-3,0_1,0.48,3,1_5 -> 0_1 -> 3_5,3,1.0,1.0,1.0,-18.124526230966964,11.267913811607535,4.0,1.0,False,0.0,1.16619037896906
+2_2,static_cell,Static hold-out point.,25,2_2,1_2,0.6,3,1_4 -> 1_2 -> 3_5,3,0.9366295855572436,1.0,1.0,-16.6880025274788,13.190375983979798,2.0,1.0,True,0.0,0.3
+3_-8,static_cell,Static hold-out point.,25,3_-8,0_7,0.52,4,3_7 -> 0_7 -> 3_3 -> 1_6,4,0.830788814646821,1.0,1.0,-15.40521240658448,13.565530997798083,2.0,1.0,False,0.0,3.8564880396547325
+3_9,static_cell,Static hold-out point.,25,3_9,3_6,0.6,2,2_8 -> 3_6,2,1.0,1.0,1.0,-27.735323671588358,21.56471287547769,2.0,1.0,False,0.0,0.75
+4_12,static_cell,Static hold-out point.,25,4_12,0_0,0.52,3,3_5 -> 0_0 -> 3_3,3,0.9112416427230137,1.0,1.0,-17.26951037810202,11.241164276804005,4.0,1.0,False,0.0,3.2310988842807022
+b_c,trajectory_or_semantic,"ESP32 au fond de la piece, centre.",25,,3_7,0.56,3,0_1 -> 3_7 -> 1_4,3,0.9051498575469753,1.0,1.0,-30.590363596989672,23.550290836735893,4.0,1.0,,,
+b_d,trajectory_or_semantic,"ESP32 au fond de la piece, droite.",25,,3_4,0.56,2,3_4 -> 3_7,2,0.6448513414084023,0.7478263481520635,1.0,-15.903126838779691,19.44687281136687,4.0,1.0,,,
+b_g,trajectory_or_semantic,"ESP32 au fond de la piece, gauche.",25,,1_6,0.6,3,3_4 -> 1_6 -> 3_3,3,1.0,1.0,1.0,-18.8785995734605,9.85128326287398,4.0,1.0,,,
+c_c,trajectory_or_semantic,"ESP32 au centre de la piece, centre.",25,,1_7,0.56,2,0_1 -> 1_7,2,1.0,1.0,1.0,-19.448290472877446,10.84253880206063,2.0,1.0,,,
+c_d,trajectory_or_semantic,"ESP32 au centre de la piece, droite.",25,,0_5,0.76,2,0_5 -> 1_6,2,0.6979648227897615,0.602585293144423,1.0,-13.821343680161167,14.748037900286745,2.0,1.0,,,
+c_g,trajectory_or_semantic,ESP32 au centre/cote gauche.,25,,3_1,1.0,1,3_1,1,0.8165930306451038,1.0,1.0,-14.743029895646254,14.870774239697322,4.0,1.0,,,
+diag_4-4,trajectory_or_semantic,Diagonale demarrant a 4_-4.,25,,1_5,0.52,2,1_5 -> 3_0,2,0.7788818619789913,0.5747728114980604,1.0,-12.30397097666605,9.945267870113097,4.0,1.0,,,
+diag_44,trajectory_or_semantic,Diagonale demarrant a 4_4.,25,,2_4,0.6,3,3_2 -> 2_4 -> 3_1,3,1.0,1.0,1.0,-39.17241339402823,19.15086382656041,2.0,1.0,,,
+hauteur_47,trajectory_or_semantic,Trajet vertical demarrant a 4_7.,25,,3_1,0.6,2,3_1 -> 3_0,2,1.0,1.0,1.0,-11.982326739662069,10.900424420802363,4.0,1.0,,,
+rond_411,trajectory_or_semantic,Cercle en mouvement demarrant autour de 4_11.,25,,0_3,0.44,3,2_1 -> 0_3 -> 3_4,3,1.0,1.0,1.0,-26.533991665644365,12.520680600206376,4.0,1.0,,,

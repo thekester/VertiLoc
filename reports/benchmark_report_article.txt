@@ -34,6 +34,7 @@ Date : Mars 2026
   - LORO (salle inconnue)         : ~1–2 % tous modèles  → non transférable
   - LOCO E102 (campagne inconnue) : HistGB 2.42 %         → non transférable
   - LOCO B121 (campagne inconnue) : HistGB 2.30 %         → non transférable
+  - B121/deplacement (inférence OOD/mouvement) : 100 % rejet OOD ; 0 % exact sur 6 points statiques
   - Conclusion : chaque déploiement requiert une recalibration complète.
 
   Robustesse :
@@ -680,6 +681,54 @@ relative routeur-tableau, même sans facteur "volets" ni changement d'élévatio
 Artefacts produits :
   - `reports/benchmarks/loco_b121.csv`
   - `reports/benchmarks/loco_b121_summary.json`
+
+════════════════════════════════════════════════════════════════════════════════
+11quater. B121/DEPLACEMENT — CHALLENGE D'INFÉRENCE HORS ENTRAÎNEMENT
+════════════════════════════════════════════════════════════════════════════════
+
+Objectif :
+  Évaluer directement le modèle d'inférence exporté sur un dossier explicitement
+  exclu de l'entraînement (`data/B121/deplacement`) afin de tester sa capacité à
+  "s'en sortir" sur des positions hors grille, des trajectoires en mouvement et
+  des placements sémantiques (fond/centre/gauche/droite de la pièce).
+
+Contenu évalué :
+  - 6 points statiques : `0_15`, `2_-3`, `2_2`, `3_-8`, `3_9`, `4_12`
+  - 10 traces d'inférence seules : `rond_411`, `diag_44`, `diag_4-4`,
+    `hauteur_47`, `b_c`, `b_d`, `b_g`, `c_c`, `c_d`, `c_g`
+  - 25 mesures RSSI par fichier, soit 16 traces × 25 = 400 inférences
+
+Protocole :
+  - Aucun ré-entraînement ; utilisation directe de `reports/localizer.joblib`
+  - Inférence batch via `VertiLocInferenceModel`
+  - Lecture des scores OOD déjà embarqués (énergie softmax + distance latente)
+
+Résultats principaux :
+  - Taux de rejet OOD : 100 % sur les 16 traces (400/400 échantillons rejetés)
+  - Points statiques : 0 % de prédiction exacte sur les 6 cas
+  - Erreur dominante sur les 6 points statiques : moyenne 1.884 m,
+    médiane 1.583 m, max 3.856 m
+  - Même le point interne `2_2` n'est pas récupéré exactement :
+    cellule dominante prédite = `1_2` (erreur 0.30 m)
+  - Les points hors tableau (`0_15`, `3_-8`, `4_12`) sont rabattus vers des
+    cellules internes, jamais correctement identifiés comme position géométrique
+    extrapolée
+  - Les trajectoires (`rond`, `diag`, `hauteur`) et placements sémantiques
+    (`b_*`, `c_*`) restent toutes rejetées comme hors distribution
+
+Interprétation :
+  Le modèle d'inférence se comporte ici comme un classifieur fermé sur sa carte
+  radio d'entraînement : en dehors de la distribution calibrée, il projette les
+  vecteurs RSSI vers des cellules connues mais le module OOD les rejette
+  systématiquement. Autrement dit, sans nouvelle calibration, le système ne sait
+  ni extrapoler spatialement hors grille, ni suivre proprement un mouvement
+  continu à partir des seuls fingerprints statiques de B121.
+
+Artefacts produits :
+  - `scripts/evaluate_b121_deplacement.py`
+  - `reports/benchmarks/b121_deplacement_eval.csv`
+  - `reports/benchmarks/b121_deplacement_eval.json`
+  - `reports/benchmarks/b121_deplacement_eval_predictions.csv`
 
 Métriques de shift implémentées :
   - MMD RBF (Maximum Mean Discrepancy, estimateur non biaisé),
@@ -1811,6 +1860,7 @@ salle en un seul passage, sans information contextuelle extérieure.
   │  Bruit synthétique σ=3 dBm (LOCO) │  KNN              │  perte ~5–10 pp             │
   │  Learning curve (100 % → 20 %)    │  KNN              │  60 % donne ~90 % plateau   │
   │  OOD (salle inconnue)             │  seuil softmax E  │  AUROC 0.67–0.85            │
+  │  B121 deplacement (OOD inférence) │  modèle exporté   │  100 % rejet, 0 % exact     │
   │  Spatial smoothing (CRF-lite r2)  │  KNN+CRF          │  +0.5–1 pp sur LOCO         │
   │  Ablation (sans A3, LORO)         │  NN+L-KNN         │  −0.18 pp (marginal)        │
   │  Significativité KNN vs NN+L-KNN  │  indiscernables   │  McNemar p=0.070            │
@@ -1883,6 +1933,59 @@ Conclusion scientifique :
     plus riches que 5 RSSI scalaires.
 
 ════════════════════════════════════════════════════════════════════════════════
+16octodecies. BENCHMARK AUXILIAIRE PYTORCH — NN+L-KNN
+════════════════════════════════════════════════════════════════════════════════
+
+Objectif :
+  Vérifier la faisabilité d'une variante PyTorch du modèle NN+L-KNN, distincte
+  du pipeline principal actuellement implémenté avec `sklearn MLPClassifier`.
+
+Implémentation :
+  - Script : `scripts/nn_lknn_torch.py`
+  - Encoder : MLP PyTorch (5 entrées RSSI -> 64 -> 32 -> softmax)
+  - Décodeur : KNN local sur l'embedding latent (k=5, poids distance)
+  - Optimisation : Adam, lr=1e-3, weight_decay=1e-4
+  - Prétraitement : `StandardScaler`
+  - Environnement d'exécution : `.venv` locale, torch 2.10.0+cpu
+  - Date d'exécution : 19 mars 2026
+
+Protocole :
+  - Split unique stratifié 75/25 (`test_size=0.25`)
+  - Seed fixe : 42
+  - CPU uniquement, threads bornés (`OMP_NUM_THREADS=1`)
+  - Attention : ces runs sont auxiliaires et ne remplacent pas les tableaux
+    principaux multi-seeds / room-aware du rapport.
+
+Résultats auxiliaires obtenus :
+
+  1) D005 (ddeuxmetres + dquatremetres, run par défaut du script)
+     - train = 1 275 | test = 425
+     - Accuracy cellule : 98.35 %
+     - Erreur moyenne   : 0.0119 m
+
+  2) E102 complet (exp1..exp6, distance 4 m)
+     - train = 8 437 | test = 2 813
+     - Accuracy cellule : 91.50 %
+     - Erreur moyenne   : 0.1260 m
+
+Lecture :
+  - La variante PyTorch fonctionne correctement et retrouve un niveau de
+    performance cohérent avec le pipeline `sklearn` existant.
+  - Sur D005, le run rapide atteint 98.35 %, très proche des meilleurs résultats
+    intra-salle déjà rapportés (~98 %).
+  - Sur E102 complet, le run rapide atteint 91.5 %, légèrement sous les ~92.7 %
+    du benchmark principal intra-salle, mais dans le même ordre de grandeur.
+  - L'écart résiduel peut s'expliquer par le protocole plus simple ici
+    (un seul split, 30 epochs, pas d'agrégation multi-seeds, pas de calibration
+    ni de recherche d'hyperparamètres).
+
+Conclusion pratique :
+  - Oui, une version PyTorch de NN+L-KNN a été exécutée avec succès.
+  - À ce stade, elle constitue une preuve de faisabilité technique crédible,
+    mais pas encore un remplacement méthodologiquement strict du pipeline
+    `sklearn` utilisé dans les sections comparatives principales.
+
+════════════════════════════════════════════════════════════════════════════════
 17. FICHIERS DE RÉSULTATS DISPONIBLES
 ════════════════════════════════════════════════════════════════════════════════
 
@@ -1951,7 +2054,8 @@ Conclusion scientifique :
   ├── e102_elevation_confusion_matrix.csv   — matrice de confusion élévation (comptes)
   ├── e102_elevation_confusion_matrix.png   — visualisation de la matrice
   ├── e102_elevation_multitask_predictions.csv — prédictions agrégées par seed
-  └── e102_elevation_report_snippet.md      — snippet markdown auto pour article
+  ├── e102_elevation_report_snippet.md      — snippet markdown auto pour article
+  └── nn_lknn_torch_aux_benchmark_mars2026.txt — commandes et sorties brutes du benchmark PyTorch
 
 
 ================================================================================

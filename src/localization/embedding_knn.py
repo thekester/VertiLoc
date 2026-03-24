@@ -181,13 +181,7 @@ class EmbeddingKnnLocalizer:
             raise RuntimeError("Fit the model before calibrating OOD thresholds.")
 
         energy_train = self._energy_from_scaled(self.train_scaled_, temperature=temperature)
-        # Use the second neighbor to avoid the trivial self-distance = 0 on train points.
-        n_neighbors = 2 if len(self.train_embeddings_) > 1 else 1
-        dist_train_all, _ = self.knn_.kneighbors(self.train_embeddings_, n_neighbors=n_neighbors)
-        if n_neighbors == 2:
-            dist_train = dist_train_all[:, 1]
-        else:
-            dist_train = dist_train_all[:, 0]
+        dist_train = self._calibration_distance_reference()
 
         self.ood_energy_threshold_ = float(np.percentile(energy_train, energy_percentile))
         self.ood_distance_threshold_ = float(np.percentile(dist_train, distance_percentile))
@@ -226,6 +220,61 @@ class EmbeddingKnnLocalizer:
         distances, indices = self.kneighbors(X, n_neighbors=top_k)
         neighbor_labels = self.train_labels_[indices]
         return distances, neighbor_labels
+
+    def _calibration_distance_reference(self) -> np.ndarray:
+        """Return train-time embedding distances used to set the OOD threshold.
+
+        Using the plain second neighbor is brittle when multiple captures of the
+        same cell collapse to identical or near-identical embeddings, because
+        the percentile can then become almost zero. We instead prefer the
+        nearest neighbor carrying a different cell label, which better matches
+        the separation margin the OOD rule is trying to enforce.
+        """
+        if self.train_embeddings_ is None or self.knn_ is None:
+            raise RuntimeError("Fit the model before calibrating OOD thresholds.")
+
+        n_samples = len(self.train_embeddings_)
+        if n_samples <= 1:
+            return np.zeros(n_samples, dtype=float)
+
+        labels = None if self.train_labels_ is None else np.asarray(self.train_labels_)
+        if labels is None:
+            distances, _ = self.knn_.kneighbors(self.train_embeddings_, n_neighbors=2)
+            return distances[:, 1]
+
+        result = np.full(n_samples, np.nan, dtype=float)
+        unresolved = np.ones(n_samples, dtype=bool)
+        n_neighbors = min(max(8, int(self.config.k_neighbors) + 1), n_samples)
+
+        while np.any(unresolved):
+            query = self.train_embeddings_[unresolved]
+            distances, indices = self.knn_.kneighbors(query, n_neighbors=n_neighbors)
+            unresolved_idx = np.flatnonzero(unresolved)
+            for row_idx, sample_idx in enumerate(unresolved_idx):
+                sample_label = labels[sample_idx]
+                candidate_indices = indices[row_idx]
+                candidate_labels = labels[candidate_indices]
+                valid = (candidate_indices != sample_idx) & (candidate_labels != sample_label)
+                if np.any(valid):
+                    first_valid = int(np.flatnonzero(valid)[0])
+                    result[sample_idx] = float(distances[row_idx, first_valid])
+                    unresolved[sample_idx] = False
+
+            if not np.any(unresolved) or n_neighbors >= n_samples:
+                break
+            n_neighbors = min(n_samples, n_neighbors * 2)
+
+        if np.any(unresolved):
+            fallback_neighbors = 2 if n_samples > 1 else 1
+            fallback_distances, _ = self.knn_.kneighbors(
+                self.train_embeddings_[unresolved],
+                n_neighbors=fallback_neighbors,
+            )
+            if fallback_neighbors == 2:
+                result[unresolved] = fallback_distances[:, 1]
+            else:
+                result[unresolved] = fallback_distances[:, 0]
+        return result
 
     @staticmethod
     def _ensure_2d_array(X) -> np.ndarray:

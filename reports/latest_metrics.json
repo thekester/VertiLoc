@@ -61,7 +61,7 @@
   ],
   "run_name": "vertiloc-beacon-v1",
   "ood_energy_threshold": -7.097844633292744,
-  "ood_distance_threshold": 1.9073486328125e-06,
+  "ood_distance_threshold": 30.513959693812065,
   "ood_energy_percentile": 95.0,
   "ood_distance_percentile": 95.0,
   "ood_temperature": 1.0,

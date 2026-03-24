@@ -701,10 +701,19 @@ Contenu évalué :
 Protocole :
   - Aucun ré-entraînement ; utilisation directe de `reports/localizer.joblib`
   - Inférence batch via `VertiLocInferenceModel`
-  - Lecture des scores OOD déjà embarqués (énergie softmax + distance latente)
+  - Lecture des scores OOD déjà embarqués (OOD = out-of-distribution,
+    c'est-à-dire détection d'échantillons dont la signature RSSI s'écarte de la
+    distribution radio observée pendant l'entraînement)
+  - Recalibration du seuil OOD en distance latente :
+    le seuil n'est plus estimé à partir du seul 2e voisin d'entraînement,
+    mais du plus proche voisin associé à une cellule différente, afin
+    d'éviter une sous-estimation due à des répétitions quasi identiques
+    au sein d'une même cellule
 
 Résultats principaux :
-  - Taux de rejet OOD : 100 % sur les 16 traces (400/400 échantillons rejetés)
+  - Le taux moyen de rejet OOD tombe à 4.25 %
+    (17/400 échantillons), avec rejet non nul sur 2 traces seulement :
+    `4_12` = 36 %, `b_c` = 32 %
   - Points statiques : 0 % de prédiction exacte sur les 6 cas
   - Erreur dominante sur les 6 points statiques : moyenne 1.884 m,
     médiane 1.583 m, max 3.856 m
@@ -714,15 +723,32 @@ Résultats principaux :
     cellules internes, jamais correctement identifiés comme position géométrique
     extrapolée
   - Les trajectoires (`rond`, `diag`, `hauteur`) et placements sémantiques
-    (`b_*`, `c_*`) restent toutes rejetées comme hors distribution
+    (`b_*`, `c_*`) restent projetées vers des cellules d'entraînement connues plutôt que
+    reconstruites comme mouvement continu ou position extrapolée
 
 Interprétation :
-  Le modèle d'inférence se comporte ici comme un classifieur fermé sur sa carte
-  radio d'entraînement : en dehors de la distribution calibrée, il projette les
-  vecteurs RSSI vers des cellules connues mais le module OOD les rejette
-  systématiquement. Autrement dit, sans nouvelle calibration, le système ne sait
-  ni extrapoler spatialement hors grille, ni suivre proprement un mouvement
-  continu à partir des seuls fingerprints statiques de B121.
+  Ici, le score OOD ne mesure pas l'exactitude géométrique de la prédiction,
+  mais le degré d'écart entre un échantillon RSSI et le support radio appris.
+  Un échantillon marqué OOD est donc interprété comme "hors de la distribution
+  d'entraînement", pas nécessairement comme "faux" au sens strict, tandis qu'un
+  échantillon accepté n'est pas nécessairement bien localisé. La recalibration
+  du seuil en distance latente porte ce seuil à `30.514` et rétablit un
+  comportement d'inférence cohérent sur les traces évaluées.
+
+  La conclusion sur la généralisation demeure toutefois inchangée. Le système
+  se comporte comme un classifieur fermé sur sa carte radio d'entraînement :
+  les RSSI hors grille ou en mouvement sont rabattus vers les cellules connues
+  les plus proches, sans extrapolation géométrique fiable ni suivi continu
+  robuste. Le point `2_2` reste proche de sa zone cible (`1_2`, erreur 0.30 m),
+  mais aucun des 6 points statiques n'est retrouvé exactement, et les cas les
+  plus éloignés (`0_15`, `3_-8`, `4_12`) restent mal localisés.
+
+  En pratique, cette expérience montre que la limite principale du modèle
+  d'inférence est son incapacité à sortir du cadre de son entraînement. Face à
+  des positions hors grille, des trajectoires continues ou des configurations
+  sémantiques non vues, il ne généralise pas réellement : il rabat les mesures
+  vers les cellules apprises les plus proches au lieu de produire une
+  extrapolation spatiale fiable.
 
 Artefacts produits :
   - `scripts/evaluate_b121_deplacement.py`
@@ -1176,22 +1202,24 @@ salle en un seul passage, sans information contextuelle extérieure.
 
   Implémentation (13 mars 2026) :
   - Nouveau script : `scripts/embedded_profile.py`
-  - Sorties : `reports/benchmarks/embedded_profile_e102_quick.csv` et `.json`
+  - Sorties actualisées : `reports/benchmarks/embedded_profile_e102_article_refresh.csv` et `.json`
   - Métriques calculées par modèle :
-    taille disque (proxy flash), temps de chargement, cold start total,
-    warm-up moyen/p95, latence p50/p90/p95/p99, débit (inf/s),
-    énergie/inférence côté hôte, estimation énergie ESP32.
+    flash_kb / flash_mb (stockage sérialisé), ram_kb / ram_mb (empreinte
+    NumPy minimale une fois chargé), weights_kb / weights_mb (poids appris),
+    temps de chargement, cold_start_ms, warm-up moyen/p95, latence
+    p50/p90/p95/p99, débit (inf/s), énergie/inférence côté hôte, estimation
+    énergie ESP32.
 
-  Commande exécutée (run rapide reproductible) :
+  Commande exécutée (refresh article homogène, mars 2026) :
     OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
-    PYTHONPATH=src python3 scripts/embedded_profile.py \
-      --models rf,et,mlp \
+    python3 scripts/embedded_profile.py \
       --room E102 --distances 4 \
+      --models knn,nn_lknn,mlp,rf,et \
       --max-train-samples 1200 --max-test-samples 500 \
-      --warmup-runs 20 --repeats 8 --batch-size 32 \
+      --warmup-runs 10 --repeats 3 --batch-size 32 \
       --host-power-w 6.0 \
       --esp32-current-ma 95 --esp32-inference-ms 12 \
-      --output-prefix embedded_profile_e102_quick
+      --output-prefix embedded_profile_e102_article_refresh
 
   Hypothèses énergie ESP32 du run :
   - Tension = 3.3 V
@@ -1199,53 +1227,58 @@ salle en un seul passage, sans information contextuelle extérieure.
   - Temps d'inférence supposé = 12 ms
   - Energie estimée = 3 762 µJ / inférence (= 0.003762 J)
 
-  Résultats (snapshot E102, split 80/20 puis sous-échantillonnage) :
+  Résultats homogènes (E102, split 80/20 puis sous-échantillonnage
+  n_train=1200, n_test=500 pour tous les modèles) :
 
-  - MLP
-    Accuracy cellule: 28.0 %
-    Flash proxy: 452.6 KB
-    Cold start total: 3.59 ms
-    Latence p50/p95: 0.0065 / 0.0156 ms
-    Débit: 71 587 inf/s
-    Energie hôte: 0.0838 mJ / inférence
+  ┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+  │  Modèle    │ Acc.  │ Flash(KB) │ RAM(KB) │ Poids(KB) │ Load(ms) │ Cold(ms) │ p50(ms) │ p95(ms) │
+  ├──────────────────────────────────────────────────────────────────────────────────────────────┤
+  │  KNN       │ 66.8% │    122.0  │    57.0 │     0.0   │    1.94  │    3.17  │  0.042  │  0.0566 │
+  │  NN+L-KNN  │ 66.4% │    635.4  │   396.8 │    26.1   │    3.55  │    4.62  │  0.0349 │  0.0515 │
+  │  MLP       │ 28.0% │    452.6  │   435.6 │   108.6   │   19.69  │   22.25  │  0.0235 │  0.1056 │
+  │  ExtraTrees│ 61.8% │ 98 885.2  │   176.4 │   176.4   │  104.79  │  364.46  │  5.45   │ 95.44   │
+  │  RandForest│ 58.6% │ 65 007.9  │   129.5 │   129.5   │  715.73  │ 2350.96  │ 40.46   │117.67   │
+  └──────────────────────────────────────────────────────────────────────────────────────────────┘
 
-  - RandomForest
-    Accuracy cellule: 58.6 %
-    Flash proxy: 65 007.9 KB (~63.5 MB)
-    Cold start total: 903.5 ms
-    Latence p50/p95: 13.91 / 37.43 ms
-    Débit: 58.6 inf/s
-    Energie hôte: 102.36 mJ / inférence
+  Débit et énergie hôte :
+  - NN+L-KNN : 27 983 inf/s | 0.214 mJ / inférence
+  - MLP      : 24 957 inf/s | 0.240 mJ / inférence
+  - KNN      : 22 821 inf/s | 0.263 mJ / inférence
+  - ExtraTrees : 55.2 inf/s | 108.70 mJ / inférence
+  - RandomForest : 22.0 inf/s | 272.75 mJ / inférence
 
-  - ExtraTrees
-    Accuracy cellule: 61.8 %
-    Flash proxy: 98 885.2 KB (~96.6 MB)
-    Cold start total: 836.7 ms
-    Latence p50/p95: 16.15 / 33.73 ms
-    Débit: 55.7 inf/s
-    Energie hôte: 107.76 mJ / inférence
+  Lecture embarquée :
+  - Sur ce protocole homogène, KNN et NN+L-KNN dominent nettement le compromis
+    précision/coût. Leur précision est très proche (66.8 % vs 66.4 %), mais KNN
+    reste 5.2× plus petit en flash et 7× plus léger en RAM minimale chargée.
+  - NN+L-KNN est légèrement plus rapide en p50/p95 que KNN sur cette taille de
+    jeu de test, mais sa charge mémoire est bien plus élevée à cause du cache
+    d'embeddings et de l'état appris de l'encodeur.
+  - MLP seul est extrêmement rapide et compact en flash, mais son accuracy
+    chute à 28.0 %, donc il n'est pas compétitif ici.
+  - Les ensembles d'arbres sont hors cible pour de l'edge embarqué :
+    65–99 MB de flash, cold start très long, et énergie par inférence
+    deux à trois ordres de grandeur au-dessus de KNN/NN+L-KNN.
+  - En termes strictement embarqués :
+    décision "hard" → KNN ;
+    alternative compacte avec représentation apprise → NN+L-KNN si la RAM le permet ;
+    RF/ET à exclure sur microcontrôleur.
 
-  Lecture embarquée (ESP32/edge) :
-  - Les ensembles d'arbres ont ici la meilleure précision brute, mais un coût
-    mémoire flash/réseau et une latence nettement supérieurs.
-  - Le MLP est très compact et très rapide, mais sous-performe fortement sur
-    cette configuration de généralisation E102.
-  - Pour une cible ESP32, la décision de déploiement doit donc être pilotée par
-    un compromis précision/flash/latence, puis validée sur firmware réel
-    (mesure bout-en-bout acquisition RSSI + inférence + émission décision).
-
-  Limites de ce snapshot :
-  - Profiling effectué sur hôte Python (pas sur firmware ESP32 natif).
-  - L'énergie ESP32 est une estimation paramétrique; remplacer `--esp32-inference-ms`
-    par la latence mesurée sur cible pour un chiffrage final article.
+  Limites :
+  - Ce refresh est un benchmark article-refresh homogène, pas un run exhaustif
+    sur l'intégralité des 9 000/2 000 échantillons déjà utilisé dans le snapshot
+    historique KNN vs NN+L-KNN.
+  - Le profiling reste effectué sur hôte Python ; les chiffres ESP32 sont une
+    projection paramétrique, à remplacer par une mesure firmware réelle.
 
 ────────────────────────────────────────────────────────────────────────────────
-  Complément profil (mars 2026) — KNN et NN+L-KNN sur E102 complet
+  Snapshot historique conservé — KNN et NN+L-KNN sur E102 complet
 ────────────────────────────────────────────────────────────────────────────────
 
   Commande exécutée (run sur dataset complet E102, n_train=9000, n_test=2000) :
     PYTHONPATH=src:scripts python3 scripts/embedded_profile.py \
       --room E102 --models knn,nn_lknn \
+      --distances 4 \
       --warmup-runs 50 --repeats 10 --host-power-w 6.0 \
       --output-prefix embedded_profile_e102_knn_nnlknn
 
@@ -1275,28 +1308,9 @@ salle en un seul passage, sans information contextuelle extérieure.
   - Débit : KNN supporte 27 000 inf/s vs 85 inf/s pour NN+L-KNN.
   - Énergie : KNN consomme 321× moins d'énergie par inférence.
 
-  Tableau récapitulatif profil complet (hôte Python, E102) :
-
-  ┌──────────────────────────────────────────────────────────────────────────────────┐
-  │  Modèle    │ Flash(KB) │ Acc.  │ Lat.p50(ms)│ Lat.p95(ms)│ Débit(inf/s)│ E(mJ) │
-  ├──────────────────────────────────────────────────────────────────────────────────┤
-  │  MLP       │    453    │ 28.0% │   0.0065   │   0.016    │  71 587     │ 0.084 │
-  │  KNN       │    902    │ 92.4% │   0.034    │   0.052    │  27 193     │ 0.221 │
-  │  RF        │ 65 008    │ 58.6% │  13.91     │  37.43     │      59     │102.36 │
-  │  ET        │ 98 885    │ 61.8% │  16.15     │  33.73     │      56     │107.76 │
-  │  NN+L-KNN  │  3 952    │ 92.7% │  11.35     │  14.67     │      85     │ 70.78 │
-  └──────────────────────────────────────────────────────────────────────────────────┘
-  (MLP/RF/ET : run rapide n_train=1200, n_test=500 ; KNN/NN_LKNN : n_train=9000, n_test=2000)
-
-  Recommandation embarquée :
-  - KNN est le choix optimal pour l'embarqué : meilleure précision utile
-    (92.4 % vs <62 % pour RF/ET sur run court), modèle compact (0.88 MB),
-    latence sous la milliseconde, énergie minimale.
-  - NN+L-KNN est compétitif en précision mais inadapté à l'edge : 382 ms de
-    cold start et 3.86 MB de flash sont rédhibitoires sur ESP32.
-  - RF et ET sont à exclure de tout déploiement edge : 65–99 MB de flash.
-
   Fichiers produits :
+  - reports/benchmarks/embedded_profile_e102_article_refresh.csv
+  - reports/benchmarks/embedded_profile_e102_article_refresh.json
   - reports/benchmarks/embedded_profile_e102_knn_nnlknn.csv
   - reports/benchmarks/embedded_profile_e102_knn_nnlknn.json
 
@@ -1860,7 +1874,7 @@ salle en un seul passage, sans information contextuelle extérieure.
   │  Bruit synthétique σ=3 dBm (LOCO) │  KNN              │  perte ~5–10 pp             │
   │  Learning curve (100 % → 20 %)    │  KNN              │  60 % donne ~90 % plateau   │
   │  OOD (salle inconnue)             │  seuil softmax E  │  AUROC 0.67–0.85            │
-  │  B121 deplacement (OOD inférence) │  modèle exporté   │  100 % rejet, 0 % exact     │
+  │  B121 deplacement (OOD inférence) │  modèle exporté   │  4.25 % rejet, 0 % exact    │
   │  Spatial smoothing (CRF-lite r2)  │  KNN+CRF          │  +0.5–1 pp sur LOCO         │
   │  Ablation (sans A3, LORO)         │  NN+L-KNN         │  −0.18 pp (marginal)        │
   │  Significativité KNN vs NN+L-KNN  │  indiscernables   │  McNemar p=0.070            │
@@ -1889,36 +1903,52 @@ Protocole :
   - Multi-tâche : MLP à tronc partagé + tête cellule + tête élévation
 
 Résultats globaux — tâche élévation :
-  - Accuracy moyenne  : 70.11 %  (std 0.59 pp)
-  - F1 macro moyen    : 0.458    (std 0.019)
+  Tableau 16septdecies-A. Synthèse globale du benchmark
 
-Matrice de confusion agrégée (5 seeds, comptes bruts) :
+  ┌───────────────────────────────────────┬──────────────────────────────┐
+  │  Métrique                             │  Résultat                    │
+  ├───────────────────────────────────────┼──────────────────────────────┤
+  │  Accuracy élévation moyenne           │  70.11 %                     │
+  │  Écart-type accuracy                  │  0.59 point                  │
+  │  F1 macro élévation moyen             │  0.458                       │
+  │  Écart-type F1 macro                  │  0.019                       │
+  │  Accuracy cellule baseline            │  16.14 %                     │
+  │  Accuracy cellule multi-tâche         │  16.33 %                     │
+  │  Gain absolu cellule                  │  +0.19 point                 │
+  │  F1 macro cellule                     │  0.146 -> 0.147             │
+  └───────────────────────────────────────┴──────────────────────────────┘
 
-                  Prédit 0.00m   Prédit 0.75m   Prédit 1.50m
-  Vrai 0.00m            95            1 628           152
-  Vrai 0.75m            59            7 058           383
-  Vrai 1.50m            17            1 124           734
+  Tableau 16septdecies-B. Performance par campagne
 
-Lecture :
-  - La classe nominale 0.75 m est reconnue correctement dans la majorité des cas.
-  - En revanche, les hauteurs extrêmes sont souvent rabattues vers 0.75 m.
-  - La tête auxiliaire détecte donc bien une structure liée à la hauteur, mais
-    pas assez nettement pour distinguer proprement exp5 (sol) et exp6 (1.50 m)
-    à partir des seuls 5 RSSI dans ce protocole.
+  ┌──────────────────────┬───────────────┬────────────────────┬────────────────────┬──────────────────────┐
+  │  Campagne            │  Élévation    │  Acc. élévation    │  Acc. cellule base │  Acc. cellule MT     │
+  ├──────────────────────┼───────────────┼────────────────────┼────────────────────┼──────────────────────┤
+  │  exp1_back_right     │  0.75 m       │  98.6 %            │  17.5 %            │  18.4 %              │
+  │  exp2_front_right    │  0.75 m       │  87.4 %            │  21.1 %            │  20.4 %              │
+  │  exp3_front_left     │  0.75 m       │  92.3 %            │  15.0 %            │  12.9 %              │
+  │  exp4_back_left      │  0.75 m       │  98.2 %            │  11.8 %            │  15.2 %              │
+  │  exp5_ground         │  0.00 m       │   5.1 %            │  17.2 %            │  17.1 %              │
+  │  exp6_1m50           │  1.50 m       │  39.1 %            │  14.2 %            │  14.2 %              │
+  └──────────────────────┴───────────────┴────────────────────┴────────────────────┴──────────────────────┘
 
-Performance par campagne (au minimum exp5 / exp6) :
-  - exp5_ground (0.00 m) : accuracy élévation = 5.1 %
-  - exp6_1m50  (1.50 m)  : accuracy élévation = 39.1 %
-  - exp1_back_right      : 98.6 %
-  - exp2_front_right     : 87.4 %
-  - exp3_front_left      : 92.3 %
-  - exp4_back_left       : 98.2 %
+  Matrice de confusion agrégée (5 seeds, comptes bruts) :
 
-Impact sur la tâche cellule :
-  - Baseline cellule seule       : 16.14 % accuracy moyenne
-  - Modèle multi-tâche cellule+élévation : 16.33 % accuracy moyenne
-  - Gain absolu moyen            : +0.19 point
-  - F1 macro cellule : 0.146 → 0.147
+  Tableau 16septdecies-C. Confusion de la tâche élévation
+
+  ┌──────────────┬───────────────┬───────────────┬───────────────┐
+  │  Vrai \ Préd.│  0.00 m       │  0.75 m       │  1.50 m       │
+  ├──────────────┼───────────────┼───────────────┼───────────────┤
+  │  0.00 m      │  95           │  1 628        │  152          │
+  │  0.75 m      │  59           │  7 058        │  383          │
+  │  1.50 m      │  17           │  1 124        │  734          │
+  └──────────────┴───────────────┴───────────────┴───────────────┘
+
+Lecture synthétique :
+  - La classe nominale 0.75 m concentre l'essentiel de la reconnaissance correcte.
+  - Les classes extrêmes 0.00 m et 1.50 m sont majoritairement rabattues vers
+    la classe intermédiaire 0.75 m.
+  - Le signal RSSI contient donc une information de hauteur réelle, mais trop
+    partielle pour fournir une séparation robuste des trois niveaux.
 
 Conclusion scientifique :
   - L'ajout de la tête élévation n'apporte qu'un gain marginal sur la cellule.

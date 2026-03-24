@@ -12,10 +12,12 @@ import gc
 import json
 import math
 import os
+import sys
 import resource
 import tempfile
 import time
 from pathlib import Path
+from typing import Any
 
 import joblib
 import numpy as np
@@ -32,6 +34,12 @@ import benchmark_models as bm
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REPORT_DIR = PROJECT_ROOT / "reports" / "benchmarks"
+SRC_DIR = PROJECT_ROOT / "src"
+
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from localization.embedding_knn import EmbeddingKnnLocalizer  # noqa: E402
 
 
 def _rss_mb() -> float:
@@ -57,6 +65,246 @@ def _iter_batches(X: np.ndarray, batch_size: int):
         return
     for i in range(0, n, batch_size):
         yield X[i : i + batch_size]
+
+
+def _collect_numpy_arrays(obj: Any, *, seen: set[int] | None = None) -> list[np.ndarray]:
+    if seen is None:
+        seen = set()
+
+    arrays: list[np.ndarray] = []
+
+    def visit(value: Any) -> None:
+        obj_id = id(value)
+        if obj_id in seen:
+            return
+        seen.add(obj_id)
+
+        if isinstance(value, np.ndarray):
+            arrays.append(value)
+            return
+        if isinstance(value, (str, bytes, bytearray, int, float, bool, type(None), Path)):
+            return
+        if isinstance(value, dict):
+            for key, item in value.items():
+                visit(key)
+                visit(item)
+            return
+        if isinstance(value, (list, tuple, set, frozenset)):
+            for item in value:
+                visit(item)
+            return
+        if hasattr(value, "__dict__"):
+            visit(vars(value))
+
+    visit(obj)
+    return arrays
+
+
+def _float_or_nan(value: Any) -> float:
+    try:
+        return float(value)
+    except Exception:
+        return float("nan")
+
+
+def _safe_int(value: Any) -> int | None:
+    try:
+        return int(value)
+    except Exception:
+        return None
+
+
+def _dense_param_stats_from_mlp(mlp: MLPClassifier) -> dict[str, float | int]:
+    coefs = getattr(mlp, "coefs_", None) or []
+    intercepts = getattr(mlp, "intercepts_", None) or []
+    weight_count = int(sum(np.size(arr) for arr in coefs))
+    bias_count = int(sum(np.size(arr) for arr in intercepts))
+    total_params = weight_count + bias_count
+    total_bytes = int(sum(arr.nbytes for arr in [*coefs, *intercepts]))
+    hidden_layers = tuple(int(x) for x in getattr(mlp, "hidden_layer_sizes", ()) or ())
+    return {
+        "param_count": total_params,
+        "weight_count": weight_count,
+        "bias_count": bias_count,
+        "param_bytes": total_bytes,
+        "input_dim": int(coefs[0].shape[0]) if coefs else 0,
+        "output_dim": int(coefs[-1].shape[1]) if coefs else 0,
+        "hidden_layer_count": int(len(hidden_layers)),
+        "hidden_units_total": int(sum(hidden_layers)) if hidden_layers else 0,
+    }
+
+
+def _model_structure_metrics(name: str, model) -> dict[str, object]:
+    metrics: dict[str, object] = {"model_family": name}
+
+    arrays = _collect_numpy_arrays(model)
+    unique_arrays: dict[int, np.ndarray] = {id(arr): arr for arr in arrays}
+    total_array_bytes = int(sum(arr.nbytes for arr in unique_arrays.values()))
+    total_array_values = int(sum(arr.size for arr in unique_arrays.values()))
+    metrics.update(
+        {
+            "numpy_array_count": int(len(unique_arrays)),
+            "numpy_values_count": total_array_values,
+            "numpy_array_bytes": total_array_bytes,
+            "numpy_array_kb": total_array_bytes / 1024.0,
+            "numpy_array_mb": total_array_bytes / (1024.0 * 1024.0),
+        }
+    )
+
+    if isinstance(model, EmbeddingKnnLocalizer):
+        encoder = getattr(model, "encoder_", None)
+        knn = getattr(model, "knn_", None)
+        scaler = getattr(model, "scaler_", None)
+        distance_clf = getattr(model, "distance_clf_", None)
+        train_embeddings = getattr(model, "train_embeddings_", None)
+        train_scaled = getattr(model, "train_scaled_", None)
+        train_labels = getattr(model, "train_labels_", None)
+
+        encoder_stats = _dense_param_stats_from_mlp(encoder) if isinstance(encoder, MLPClassifier) else {}
+        scaler_bytes = 0
+        if scaler is not None:
+            scaler_bytes = int(
+                sum(
+                    getattr(scaler, attr).nbytes
+                    for attr in ("mean_", "scale_", "var_")
+                    if hasattr(scaler, attr) and isinstance(getattr(scaler, attr), np.ndarray)
+                )
+            )
+        distance_param_count = 0
+        distance_param_bytes = 0
+        if distance_clf is not None:
+            for attr in ("coef_", "intercept_"):
+                arr = getattr(distance_clf, attr, None)
+                if isinstance(arr, np.ndarray):
+                    distance_param_count += int(arr.size)
+                    distance_param_bytes += int(arr.nbytes)
+
+        metrics.update(
+            {
+                "model_family": "nn_lknn",
+                "encoder_param_count": int(encoder_stats.get("param_count", 0)),
+                "encoder_param_bytes": int(encoder_stats.get("param_bytes", 0)),
+                "encoder_weight_count": int(encoder_stats.get("weight_count", 0)),
+                "encoder_bias_count": int(encoder_stats.get("bias_count", 0)),
+                "encoder_input_dim": int(encoder_stats.get("input_dim", 0)),
+                "encoder_output_dim": int(encoder_stats.get("output_dim", 0)),
+                "encoder_hidden_layer_count": int(encoder_stats.get("hidden_layer_count", 0)),
+                "encoder_hidden_units_total": int(encoder_stats.get("hidden_units_total", 0)),
+                "knn_neighbors": _safe_int(getattr(knn, "n_neighbors", None)),
+                "knn_train_samples": int(len(train_labels)) if train_labels is not None else 0,
+                "knn_embedding_dim": int(train_embeddings.shape[1]) if isinstance(train_embeddings, np.ndarray) and train_embeddings.ndim == 2 else 0,
+                "knn_embedding_bytes": int(train_embeddings.nbytes) if isinstance(train_embeddings, np.ndarray) else 0,
+                "train_scaled_bytes": int(train_scaled.nbytes) if isinstance(train_scaled, np.ndarray) else 0,
+                "train_labels_bytes": int(train_labels.nbytes) if isinstance(train_labels, np.ndarray) else 0,
+                "scaler_bytes": scaler_bytes,
+                "distance_head_param_count": int(distance_param_count),
+                "distance_head_param_bytes": int(distance_param_bytes),
+                "ood_enabled": bool(
+                    getattr(model, "ood_energy_threshold_", None) is not None
+                    and getattr(model, "ood_distance_threshold_", None) is not None
+                ),
+            }
+        )
+        metrics["learned_param_count"] = (
+            int(metrics["encoder_param_count"]) + int(metrics["distance_head_param_count"])
+        )
+        metrics["learned_param_bytes"] = (
+            int(metrics["encoder_param_bytes"]) + int(metrics["distance_head_param_bytes"])
+        )
+        metrics["runtime_state_bytes"] = (
+            int(metrics["knn_embedding_bytes"])
+            + int(metrics["train_scaled_bytes"])
+            + int(metrics["train_labels_bytes"])
+            + int(metrics["scaler_bytes"])
+        )
+        return metrics
+
+    if hasattr(model, "estimators_") and isinstance(model.estimators_, (list, np.ndarray)):
+        estimators = list(model.estimators_)
+        node_count = 0
+        max_depth = 0
+        for estimator in estimators:
+            tree = getattr(estimator, "tree_", None)
+            if tree is None:
+                continue
+            node_count += int(getattr(tree, "node_count", 0))
+            max_depth = max(max_depth, int(getattr(tree, "max_depth", 0)))
+        metrics.update(
+            {
+                "estimator_count": int(len(estimators)),
+                "tree_total_nodes": int(node_count),
+                "tree_max_depth": int(max_depth),
+                "learned_param_count": total_array_values,
+                "learned_param_bytes": total_array_bytes,
+            }
+        )
+        return metrics
+
+    if isinstance(model, KNeighborsClassifier):
+        fit_x = getattr(model, "_fit_X", None)
+        fit_y = getattr(model, "_y", None)
+        metrics.update(
+            {
+                "knn_neighbors": _safe_int(getattr(model, "n_neighbors", None)),
+                "knn_train_samples": int(fit_x.shape[0]) if isinstance(fit_x, np.ndarray) and fit_x.ndim == 2 else 0,
+                "knn_feature_dim": int(fit_x.shape[1]) if isinstance(fit_x, np.ndarray) and fit_x.ndim == 2 else 0,
+                "knn_fit_x_bytes": int(fit_x.nbytes) if isinstance(fit_x, np.ndarray) else 0,
+                "knn_fit_y_bytes": int(fit_y.nbytes) if isinstance(fit_y, np.ndarray) else 0,
+                "learned_param_count": 0,
+                "learned_param_bytes": 0,
+                "runtime_state_bytes": int(total_array_bytes),
+            }
+        )
+        return metrics
+
+    if hasattr(model, "named_steps"):
+        scaler = getattr(model.named_steps.get("standardscaler"), "scale_", None)
+        clf = model.named_steps.get("mlpclassifier")
+        if isinstance(clf, MLPClassifier):
+            encoder_stats = _dense_param_stats_from_mlp(clf)
+            metrics.update(
+                {
+                    "model_family": "pipeline_mlp",
+                    "encoder_param_count": int(encoder_stats.get("param_count", 0)),
+                    "encoder_param_bytes": int(encoder_stats.get("param_bytes", 0)),
+                    "encoder_input_dim": int(encoder_stats.get("input_dim", 0)),
+                    "encoder_output_dim": int(encoder_stats.get("output_dim", 0)),
+                    "encoder_hidden_layer_count": int(encoder_stats.get("hidden_layer_count", 0)),
+                    "encoder_hidden_units_total": int(encoder_stats.get("hidden_units_total", 0)),
+                    "scaler_feature_dim": int(scaler.shape[0]) if isinstance(scaler, np.ndarray) else 0,
+                    "learned_param_count": int(encoder_stats.get("param_count", 0)),
+                    "learned_param_bytes": int(encoder_stats.get("param_bytes", 0)),
+                }
+            )
+            return metrics
+
+        clf = model.named_steps.get("kneighborsclassifier")
+        if isinstance(clf, KNeighborsClassifier):
+            fit_x = getattr(clf, "_fit_X", None)
+            fit_y = getattr(clf, "_y", None)
+            metrics.update(
+                {
+                    "model_family": "pipeline_knn",
+                    "knn_neighbors": _safe_int(getattr(clf, "n_neighbors", None)),
+                    "knn_train_samples": int(fit_x.shape[0]) if isinstance(fit_x, np.ndarray) and fit_x.ndim == 2 else 0,
+                    "knn_feature_dim": int(fit_x.shape[1]) if isinstance(fit_x, np.ndarray) and fit_x.ndim == 2 else 0,
+                    "knn_fit_x_bytes": int(fit_x.nbytes) if isinstance(fit_x, np.ndarray) else 0,
+                    "knn_fit_y_bytes": int(fit_y.nbytes) if isinstance(fit_y, np.ndarray) else 0,
+                    "scaler_feature_dim": int(scaler.shape[0]) if isinstance(scaler, np.ndarray) else 0,
+                    "learned_param_count": 0,
+                    "learned_param_bytes": 0,
+                    "runtime_state_bytes": int(total_array_bytes),
+                }
+            )
+            return metrics
+
+    metrics.update(
+        {
+            "learned_param_count": total_array_values,
+            "learned_param_bytes": total_array_bytes,
+        }
+    )
+    return metrics
 
 
 def _benchmark_predict(predict_fn, X_eval: np.ndarray, *, warmup_runs: int, repeats: int, batch_size: int) -> dict:
@@ -182,12 +430,18 @@ def _model_size_and_cold_start(model, sample_batch: np.ndarray) -> dict:
         "model_size_bytes": size_bytes,
         "model_size_kb": size_bytes / 1024.0,
         "model_size_mb": size_bytes / (1024.0 * 1024.0),
+        "storage_size_bytes": size_bytes,
+        "storage_size_kb": size_bytes / 1024.0,
+        "storage_size_mb": size_bytes / (1024.0 * 1024.0),
         "flash_proxy_kb": size_bytes / 1024.0,
         "load_time_ms": float(load_ms),
         "first_inference_ms": float(first_inf_ms),
         "cold_start_total_ms": float(cold_start_total_ms),
         "rss_after_warmup_mb": float(rss_after_warm),
         "rss_baseline_before_load_mb": float(rss_before),
+        "rss_delta_load_warmup_mb": float(rss_after_warm - rss_before)
+        if math.isfinite(rss_before) and math.isfinite(rss_after_warm)
+        else float("nan"),
     }
 
 
@@ -341,6 +595,7 @@ def main(argv: list[str] | None = None):
         cell_acc = float(accuracy_score(y_test, y_pred))
 
         size_res = _model_size_and_cold_start(model, sample_batch=X_test[: max(1, min(8, len(X_test)))])
+        structure_res = _model_structure_metrics(model_key, model)
         perf_res = _benchmark_predict(
             predict_fn,
             X_test,
@@ -364,9 +619,26 @@ def main(argv: list[str] | None = None):
             "n_cells": int(df["grid_cell"].nunique()),
             "cell_accuracy": cell_acc,
             **size_res,
+            **structure_res,
             **perf_res,
             **energy_res,
         }
+        storage_kb = _float_or_nan(row.get("storage_size_kb"))
+        ram_kb = _float_or_nan(row.get("numpy_array_kb"))
+        learned_param_bytes = _float_or_nan(row.get("learned_param_bytes"))
+        row["storage_vs_numpy_ram_ratio"] = (
+            float(storage_kb / ram_kb) if math.isfinite(storage_kb) and math.isfinite(ram_kb) and ram_kb > 0 else float("nan")
+        )
+        row["learned_param_kb"] = learned_param_bytes / 1024.0 if math.isfinite(learned_param_bytes) else float("nan")
+        row["learned_param_mb"] = learned_param_bytes / (1024.0 * 1024.0) if math.isfinite(learned_param_bytes) else float("nan")
+        row["flash_kb"] = row["storage_size_kb"]
+        row["flash_mb"] = row["storage_size_mb"]
+        row["ram_kb"] = row["numpy_array_kb"]
+        row["ram_mb"] = row["numpy_array_mb"]
+        row["weights_kb"] = row["learned_param_kb"]
+        row["weights_mb"] = row["learned_param_mb"]
+        row["model_loaded_rss_delta_mb"] = row["rss_delta_load_warmup_mb"]
+        row["cold_start_ms"] = row["cold_start_total_ms"]
         rows.append(row)
 
     out_df = pd.DataFrame(rows)
@@ -404,7 +676,9 @@ def main(argv: list[str] | None = None):
     cols = [
         "model",
         "cell_accuracy",
-        "model_size_kb",
+        "flash_kb",
+        "ram_kb",
+        "weights_kb",
         "latency_p50_ms",
         "latency_p95_ms",
         "throughput_inf_per_s",

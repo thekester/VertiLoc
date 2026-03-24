@@ -1,0 +1,46 @@
+Benchmark auxiliaire PyTorch NN+L-KNN
+Date d'execution : 2026-03-19
+Environnement : .venv locale, torch 2.10.0+cpu
+
+Script :
+  scripts/nn_lknn_torch.py
+
+Commande 1 — D005 (default script dataset: ddeuxmetres + dquatremetres) :
+  OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
+  .venv/bin/python scripts/nn_lknn_torch.py \
+    --epochs 30 --batch-size 128 --device cpu --seed 42
+
+Sortie :
+  [epoch    1/30] train_loss=3.52009
+  [epoch   20/30] train_loss=2.50336
+  [epoch   30/30] train_loss=2.09164
+  Samples: train=1275 | test=425
+  Device: cpu
+  Cell accuracy: 0.9835
+  Mean localization error (m): 0.011907
+
+Commande 2 — E102 complet (exp1..exp6, distance 4 m) :
+  OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 \
+  .venv/bin/python scripts/nn_lknn_torch.py \
+    --campaign data/E102/exp1:4 \
+    --campaign data/E102/exp2:4 \
+    --campaign data/E102/exp3:4 \
+    --campaign data/E102/exp4:4 \
+    --campaign data/E102/elevation/exp5:4 \
+    --campaign data/E102/elevation/exp6:4 \
+    --epochs 30 --batch-size 128 --device cpu --seed 42
+
+Sortie :
+  [epoch    1/30] train_loss=4.28904
+  [epoch   20/30] train_loss=3.25802
+  [epoch   30/30] train_loss=3.01143
+  Samples: train=8437 | test=2813
+  Device: cpu
+  Cell accuracy: 0.9150
+  Mean localization error (m): 0.126021
+
+Notes :
+  - Protocole auxiliaire, distinct du pipeline principal sklearn.
+  - Split unique stratifie 75/25, seed fixe 42.
+  - Les chiffres ne sont donc pas directement comparables aux tableaux multi-seeds
+    et room-aware du rapport principal.

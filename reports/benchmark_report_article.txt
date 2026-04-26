@@ -2457,6 +2457,7 @@ Conclusion pratique :
   - `scripts/protonet_fewshot.py`
   - `scripts/fewshot_target_calibration.py`
   - `scripts/fewshot_campaign_calibration.py`
+  - `scripts/targetknn_stress_test.py`
 
   Commandes principales :
   - ProtoNet S=5 :
@@ -2528,6 +2529,70 @@ Conclusion pratique :
     l'augmentation de K. TargetKNN, lui, suit une courbe monotone et exploitable.
   - En LOCO, le même principe est encore plus fort : quelques mesures de la
     campagne cible suffisent à revenir proche du plafond room-aware.
+
+  Stress test anti-fuite TargetKNN :
+
+  Objectif :
+  Vérifier que le gain TargetKNN n'est pas une erreur de protocole, ni une fuite
+  de données où les points de test auraient déjà été vus à l'entraînement.
+
+  Commandes exécutées :
+  - LORO strict :
+    `scripts/targetknn_stress_test.py --k-values 1 5 10 25 --nn-values 1 3 5 7 --n-trials 20 --noise-sigmas 0 1 3 --hybrid-k-values 5 10 25 --control-k-values 5 10 25 --output-name targetknn_stress_test_loro_audit.json`
+  - LOCO strict :
+    `scripts/fewshot_campaign_calibration.py --rooms B121 D005 E101 E102 --k-values 5 10 25 --n-trials 10 --output-name targetknn_loco_audit.json`
+
+  Garde-fous du protocole :
+  - En LORO, la salle cible est totalement absente de l'entraînement source.
+    Le StandardScaler est ajusté uniquement sur les salles sources.
+  - En LOCO, la campagne cible est totalement absente de l'entraînement source.
+  - Les K supports labellisés sont tirés dans la cible, puis retirés du set de
+    requête. Les samples de requête ne sont donc jamais utilisés pour entraîner
+    TargetKNN.
+  - Le JSON d'audit vérifie à chaque tirage que `support_query_overlap_max = 0`.
+  - Contrôle négatif : on relance TargetKNN avec les mêmes supports, mais avec
+    les labels de support mélangés. Si le score venait d'une fuite ou d'une
+    mémorisation cachée, il resterait élevé. S'il vient bien des quelques mesures
+    labellisées, il doit retomber vers le hasard.
+
+  Résultats LORO strict, moyenne 4 salles :
+  - SourceKNN sans label cible : 1.30 %
+  - TargetKNN K=1  : 18.12 %, 1.047 m
+  - TargetKNN K=5  : 49.49 %, 0.653 m
+  - TargetKNN K=10 : 66.91 %, 0.429 m
+  - TargetKNN K=25 : 84.65 %, 0.196 m
+  - Contrôle labels mélangés :
+    * K=5  : 1.53 %
+    * K=10 : 1.77 %
+    * K=25 : 1.71 %
+  - Audit : `target_room_present_in_source_training = false` pour les 4 folds ;
+    `support_query_overlap_max = 0` pour les 4 folds.
+
+  Résultats LOCO strict, moyenne B121/D005/E101/E102 :
+  - KNN source sans label de campagne cible : 1.66 %
+  - TargetKNN K=5  : 89.80 %, 0.117 m
+  - TargetKNN K=10 : 94.57 %, 0.058 m
+  - TargetKNN K=25 : 96.25 %, 0.039 m
+  - Contrôle labels mélangés :
+    * K=5  : 2.00 %
+    * K=10 : 1.73 %
+    * K=25 : 1.63 %
+  - Audit : `held_out_campaign_present_in_source_training = false` sur tous
+    les folds ; `support_query_overlap_max = 0` sur tous les folds.
+
+  Lecture :
+  - Le gain ne survit pas quand les labels de support sont mélangés : il retombe
+    au niveau du hasard. Cela valide que TargetKNN n'utilise pas une fuite de
+    données, mais bien l'information contenue dans quelques mesures labellisées
+    de la cible.
+  - Le benchmark hybride Source+Target est moins bon que TargetKNN pur en LORO
+    (K=25 : 68.32 % vs 84.55 %). Les anciennes salles ajoutent donc du bruit
+    plus qu'elles n'aident : le signal utile vient de la calibration locale.
+  - Ajouter du bruit artificiel aux supports LORO confirme que ce sont les vraies
+    mesures de calibration qui portent le résultat. A K=10, TargetKNN passe de
+    66.74 % sans bruit à 7.25 % avec sigma=1 dBm et 3.54 % avec sigma=3 dBm.
+    En pratique, les supports doivent donc être collectés proprement plutôt que
+    simulés.
 
 ────────────────────────────────────────────────────────────────────────────────
 18.8 TTA / Tent — Adaptation test-time par minimisation d'entropie
@@ -3507,6 +3572,8 @@ Conclusion pratique :
   ├── fewshot_target_calibration.json     — TargetKNN/RawCentroid K={1,2,3,5,10,15,20,25}
   ├── fewshot_campaign_calibration_e102.json — TargetKNN LOCO E102 par campagne
   ├── fewshot_campaign_calibration_all_rooms.json — TargetKNN LOCO B121/D005/E101/E102
+  ├── targetknn_stress_test_loro_audit.json — audit anti-fuite TargetKNN LORO
+  ├── targetknn_loco_audit.json          — audit anti-fuite TargetKNN LOCO campagne
   ├── tta_loro.json                      — TTA/Tent 4 modes LORO
   ├── spatial_loss_benchmark.json        — Spatial CE + Hiérarchique (room-aware + E102)
   ├── deepsets_benchmark.json            — DeepSets mean/max + KNN+DeepSets

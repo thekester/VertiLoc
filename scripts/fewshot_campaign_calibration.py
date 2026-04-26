@@ -65,6 +65,66 @@ def _metrics(y_true: np.ndarray, y_pred: np.ndarray, lookup: pd.DataFrame) -> di
     return {"cell_acc": acc, "mean_error_m": err, "n": int(len(y_true))}
 
 
+def _new_audit(held_out_campaign: str, train_campaigns: list[str], n_train: int, n_test: int) -> dict:
+    if held_out_campaign in train_campaigns:
+        raise RuntimeError(f"Leakage: held-out campaign {held_out_campaign} is present in training.")
+    return {
+        "held_out_campaign": held_out_campaign,
+        "train_campaigns": train_campaigns,
+        "held_out_campaign_present_in_source_training": False,
+        "source_sample_count": int(n_train),
+        "target_sample_count": int(n_test),
+        "support_query_overlap_max": 0,
+        "split_checks": 0,
+        "split_stats_by_k": {},
+    }
+
+
+def _update_split_audit(audit: dict, k: int, support_idx: list[int], query_idx: list[int]) -> None:
+    overlap = int(np.intersect1d(np.array(support_idx), np.array(query_idx)).size)
+    if overlap:
+        raise RuntimeError(f"Leakage: support/query overlap detected for K={k}: {overlap} sample(s).")
+
+    audit["support_query_overlap_max"] = max(audit["support_query_overlap_max"], overlap)
+    audit["split_checks"] += 1
+    stats = audit["split_stats_by_k"].setdefault(
+        str(k),
+        {
+            "checks": 0,
+            "support_min": None,
+            "support_max": 0,
+            "support_sum": 0,
+            "query_min": None,
+            "query_max": 0,
+            "query_sum": 0,
+        },
+    )
+    stats["checks"] += 1
+    stats["support_min"] = (
+        int(len(support_idx))
+        if stats["support_min"] is None
+        else min(stats["support_min"], int(len(support_idx)))
+    )
+    stats["support_max"] = max(stats["support_max"], int(len(support_idx)))
+    stats["support_sum"] += int(len(support_idx))
+    stats["query_min"] = (
+        int(len(query_idx))
+        if stats["query_min"] is None
+        else min(stats["query_min"], int(len(query_idx)))
+    )
+    stats["query_max"] = max(stats["query_max"], int(len(query_idx)))
+    stats["query_sum"] += int(len(query_idx))
+
+
+def _finalize_audit(audit: dict) -> None:
+    for stats in audit["split_stats_by_k"].values():
+        checks = max(stats["checks"], 1)
+        stats["support_mean"] = float(stats["support_sum"] / checks)
+        stats["query_mean"] = float(stats["query_sum"] / checks)
+        del stats["support_sum"]
+        del stats["query_sum"]
+
+
 def raw_centroid_predict(
     scaler: StandardScaler,
     X_support: np.ndarray,
@@ -122,7 +182,13 @@ def run_room(room: str, args: argparse.Namespace) -> dict:
         knn_source = KNeighborsClassifier(n_neighbors=7, weights="distance")
         knn_source.fit(X_train_s, y_train)
         fold_results: dict[str, dict] = {
-            "KNN_source_LOCO": _metrics(y_test, knn_source.predict(X_test_s), lookup)
+            "KNN_source_LOCO": _metrics(y_test, knn_source.predict(X_test_s), lookup),
+            "anti_leakage_audit": _new_audit(
+                held_out_campaign=str(held_out),
+                train_campaigns=sorted(str(c) for c in train_df["campaign"].unique()),
+                n_train=len(X_train),
+                n_test=len(X_test),
+            ),
         }
         print(f"    KNN source campaigns: {fold_results['KNN_source_LOCO']['cell_acc']:.4f}")
 
@@ -130,6 +196,7 @@ def run_room(room: str, args: argparse.Namespace) -> dict:
         for k in args.k_values:
             centroid_accs, centroid_errs = [], []
             knn_accs, knn_errs = [], []
+            shuffle_accs, shuffle_errs = [], []
             n_supports, n_queries = [], []
             for trial in range(args.n_trials):
                 rng = np.random.default_rng(args.seed + fold_idx * 10000 + trial * 1000)
@@ -143,6 +210,7 @@ def run_room(room: str, args: argparse.Namespace) -> dict:
                     sup_idx.extend(cell_idx[perm[:k_eff]])
                     qry_idx.extend(cell_idx[perm[k_eff:]])
 
+                _update_split_audit(fold_results["anti_leakage_audit"], k, sup_idx, qry_idx)
                 if not qry_idx:
                     continue
 
@@ -163,6 +231,15 @@ def run_room(room: str, args: argparse.Namespace) -> dict:
                 knn_accs.append(m_k["cell_acc"])
                 knn_errs.append(m_k["mean_error_m"])
 
+                y_sup_shuffled = y_sup.copy()
+                rng.shuffle(y_sup_shuffled)
+                pred_s = target_knn_predict(
+                    scaler, X_sup, y_sup_shuffled, X_q, n_neighbors=args.knn_neighbors
+                )
+                m_s = _metrics(y_q, pred_s, lookup)
+                shuffle_accs.append(m_s["cell_acc"])
+                shuffle_errs.append(m_s["mean_error_m"])
+
             fold_results[f"RawCentroid_K{k}"] = {
                 "cell_acc": float(np.mean(centroid_accs)) if centroid_accs else float("nan"),
                 "cell_acc_std": float(np.std(centroid_accs)) if centroid_accs else float("nan"),
@@ -177,12 +254,19 @@ def run_room(room: str, args: argparse.Namespace) -> dict:
                 "n_support_mean": float(np.mean(n_supports)) if n_supports else 0.0,
                 "n_query_mean": float(np.mean(n_queries)) if n_queries else 0.0,
             }
+            fold_results[f"LabelShuffleTargetKNN_K{k}"] = {
+                "cell_acc": float(np.mean(shuffle_accs)) if shuffle_accs else float("nan"),
+                "cell_acc_std": float(np.std(shuffle_accs)) if shuffle_accs else float("nan"),
+                "mean_error_m": float(np.mean(shuffle_errs)) if shuffle_errs else float("nan"),
+            }
             print(
                 f"    K={k:>2}  centroid={fold_results[f'RawCentroid_K{k}']['cell_acc']:.4f}"
                 f"  targetKNN={fold_results[f'TargetKNN_K{k}']['cell_acc']:.4f}"
+                f"  shuffled={fold_results[f'LabelShuffleTargetKNN_K{k}']['cell_acc']:.4f}"
                 f"  err={fold_results[f'TargetKNN_K{k}']['mean_error_m']:.3f}m"
             )
 
+        _finalize_audit(fold_results["anti_leakage_audit"])
         room_results[short_name] = fold_results
 
     return room_results
@@ -211,6 +295,16 @@ def summarize(all_results: dict[str, dict], k_values: list[int]) -> dict:
                     "cell_acc_std": float(np.std(accs)) if accs else float("nan"),
                     "mean_error_m": float(np.mean(errs)) if errs else float("nan"),
                 }
+        for k in k_values:
+            key = f"LabelShuffleTargetKNN_K{k}"
+            vals = [fold[key] for fold in folds.values() if key in fold]
+            accs = [v["cell_acc"] for v in vals if not np.isnan(v["cell_acc"])]
+            errs = [v["mean_error_m"] for v in vals if not np.isnan(v["mean_error_m"])]
+            summary[room][key] = {
+                "cell_acc_mean": float(np.mean(accs)) if accs else float("nan"),
+                "cell_acc_std": float(np.std(accs)) if accs else float("nan"),
+                "mean_error_m": float(np.mean(errs)) if errs else float("nan"),
+            }
     return summary
 
 
@@ -239,7 +333,12 @@ def main() -> None:
         print(f"    KNN source: {summary['KNN_source_LOCO']['cell_acc_mean']:.4f}")
         for k in args.k_values:
             v = summary[f"TargetKNN_K{k}"]
-            print(f"    TargetKNN_K{k:<2} acc={v['cell_acc_mean']:.4f}  err={v['mean_error_m']:.3f}m")
+            s = summary[f"LabelShuffleTargetKNN_K{k}"]
+            print(
+                f"    TargetKNN_K{k:<2} acc={v['cell_acc_mean']:.4f}"
+                f"  shuffled={s['cell_acc_mean']:.4f}"
+                f"  err={v['mean_error_m']:.3f}m"
+            )
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     out = REPORT_DIR / args.output_name

@@ -55,10 +55,13 @@ PYTHONPATH=src python -m localization.pipeline \
 ```
 
 ## Continuous Integration
-GitHub Actions runs two smoke tests on every push/PR (`.github/workflows/ci.yml`):
-1. `python -m localization.pipeline ...` trains/evaluates on both campaigns to validate the CLI pipeline.
-2. `python scripts/notebook_smoke.py` replays the main steps from the notebook (split, train, predict, explain) to guarantee that the tutorial/code samples keep working.
-3. `python scripts/query_vertiloc.py ...` runs twice (one 2 m sample, one 4 m sample) to confirm the query CLI returns a plausible cell prediction and logs the top-K neighbors.
+GitHub Actions runs fast checks on every push/PR (`.github/workflows/ci.yml`):
+1. `python -m unittest discover -s tests` validates shared constants, catalog filtering, data loading, geometry, and orientation helpers.
+2. `python -m localization.pipeline ...` trains/evaluates a bounded CLI smoke run.
+3. `python scripts/notebook_smoke.py` replays the main notebook path (split, train, predict, explain).
+4. `python scripts/benchmark_models.py ...` runs a reduced benchmark smoke on D005 only.
+5. `python scripts/triscope_eval.py --iterations 5 --sample-size 10` checks the multi-head path without the full 50-draw run.
+6. `python scripts/query_vertiloc.py ...` verifies the inference CLI entrypoint.
 
 ## Querying VertiLoc with custom RSSI readings
 In practice, to run inference you call the CLI script `scripts/query_vertiloc.py`.
@@ -162,6 +165,22 @@ Available orientation labels and degrees:
 - `front_left` = `225`
 - `left` = `270`
 - `back_left` = `315`
+
+### XGBoost polar 360 experiment
+To test the 360-degree feature-engineering path with one-second capture windows,
+three polar regression heads (`radius`, `sin(theta)`, `cos(theta)`), and XGBoost/RF
+cell-classifier baselines:
+```bash
+PYTHONPATH=src ./.venv/bin/python scripts/xgb_polar_360.py \
+  --datasets E101,E102 \
+  --n-estimators 400 --max-depth 5 --learning-rate 0.04 \
+  --output-prefix xgb_polar_360_e101_e102_xgb400
+```
+Outputs are written under `reports/benchmarks/`:
+- `*_metrics.csv`: p50/p80/p90 errors, cell accuracy, lateral/depth errors;
+- `*_predictions.csv`: per-window predictions;
+- `*_feature_importance.csv`: feature importances for XGBoost/RF heads;
+- `*_xgb_cell_confusion_matrix.csv`: cell confusion matrix for the XGBoost classifier.
 
 ### Embedded/edge profiling (RAM/flash/warm-up/energy)
 Use the dedicated profiler to compare deployment cost per model:

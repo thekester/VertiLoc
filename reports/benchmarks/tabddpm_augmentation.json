@@ -1,0 +1,100 @@
+{
+  "E102": {
+    "exp1": {
+      "baseline_knn": {
+        "cell_acc": 0.0144,
+        "mean_error_m": 1.437125524007655
+      },
+      "augmented_knn": {
+        "cell_acc": 0.0144,
+        "mean_error_m": 1.427230701608669
+      },
+      "augmented_rf": {
+        "cell_acc": 0.0208,
+        "mean_error_m": 1.3313095506514028
+      },
+      "n_synthetic": 150,
+      "n_train_original": 9375
+    },
+    "exp2": {
+      "baseline_knn": {
+        "cell_acc": 0.023466666666666667,
+        "mean_error_m": 1.3542878317872862
+      },
+      "augmented_knn": {
+        "cell_acc": 0.023466666666666667,
+        "mean_error_m": 1.3562210296289345
+      },
+      "augmented_rf": {
+        "cell_acc": 0.023466666666666667,
+        "mean_error_m": 1.3068656266074654
+      },
+      "n_synthetic": 150,
+      "n_train_original": 9375
+    },
+    "exp3": {
+      "baseline_knn": {
+        "cell_acc": 0.027733333333333332,
+        "mean_error_m": 1.4515454192849544
+      },
+      "augmented_knn": {
+        "cell_acc": 0.020266666666666665,
+        "mean_error_m": 1.4707076214951118
+      },
+      "augmented_rf": {
+        "cell_acc": 0.023466666666666667,
+        "mean_error_m": 1.4586340026376376
+      },
+      "n_synthetic": 150,
+      "n_train_original": 9375
+    },
+    "exp4": {
+      "baseline_knn": {
+        "cell_acc": 0.0128,
+        "mean_error_m": 1.4114937064765802
+      },
+      "augmented_knn": {
+        "cell_acc": 0.0128,
+        "mean_error_m": 1.43978589932909
+      },
+      "augmented_rf": {
+        "cell_acc": 0.0176,
+        "mean_error_m": 1.3472058702551308
+      },
+      "n_synthetic": 150,
+      "n_train_original": 9375
+    },
+    "exp5": {
+      "baseline_knn": {
+        "cell_acc": 0.009066666666666667,
+        "mean_error_m": 1.431880776947966
+      },
+      "augmented_knn": {
+        "cell_acc": 0.009066666666666667,
+        "mean_error_m": 1.443018185790509
+      },
+      "augmented_rf": {
+        "cell_acc": 0.005866666666666667,
+        "mean_error_m": 1.449756713969058
+      },
+      "n_synthetic": 150,
+      "n_train_original": 9375
+    },
+    "exp6": {
+      "baseline_knn": {
+        "cell_acc": 0.0272,
+        "mean_error_m": 1.4023457106443484
+      },
+      "augmented_knn": {
+        "cell_acc": 0.0272,
+        "mean_error_m": 1.401566395977071
+      },
+      "augmented_rf": {
+        "cell_acc": 0.010666666666666666,
+        "mean_error_m": 1.4434016612694711
+      },
+      "n_synthetic": 150,
+      "n_train_original": 9375
+    }
+  }
+}

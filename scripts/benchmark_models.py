@@ -97,53 +97,18 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from localization.data import CampaignSpec, infer_router_distance, load_measurements  # noqa: E402
+from localization.catalog import (  # noqa: E402
+    BENCHMARK_REPORT_DIR,
+    FEATURE_COLUMNS,
+    ROOM_CAMPAIGNS,
+    filter_room_campaigns,
+)
+from localization.data import infer_router_distance, load_measurements  # noqa: E402
 from localization.embedding_knn import EmbeddingKnnConfig, EmbeddingKnnLocalizer  # noqa: E402
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 console = Console()
 
-# Campaign folders grouped by room, excluding circular trajectories.
-# Values are CampaignSpec objects; specify router_distance_m explicitly when
-# it cannot be inferred from the folder name (e.g. "exp1" would give 1 m
-# instead of the correct 4 m for E102).
-_E102_ROOT = PROJECT_ROOT / "data" / "E102"
-ROOM_CAMPAIGNS: dict[str, list[CampaignSpec]] = {
-    "B121": [
-        CampaignSpec(PROJECT_ROOT / "data" / "B121" / "dtroismetres" / "routeurcentretableau", router_distance_m=3.0),
-        CampaignSpec(PROJECT_ROOT / "data" / "B121" / "dtroismetres" / "routeurgauche", router_distance_m=3.0),
-        CampaignSpec(PROJECT_ROOT / "data" / "B121" / "dtroismetres" / "routeuradroitedutableau", router_distance_m=3.0),
-    ],
-    "D005": [
-        CampaignSpec(PROJECT_ROOT / "data" / "D005" / "ddeuxmetres"),
-        CampaignSpec(PROJECT_ROOT / "data" / "D005" / "dquatremetres"),
-    ],
-    "E101": [
-        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "dtroismetres"),
-        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "dcinqmetres"),
-        # Campagnes circulaires (4 orientations antenne, distance = 3 m)
-        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "circulaire" / "back",  router_distance_m=3.0),
-        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "circulaire" / "front", router_distance_m=3.0),
-        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "circulaire" / "left",  router_distance_m=3.0),
-        CampaignSpec(PROJECT_ROOT / "data" / "E101" / "circulaire" / "right", router_distance_m=3.0),
-    ],
-    "E102": [
-        # Expérience 1 – Back Right, lignes 0-4 (fenêtres/porte variables)
-        CampaignSpec(_E102_ROOT / "exp1", router_distance_m=4.0),
-        # Expérience 2 – Front Right, lignes 1-4
-        CampaignSpec(_E102_ROOT / "exp2", router_distance_m=4.0),
-        # Expérience 3 – Front Left, lignes 0-4
-        CampaignSpec(_E102_ROOT / "exp3", router_distance_m=4.0),
-        # Expérience 4 – Back Left, lignes 0-4
-        CampaignSpec(_E102_ROOT / "exp4", router_distance_m=4.0),
-        # Expérience 5 – élévation au sol, mode Front
-        CampaignSpec(_E102_ROOT / "elevation" / "exp5", router_distance_m=4.0),
-        # Expérience 6 – élévation table/table (~1.50 m), mode Front
-        CampaignSpec(_E102_ROOT / "elevation" / "exp6", router_distance_m=4.0),
-    ],
-}
-
-FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3"]
-REPORT_DIR = PROJECT_ROOT / "reports" / "benchmarks"
+REPORT_DIR = BENCHMARK_REPORT_DIR
 HEATMAP_WINDOW = 5
 GLOBAL_BASE_SEED = 21
 ANTI_LEAKAGE_GROUP_COLS = ("room", "campaign", "grid_cell")
@@ -332,42 +297,11 @@ def _strict_group_train_test_split(
     return train_df, test_df, audit
 
 
-def _normalize_room_name(room: str) -> str:
-    return room.strip().upper()
-
-
-def _distance_matches(distance: float, distance_filter: set[float]) -> bool:
-    return any(abs(distance - target) < 1e-6 for target in distance_filter)
-
-
 def _filter_room_campaigns(
     room_filter: list[str] | None,
     distance_filter: list[float] | None,
-) -> dict[str, list[CampaignSpec]]:
-    normalized_rooms = None
-    if room_filter:
-        normalized_rooms = {_normalize_room_name(room) for room in room_filter if room and room.strip()}
-        if not normalized_rooms:
-            normalized_rooms = None
-
-    distance_set = set(distance_filter) if distance_filter else None
-    filtered: dict[str, list[CampaignSpec]] = {}
-    for room, specs in ROOM_CAMPAIGNS.items():
-        if normalized_rooms and _normalize_room_name(room) not in normalized_rooms:
-            continue
-        selected: list[CampaignSpec] = []
-        for spec in specs:
-            if distance_set:
-                try:
-                    dist = spec.resolved_distance()
-                except ValueError:
-                    continue
-                if not _distance_matches(dist, distance_set):
-                    continue
-            selected.append(spec)
-        if selected:
-            filtered[room] = selected
-    return filtered
+):
+    return filter_room_campaigns(room_filter, distance_filter)
 
 
 def _make_label_encoder(classes: Iterable[str]) -> tuple[dict[str, int], np.ndarray]:

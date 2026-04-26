@@ -31,9 +31,10 @@ from localization.data import (
     CampaignSpec,
     load_measurements,
 )
+from localization.constants import RSSI_FEATURE_COLUMNS
 from localization.embedding_knn import EmbeddingKnnConfig, EmbeddingKnnLocalizer
 
-FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3"]
+FEATURE_COLUMNS = list(RSSI_FEATURE_COLUMNS)
 
 
 def main() -> None:

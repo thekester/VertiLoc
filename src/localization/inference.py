@@ -12,10 +12,10 @@ import numpy as np
 import pandas as pd
 
 from .board_geometry import BoardGeometry, add_board_geometry, add_board_zones
+from .constants import DEFAULT_RUN_NAME, RSSI_FEATURE_COLUMNS
 from .embedding_knn import EmbeddingKnnLocalizer
 
-FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3"]
-DEFAULT_RUN_NAME = "vertiloc-beacon-v1"
+FEATURE_COLUMNS = list(RSSI_FEATURE_COLUMNS)
 
 
 def _parse_grid_cell(cell: str) -> tuple[int, int]:

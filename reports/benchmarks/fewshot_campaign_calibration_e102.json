@@ -1,0 +1,826 @@
+{
+  "config": {
+    "rooms": [
+      "E102"
+    ],
+    "k_values": [
+      1,
+      2,
+      3,
+      5,
+      10,
+      15,
+      20,
+      25
+    ],
+    "n_trials": 20,
+    "knn_neighbors": 3,
+    "seed": 42,
+    "output_name": "fewshot_campaign_calibration_e102.json"
+  },
+  "folds": {
+    "E102": {
+      "exp1": {
+        "KNN_source_LOCO": {
+          "cell_acc": 0.0144,
+          "mean_error_m": 1.437125524007655,
+          "n": 1875
+        },
+        "RawCentroid_K1": {
+          "cell_acc": 0.5432777777777777,
+          "cell_acc_std": 0.019045834903214234,
+          "mean_error_m": 0.589864926980745,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "TargetKNN_K1": {
+          "cell_acc": 0.5436666666666665,
+          "cell_acc_std": 0.019290981709302452,
+          "mean_error_m": 0.5888711840123936,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "RawCentroid_K2": {
+          "cell_acc": 0.5077101449275363,
+          "cell_acc_std": 0.024839480468803948,
+          "mean_error_m": 0.6312905941645084,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "TargetKNN_K2": {
+          "cell_acc": 0.7155652173913044,
+          "cell_acc_std": 0.023516001157488125,
+          "mean_error_m": 0.36342458756132123,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "RawCentroid_K3": {
+          "cell_acc": 0.5016666666666667,
+          "cell_acc_std": 0.02035757034470865,
+          "mean_error_m": 0.6503422522089572,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "TargetKNN_K3": {
+          "cell_acc": 0.8066363636363636,
+          "cell_acc_std": 0.023915580791429008,
+          "mean_error_m": 0.24088965501488696,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "RawCentroid_K5": {
+          "cell_acc": 0.491,
+          "cell_acc_std": 0.020558318132679148,
+          "mean_error_m": 0.6559326690816232,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "TargetKNN_K5": {
+          "cell_acc": 0.8994333333333333,
+          "cell_acc_std": 0.019531484554147154,
+          "mean_error_m": 0.12098028937052101,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "RawCentroid_K10": {
+          "cell_acc": 0.4667111111111112,
+          "cell_acc_std": 0.020794063730299395,
+          "mean_error_m": 0.6987848803846543,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "TargetKNN_K10": {
+          "cell_acc": 0.9575111111111113,
+          "cell_acc_std": 0.008556450169677435,
+          "mean_error_m": 0.05735553338628654,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "RawCentroid_K15": {
+          "cell_acc": 0.4738666666666667,
+          "cell_acc_std": 0.021045559045925945,
+          "mean_error_m": 0.683842579823138,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "TargetKNN_K15": {
+          "cell_acc": 0.9707333333333332,
+          "cell_acc_std": 0.0077571472419526236,
+          "mean_error_m": 0.044857285671815676,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "RawCentroid_K20": {
+          "cell_acc": 0.47280000000000005,
+          "cell_acc_std": 0.020345460864226637,
+          "mean_error_m": 0.6851905112025154,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "TargetKNN_K20": {
+          "cell_acc": 0.9739999999999999,
+          "cell_acc_std": 0.006579429222120176,
+          "mean_error_m": 0.04157584798345669,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "RawCentroid_K25": {
+          "cell_acc": 0.44799999999999995,
+          "cell_acc_std": 0.03685406656289401,
+          "mean_error_m": 0.712681219171474,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        },
+        "TargetKNN_K25": {
+          "cell_acc": 0.9753333333333332,
+          "cell_acc_std": 0.01351542328847554,
+          "mean_error_m": 0.039145673312274226,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        }
+      },
+      "exp2": {
+        "KNN_source_LOCO": {
+          "cell_acc": 0.023466666666666667,
+          "mean_error_m": 1.3542878317872862,
+          "n": 1875
+        },
+        "RawCentroid_K1": {
+          "cell_acc": 0.6164444444444446,
+          "cell_acc_std": 0.02073004022912724,
+          "mean_error_m": 0.5419819767695968,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "TargetKNN_K1": {
+          "cell_acc": 0.6158888888888889,
+          "cell_acc_std": 0.02098309137035794,
+          "mean_error_m": 0.5438030781017121,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "RawCentroid_K2": {
+          "cell_acc": 0.5851014492753623,
+          "cell_acc_std": 0.02423167602712172,
+          "mean_error_m": 0.5660929010201226,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "TargetKNN_K2": {
+          "cell_acc": 0.7739999999999999,
+          "cell_acc_std": 0.024288592544408148,
+          "mean_error_m": 0.3325626541894465,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "RawCentroid_K3": {
+          "cell_acc": 0.597030303030303,
+          "cell_acc_std": 0.028607023609881987,
+          "mean_error_m": 0.5519322121660821,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "TargetKNN_K3": {
+          "cell_acc": 0.8470909090909091,
+          "cell_acc_std": 0.024349083547541218,
+          "mean_error_m": 0.22831313189723615,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "RawCentroid_K5": {
+          "cell_acc": 0.5921333333333334,
+          "cell_acc_std": 0.02489676462693274,
+          "mean_error_m": 0.5567708635421209,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "TargetKNN_K5": {
+          "cell_acc": 0.9223333333333332,
+          "cell_acc_std": 0.012549457712940774,
+          "mean_error_m": 0.11739651317171376,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "RawCentroid_K10": {
+          "cell_acc": 0.602311111111111,
+          "cell_acc_std": 0.014503877727552811,
+          "mean_error_m": 0.5251967272164815,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "TargetKNN_K10": {
+          "cell_acc": 0.9710222222222225,
+          "cell_acc_std": 0.006558530398469947,
+          "mean_error_m": 0.04420769225878838,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "RawCentroid_K15": {
+          "cell_acc": 0.607,
+          "cell_acc_std": 0.012598941754501967,
+          "mean_error_m": 0.5205067657643789,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "TargetKNN_K15": {
+          "cell_acc": 0.9802000000000002,
+          "cell_acc_std": 0.004427690644618745,
+          "mean_error_m": 0.028525021658943994,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "RawCentroid_K20": {
+          "cell_acc": 0.6005333333333335,
+          "cell_acc_std": 0.0147416266251576,
+          "mean_error_m": 0.5330205251991373,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "TargetKNN_K20": {
+          "cell_acc": 0.9829333333333332,
+          "cell_acc_std": 0.005491002741859736,
+          "mean_error_m": 0.023350691260569427,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "RawCentroid_K25": {
+          "cell_acc": 0.5979999999999999,
+          "cell_acc_std": 0.028370563774604278,
+          "mean_error_m": 0.5172755127751966,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        },
+        "TargetKNN_K25": {
+          "cell_acc": 0.9879999999999999,
+          "cell_acc_std": 0.010241527663824792,
+          "mean_error_m": 0.016045070382862407,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        }
+      },
+      "exp3": {
+        "KNN_source_LOCO": {
+          "cell_acc": 0.027733333333333332,
+          "mean_error_m": 1.4515454192849544,
+          "n": 1875
+        },
+        "RawCentroid_K1": {
+          "cell_acc": 0.49805555555555553,
+          "cell_acc_std": 0.019980314385989104,
+          "mean_error_m": 0.720190591786386,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "TargetKNN_K1": {
+          "cell_acc": 0.4974166666666666,
+          "cell_acc_std": 0.020130956292103163,
+          "mean_error_m": 0.7229764506445482,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "RawCentroid_K2": {
+          "cell_acc": 0.46710144927536235,
+          "cell_acc_std": 0.027458853906253824,
+          "mean_error_m": 0.7735532649127519,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "TargetKNN_K2": {
+          "cell_acc": 0.7094782608695651,
+          "cell_acc_std": 0.026036198606770533,
+          "mean_error_m": 0.43190300324363673,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "RawCentroid_K3": {
+          "cell_acc": 0.47239393939393937,
+          "cell_acc_std": 0.02367399878662511,
+          "mean_error_m": 0.778992433577929,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "TargetKNN_K3": {
+          "cell_acc": 0.8153939393939394,
+          "cell_acc_std": 0.022213092706854346,
+          "mean_error_m": 0.26660309913889624,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "RawCentroid_K5": {
+          "cell_acc": 0.46749999999999997,
+          "cell_acc_std": 0.024222923027578655,
+          "mean_error_m": 0.7702484695082753,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "TargetKNN_K5": {
+          "cell_acc": 0.8989999999999998,
+          "cell_acc_std": 0.011655232492080296,
+          "mean_error_m": 0.15412160629249777,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "RawCentroid_K10": {
+          "cell_acc": 0.4655555555555555,
+          "cell_acc_std": 0.020669056014806536,
+          "mean_error_m": 0.7724577100262893,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "TargetKNN_K10": {
+          "cell_acc": 0.9533333333333334,
+          "cell_acc_std": 0.008178260855297053,
+          "mean_error_m": 0.07101147164468566,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "RawCentroid_K15": {
+          "cell_acc": 0.4573333333333333,
+          "cell_acc_std": 0.022022211010200077,
+          "mean_error_m": 0.7777788741520915,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "TargetKNN_K15": {
+          "cell_acc": 0.9630666666666665,
+          "cell_acc_std": 0.005217066012403697,
+          "mean_error_m": 0.053513366323479986,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "RawCentroid_K20": {
+          "cell_acc": 0.4528,
+          "cell_acc_std": 0.016941205519219824,
+          "mean_error_m": 0.7597689334699783,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "TargetKNN_K20": {
+          "cell_acc": 0.9667999999999999,
+          "cell_acc_std": 0.004951318567367253,
+          "mean_error_m": 0.04884161614601195,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "RawCentroid_K25": {
+          "cell_acc": 0.462,
+          "cell_acc_std": 0.03218695387886216,
+          "mean_error_m": 0.7398488712689498,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        },
+        "TargetKNN_K25": {
+          "cell_acc": 0.9713333333333333,
+          "cell_acc_std": 0.012128936932440193,
+          "mean_error_m": 0.044920392538539446,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        }
+      },
+      "exp4": {
+        "KNN_source_LOCO": {
+          "cell_acc": 0.0128,
+          "mean_error_m": 1.4114937064765802,
+          "n": 1875
+        },
+        "RawCentroid_K1": {
+          "cell_acc": 0.5653611111111111,
+          "cell_acc_std": 0.022391215070774493,
+          "mean_error_m": 0.5028180795051185,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "TargetKNN_K1": {
+          "cell_acc": 0.5653611111111111,
+          "cell_acc_std": 0.022391215070774493,
+          "mean_error_m": 0.5028180795051185,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "RawCentroid_K2": {
+          "cell_acc": 0.5497391304347826,
+          "cell_acc_std": 0.02375475057232139,
+          "mean_error_m": 0.5363872894755499,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "TargetKNN_K2": {
+          "cell_acc": 0.7397101449275363,
+          "cell_acc_std": 0.024460745743653117,
+          "mean_error_m": 0.3010231892881982,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "RawCentroid_K3": {
+          "cell_acc": 0.5555454545454546,
+          "cell_acc_std": 0.027713127705101523,
+          "mean_error_m": 0.5244003396720655,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "TargetKNN_K3": {
+          "cell_acc": 0.8276969696969697,
+          "cell_acc_std": 0.021538698169216497,
+          "mean_error_m": 0.20502466151887194,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "RawCentroid_K5": {
+          "cell_acc": 0.5666,
+          "cell_acc_std": 0.029687932452990607,
+          "mean_error_m": 0.5264568535034782,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "TargetKNN_K5": {
+          "cell_acc": 0.9047333333333333,
+          "cell_acc_std": 0.012778280183359745,
+          "mean_error_m": 0.11678813498169135,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "RawCentroid_K10": {
+          "cell_acc": 0.565911111111111,
+          "cell_acc_std": 0.01690122356590467,
+          "mean_error_m": 0.5454777082995972,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "TargetKNN_K10": {
+          "cell_acc": 0.9519111111111112,
+          "cell_acc_std": 0.007377777777777773,
+          "mean_error_m": 0.06475410886848373,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "RawCentroid_K15": {
+          "cell_acc": 0.5686,
+          "cell_acc_std": 0.016607762575909436,
+          "mean_error_m": 0.5477969701296334,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "TargetKNN_K15": {
+          "cell_acc": 0.9621999999999999,
+          "cell_acc_std": 0.007245228314782995,
+          "mean_error_m": 0.055599941983317136,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "RawCentroid_K20": {
+          "cell_acc": 0.5616000000000001,
+          "cell_acc_std": 0.02533192978568088,
+          "mean_error_m": 0.5615169680419689,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "TargetKNN_K20": {
+          "cell_acc": 0.9672000000000001,
+          "cell_acc_std": 0.006591577116964419,
+          "mean_error_m": 0.05036849972082654,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "RawCentroid_K25": {
+          "cell_acc": 0.5633333333333332,
+          "cell_acc_std": 0.03289714611060087,
+          "mean_error_m": 0.5781510781679267,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        },
+        "TargetKNN_K25": {
+          "cell_acc": 0.9693333333333335,
+          "cell_acc_std": 0.017435595774162704,
+          "mean_error_m": 0.052963065115098705,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        }
+      },
+      "exp5": {
+        "KNN_source_LOCO": {
+          "cell_acc": 0.009066666666666667,
+          "mean_error_m": 1.431880776947966,
+          "n": 1875
+        },
+        "RawCentroid_K1": {
+          "cell_acc": 0.542138888888889,
+          "cell_acc_std": 0.019988634888139775,
+          "mean_error_m": 0.6126984701768378,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "TargetKNN_K1": {
+          "cell_acc": 0.542138888888889,
+          "cell_acc_std": 0.019988634888139775,
+          "mean_error_m": 0.6126984701768378,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "RawCentroid_K2": {
+          "cell_acc": 0.4970434782608696,
+          "cell_acc_std": 0.023704687370193905,
+          "mean_error_m": 0.666999742231402,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "TargetKNN_K2": {
+          "cell_acc": 0.7225217391304348,
+          "cell_acc_std": 0.018153607221609698,
+          "mean_error_m": 0.3564054328124323,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "RawCentroid_K3": {
+          "cell_acc": 0.5003939393939394,
+          "cell_acc_std": 0.024531814391833547,
+          "mean_error_m": 0.6791842727157965,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "TargetKNN_K3": {
+          "cell_acc": 0.8244242424242424,
+          "cell_acc_std": 0.027514150295493627,
+          "mean_error_m": 0.2238344040895901,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "RawCentroid_K5": {
+          "cell_acc": 0.4984333333333334,
+          "cell_acc_std": 0.02479361476939847,
+          "mean_error_m": 0.6757183428928291,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "TargetKNN_K5": {
+          "cell_acc": 0.9176,
+          "cell_acc_std": 0.012385295941379663,
+          "mean_error_m": 0.1071977433922086,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "RawCentroid_K10": {
+          "cell_acc": 0.488,
+          "cell_acc_std": 0.02170964398545743,
+          "mean_error_m": 0.6823701180746016,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "TargetKNN_K10": {
+          "cell_acc": 0.9664444444444443,
+          "cell_acc_std": 0.005875246251734337,
+          "mean_error_m": 0.04158898636037822,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "RawCentroid_K15": {
+          "cell_acc": 0.4911333333333333,
+          "cell_acc_std": 0.018819729600135657,
+          "mean_error_m": 0.6703327841718763,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "TargetKNN_K15": {
+          "cell_acc": 0.9718666666666669,
+          "cell_acc_std": 0.007228339289829225,
+          "mean_error_m": 0.03188079075337121,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "RawCentroid_K20": {
+          "cell_acc": 0.4802666666666668,
+          "cell_acc_std": 0.017031213175291493,
+          "mean_error_m": 0.6821419078337746,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "TargetKNN_K20": {
+          "cell_acc": 0.9722666666666667,
+          "cell_acc_std": 0.0064992307237087665,
+          "mean_error_m": 0.03246605780944204,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "RawCentroid_K25": {
+          "cell_acc": 0.508,
+          "cell_acc_std": 0.022271057451320082,
+          "mean_error_m": 0.6701451490718655,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        },
+        "TargetKNN_K25": {
+          "cell_acc": 0.9733333333333334,
+          "cell_acc_std": 0.013333333333333348,
+          "mean_error_m": 0.03185742249586823,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        }
+      },
+      "exp6": {
+        "KNN_source_LOCO": {
+          "cell_acc": 0.0272,
+          "mean_error_m": 1.4023457106443484,
+          "n": 1875
+        },
+        "RawCentroid_K1": {
+          "cell_acc": 0.4885555555555555,
+          "cell_acc_std": 0.022025097917412417,
+          "mean_error_m": 0.7418995297387351,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "TargetKNN_K1": {
+          "cell_acc": 0.4886388888888889,
+          "cell_acc_std": 0.022106975464715444,
+          "mean_error_m": 0.7410060798058643,
+          "n_support_mean": 75.0,
+          "n_query_mean": 1800.0
+        },
+        "RawCentroid_K2": {
+          "cell_acc": 0.4502898550724638,
+          "cell_acc_std": 0.0214640567947785,
+          "mean_error_m": 0.7916115030689731,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "TargetKNN_K2": {
+          "cell_acc": 0.6434202898550725,
+          "cell_acc_std": 0.020846928141538216,
+          "mean_error_m": 0.5056082757774125,
+          "n_support_mean": 150.0,
+          "n_query_mean": 1725.0
+        },
+        "RawCentroid_K3": {
+          "cell_acc": 0.43196969696969695,
+          "cell_acc_std": 0.02113394685868042,
+          "mean_error_m": 0.8138961665563494,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "TargetKNN_K3": {
+          "cell_acc": 0.7442121212121214,
+          "cell_acc_std": 0.025393487375741226,
+          "mean_error_m": 0.37357292320056257,
+          "n_support_mean": 225.0,
+          "n_query_mean": 1650.0
+        },
+        "RawCentroid_K5": {
+          "cell_acc": 0.42869999999999997,
+          "cell_acc_std": 0.020833173332718936,
+          "mean_error_m": 0.8050040203967075,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "TargetKNN_K5": {
+          "cell_acc": 0.8479333333333334,
+          "cell_acc_std": 0.01478422582800106,
+          "mean_error_m": 0.2267373244590969,
+          "n_support_mean": 375.0,
+          "n_query_mean": 1500.0
+        },
+        "RawCentroid_K10": {
+          "cell_acc": 0.43471111111111105,
+          "cell_acc_std": 0.01634800550374929,
+          "mean_error_m": 0.7915836999883176,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "TargetKNN_K10": {
+          "cell_acc": 0.925288888888889,
+          "cell_acc_std": 0.008743138403102304,
+          "mean_error_m": 0.119668572667929,
+          "n_support_mean": 750.0,
+          "n_query_mean": 1125.0
+        },
+        "RawCentroid_K15": {
+          "cell_acc": 0.43220000000000003,
+          "cell_acc_std": 0.018500570561772182,
+          "mean_error_m": 0.7871195453400123,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "TargetKNN_K15": {
+          "cell_acc": 0.9384666666666666,
+          "cell_acc_std": 0.007414999812691966,
+          "mean_error_m": 0.10171400975069529,
+          "n_support_mean": 1125.0,
+          "n_query_mean": 750.0
+        },
+        "RawCentroid_K20": {
+          "cell_acc": 0.4364,
+          "cell_acc_std": 0.018880207155172374,
+          "mean_error_m": 0.7926228441121271,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "TargetKNN_K20": {
+          "cell_acc": 0.9456,
+          "cell_acc_std": 0.012202731934557376,
+          "mean_error_m": 0.09065165739632457,
+          "n_support_mean": 1500.0,
+          "n_query_mean": 375.0
+        },
+        "RawCentroid_K25": {
+          "cell_acc": 0.4253333333333333,
+          "cell_acc_std": 0.032359096265364255,
+          "mean_error_m": 0.8006497403988565,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        },
+        "TargetKNN_K25": {
+          "cell_acc": 0.9426666666666665,
+          "cell_acc_std": 0.021540659228538008,
+          "mean_error_m": 0.09393832585917786,
+          "n_support_mean": 1800.0,
+          "n_query_mean": 75.0
+        }
+      }
+    }
+  },
+  "summary": {
+    "E102": {
+      "KNN_source_LOCO": {
+        "cell_acc_mean": 0.01911111111111111
+      },
+      "RawCentroid_K1": {
+        "cell_acc_mean": 0.5423055555555555,
+        "cell_acc_std": 0.04257587634933172,
+        "mean_error_m": 0.6182422624929033
+      },
+      "RawCentroid_K2": {
+        "cell_acc_mean": 0.5094975845410629,
+        "cell_acc_std": 0.0461819113156211,
+        "mean_error_m": 0.660989215812218
+      },
+      "RawCentroid_K3": {
+        "cell_acc_mean": 0.5098333333333334,
+        "cell_acc_std": 0.053717098827640766,
+        "mean_error_m": 0.6664579461495299
+      },
+      "RawCentroid_K5": {
+        "cell_acc_mean": 0.5073944444444445,
+        "cell_acc_std": 0.05600511688483431,
+        "mean_error_m": 0.6650218698208391
+      },
+      "RawCentroid_K10": {
+        "cell_acc_mean": 0.5038666666666667,
+        "cell_acc_std": 0.059754135487168805,
+        "mean_error_m": 0.6693118073316567
+      },
+      "RawCentroid_K15": {
+        "cell_acc_mean": 0.5050222222222222,
+        "cell_acc_std": 0.062159039349393944,
+        "mean_error_m": 0.664562919896855
+      },
+      "RawCentroid_K20": {
+        "cell_acc_mean": 0.5007333333333334,
+        "cell_acc_std": 0.05958233643299682,
+        "mean_error_m": 0.6690436149765836
+      },
+      "RawCentroid_K25": {
+        "cell_acc_mean": 0.5007777777777777,
+        "cell_acc_std": 0.0624481019094957,
+        "mean_error_m": 0.6697919284757116
+      },
+      "TargetKNN_K1": {
+        "cell_acc_mean": 0.5421851851851852,
+        "cell_acc_std": 0.04251074866095255,
+        "mean_error_m": 0.618695557041079
+      },
+      "TargetKNN_K2": {
+        "cell_acc_mean": 0.7174492753623188,
+        "cell_acc_std": 0.039299359836260324,
+        "mean_error_m": 0.38182119047874125
+      },
+      "TargetKNN_K3": {
+        "cell_acc_mean": 0.8109090909090909,
+        "cell_acc_std": 0.032301888470732336,
+        "mean_error_m": 0.2563729791433407
+      },
+      "TargetKNN_K5": {
+        "cell_acc_mean": 0.8985055555555554,
+        "cell_acc_std": 0.024254899594122935,
+        "mean_error_m": 0.14053693527795488
+      },
+      "TargetKNN_K10": {
+        "cell_acc_mean": 0.9542518518518519,
+        "cell_acc_std": 0.01463843897919443,
+        "mean_error_m": 0.06643106086442525
+      },
+      "TargetKNN_K15": {
+        "cell_acc_mean": 0.9644222222222223,
+        "cell_acc_std": 0.013068121612119244,
+        "mean_error_m": 0.05268173602360388
+      },
+      "TargetKNN_K20": {
+        "cell_acc_mean": 0.9681333333333333,
+        "cell_acc_std": 0.01140863870218688,
+        "mean_error_m": 0.0478757283861052
+      },
+      "TargetKNN_K25": {
+        "cell_acc_mean": 0.9700000000000001,
+        "cell_acc_std": 0.01361915861870628,
+        "mean_error_m": 0.04647832495063681
+      }
+    }
+  }
+}

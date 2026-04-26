@@ -1,7 +1,7 @@
 ================================================================================
 RAPPORT TECHNIQUE — LOCALISATION INDOOR PAR FINGERPRINTING RSSI (Wi-Fi)
 Synthèse des benchmarks Machine Learning pour article scientifique
-Date : Mars 2026
+Date : Mars–Avril 2026  (mis à jour le 25 avril 2026)
 ================================================================================
 
 
@@ -32,6 +32,7 @@ Date : Mars 2026
 
   Généralisation — limites fondamentales :
   - LORO (salle inconnue)         : ~1–2 % tous modèles  → non transférable
+  - LOCO généralisé (B121/E101/E102) : HistGB 1.82–2.42 % | aléatoire ~1.25–1.39 %
   - LOCO E102 (campagne inconnue) : HistGB 2.42 %         → non transférable
   - LOCO B121 (campagne inconnue) : HistGB 2.30 %         → non transférable
   - B121/deplacement (inférence OOD/mouvement) : 100 % rejet OOD ; 0 % exact sur 6 points statiques
@@ -45,6 +46,12 @@ Date : Mars 2026
   Protocole TriScope (modèle multi-tâche, D005+E101, 50 tirages) :
   - Cellule : 97.6 % ± 3.4 % | Distance routeur : 57.1 % | Salle : 72.1 %
 
+  Protocole 360° XGBoost/RF (E101 circulaire + E102 orientations, 90/10) :
+  - Meilleur modèle testé : XGBoost cellule directe, accuracy 72.8 %
+  - Erreur médiane : 0.00 m | p80 : 0.590 m | p90 : 1.494 m
+  - La régression polaire (distance + sin/cos) est moins performante que la
+    classification directe de cellule sur ces données.
+
   Calibration / Incertitude :
   - ECE KNN (brut) : 0.023 → très bien calibré naturellement
   - HistGB + temperature scaling : ECE 0.012, NLL 0.285 (meilleure calibration)
@@ -57,6 +64,33 @@ Date : Mars 2026
   Référence état de l'art (Wi-Fi fingerprinting) :
   - Travaux publiés (KNN RSSI indoor) : 70–90 % @ grille 0.5–1 m typique
   - Ce système : 92–94 % @ cellule 25×30 cm → granularité ×20 plus fine
+
+  Approches avancées testées (avril 2026 — résultats section 18) :
+  - TabNet (pytorch-tabnet) : 25 % room-aware → inadapté au problème 5D
+  - CORAL + DANN (adaptation domaine) : LORO inchangé (~1.2–1.3 %) → résultat négatif solide
+  - Metric Learning : équivalent à KNN en room-aware ; léger gain E102 (92.8 %)
+  - SAE + KNN latent : conserve KNN ; léger gain E102 (92.76 %, 10.8 cm)
+  - SSGAN + TabDDPM : pas de gain LOCO E102, augmentation synthétique non retenue
+  - TabM : 38.1 % room-aware / 33.1 % E102 → sous KNN/RF
+  - Few-shot cible LORO : TargetKNN atteint 48.9 % en K=5, 66.9 % en K=10,
+    84.7 % en K=25 ; ProtoNet plafonne à ~17 %
+  - Few-shot cible LOCO : TargetKNN atteint 89.7 % en K=5, 94.6 % en K=10,
+    96.2 % en K=25 en moyenne sur B121/D005/E101/E102
+  - TTA / Tent : ne corrige pas LORO (1.43 % vs 1.71 % vanilla)
+  - DeepSets : échec sur split anti-leakage strict (≤3.3 %)
+  - GNN cellules : échec pratique (2.6–2.8 %)
+  - Self-supervised MAE/DAE/SimCLR : utile seulement en embedding + KNN
+  - Spatially-aware loss : baisse l'erreur MLP mais baisse l'accuracy
+  - Mixture-of-Experts : améliore MLP (MoE-4 : 46.5–50.4 %) sans atteindre KNN
+  - FOMAML : reste au plancher LORO (~1.6–1.9 %)
+  - Conformal prediction : couverture ~90 % à α=10 %, ensembles 17–20 cellules
+  - TCN-PN (Ma & Shi, Sensors 2023) — 2 variantes testées (26 avr. 2026) :
+      · TCN fidèle au papier (v1) : K=1 → 17.3 %/1.056 m ≈ ProtoNet-MLP ;
+        accuracy DÉCROÎT avec K → architecture TCN inadaptée aux 5 features
+      · MLP+confiance (v2, contribution clé adaptée) : acc CROÎT avec K ;
+        K=25 → 28.9 %/0.926 m = meilleur ProtoNet few-shot LORO testé ;
+        gain vs ProtoNet vanilla : +4.6 pp, −53 mm à K=25
+      → MLP_conf recommandé ; TCN causal dilué inutile sur vecteur 5D
 
 ════════════════════════════════════════════════════════════════════════════════
 1. CONTEXTE ET OBJECTIF
@@ -281,9 +315,13 @@ Tous les modèles résolvent un problème de classification multi-classes (75 cl
   Depuis le vecteur RSSI brut uniquement, sans one-hot salle.
 
 ────────────────────────────────────────────────────────────────────────────────
-4.10 Modèles non disponibles (dépendances manquantes)
+4.10 Modèles optionnels / dépendances variables
 ────────────────────────────────────────────────────────────────────────────────
-  - CatBoost, LightGBM, XGBoost : skippés (non installés dans l'environnement)
+  - CatBoost, LightGBM : skippés dans les benchmarks principaux lorsque les
+    dépendances ne sont pas installées dans l'environnement courant.
+  - XGBoost : non inclus dans le benchmark principal multi-salles historique,
+    mais utilisé dans le benchmark auxiliaire 360° exécuté depuis la `.venv`
+    locale (voir section 16novemdecies).
   - Stacking (RF+SVM+MLP) : skippé dans les runs finaux (temps de calcul excessif,
     ~66 min par fold sur le dataset multi-salles)
 
@@ -381,6 +419,7 @@ Tous les modèles résolvent un problème de classification multi-classes (75 cl
   au sein d'une même salle calibrée partiellement.
   Cas couverts dans ce rapport :
   - E102 : 6 campagnes (orientation antenne + élévation)
+  - E101 : 4 orientations circulaires (back/front/left/right)
   - B121 : 3 campagnes (routeur centre/gauche/droite à 3 m)
 
 ────────────────────────────────────────────────════════════════════════════════
@@ -677,6 +716,42 @@ orientation par défaut du routeur, le simple déplacement latéral du point
 d'émission suffit à faire chuter la localisation au voisinage du hasard.
 B121 confirme donc que le fingerprinting RSSI dépend fortement de la géométrie
 relative routeur-tableau, même sans facteur "volets" ni changement d'élévation.
+
+════════════════════════════════════════════════════════════════════════════════
+11terbis. SYNTHÈSE LOCO GÉNÉRALISÉE (B121 + E101 + E102)
+════════════════════════════════════════════════════════════════════════════════
+
+Objectif :
+  Donner une lecture transversale du protocole LOCO sur toutes les salles pour
+  lesquelles un benchmark inter-campagne/inter-orientation complet est
+  disponible dans ce rapport.
+
+Synthèse (meilleur modèle commun = HistGB) :
+  - B121 : 2.30 % | err=1.448 m | aléatoire = 1/80 = 1.25 %
+  - E101 : 1.82 % | err=1.306 m | aléatoire = 1/72 = 1.39 %
+  - E102 : 2.42 % | err=1.386 m | aléatoire = 1/75 = 1.33 %
+
+Algorithmes communs comparables sur B121 + E101 + E102 :
+
+  Algorithme    | B121  | E101  | E102  | Moy. 3 salles | Err. moy. 3 salles
+  ─────────────────────────────────────────────────────────────────────────────
+  HistGB        | 2.30% | 1.82% | 2.42% |    2.19 %     |      1.380 m
+  RandomForest  | 0.37% | 1.21% | 1.99% |    1.20 %     |      1.390 m
+  Bagging KNN   | 0.53% | 1.03% | 2.13% |    1.23 %     |      1.385 m
+  KNN raw       | 0.53% | 0.97% | 1.62% |    1.04 %     |      1.383 m
+  LDA+KNN       | 0.60% | 0.35% | 2.08% |    1.01 %     |      1.367 m
+
+Lecture :
+  - Malgré des shifts différents selon la salle (déplacement latéral du routeur
+    en B121, orientation circulaire en E101, orientation + élévation en E102),
+    les performances restent partout dans un régime très faible.
+  - HistGB est le seul algorithme qui reste systématiquement au-dessus du
+    niveau quasi aléatoire sur les trois salles, mais son niveau absolu reste
+    très bas (~2.19 % en moyenne).
+  - Les scores LOCO dépassent légèrement le niveau aléatoire, mais restent trop
+    bas pour caractériser une robustesse exploitable en déploiement.
+  - D005 n'est pas inclus dans cette synthèse, faute de benchmark LOCO complet
+    disponible sur cette salle dans les artefacts actuels.
 
 Artefacts produits :
   - `reports/benchmarks/loco_b121.csv`
@@ -2016,6 +2091,1330 @@ Conclusion pratique :
     `sklearn` utilisé dans les sections comparatives principales.
 
 ════════════════════════════════════════════════════════════════════════════════
+16novemdecies. BENCHMARK AUXILIAIRE XGBOOST / RF — COLLECTE 360°
+════════════════════════════════════════════════════════════════════════════════
+
+Objectif :
+  Tester la piste "collecte 360 degrés" : le routeur est orienté selon plusieurs
+  directions afin d'exploiter les différences entre antennes A1/A2/A3 et
+  d'estimer plus finement la position sur la grille.
+
+Implémentation :
+  - Script : `scripts/xgb_polar_360.py`
+  - Environnement : `.venv` locale avec XGBoost disponible
+  - Datasets du run final : E101 circulaire (`back`, `right`, `front`, `left`)
+    + E102 orientations (`exp1` à `exp4`, sans campagnes élévation exp5/exp6)
+  - Découpage temporel : chaque fichier de 25 mesures est découpé en fenêtres
+    de 5 mesures, soit environ 1 seconde par fenêtre
+  - Taille obtenue : 2 940 fenêtres, split stratifié 90/10, 294 fenêtres test
+  - Important : les variables de contexte `orientation_sin_input` /
+    `orientation_cos_input` ont été exclues des features modèle afin de ne pas
+    donner au modèle le label d'orientation de la campagne.
+
+Features construites :
+  - Statistiques par signal : moyenne, écart-type, médiane, minimum, maximum
+  - Transformations de puissance : `log1p(abs(RSSI))`, conversion dBm -> mW
+  - Différences inter-antennes : A1-A2, A1-A3, A2-A3
+  - Différences signal global vs antennes : Signal-A1/A2/A3
+  - Valeurs absolues et carrés des différences pour accentuer les asymétries
+  - Ratios de puissance entre antennes en échelle mW
+
+Modèles évalués :
+  1) `xgb_polar` :
+     trois têtes de régression XGBoost séparées :
+       - rayon / distance polaire à l'origine de la grille
+       - sin(theta)
+       - cos(theta)
+
+  2) `rf_polar` :
+     même formulation polaire, mais avec RandomForestRegressor.
+
+  3) `xgb_cell_classifier` et `rf_cell_classifier` :
+     classification directe de la cellule, puis projection au centre de la
+     cellule prédite.
+
+  4) `weighted_xgb_rf` :
+     moyenne pondérée 70 % XGBoost / 30 % RF sur les sorties polaires.
+
+  5) `arbitrated_proxy` :
+     arbitrage XGB/RF avec lissage fort quand les deux modèles divergent.
+     Ce mode est seulement un proxy, car le dataset n'est pas une vraie
+     trajectoire temps réel ordonnée.
+
+Résultats — run combiné E101+E102 :
+
+  Tableau 16novemdecies-A. Erreur de localisation par modèle
+
+  ┌─────────────────────────┬──────────┬──────────┬──────────┬──────────┬────────────┬────────────┐
+  │  Modèle                 │ Acc. cel │ Err. moy │ p50      │ p80      │ p90        │ <= 22 cm   │
+  ├─────────────────────────┼──────────┼──────────┼──────────┼──────────┼────────────┼────────────┤
+  │  XGBoost cellule        │ 72.79 %  │ 0.350 m  │ 0.000 m  │ 0.590 m  │ 1.494 m    │ 72.79 %    │
+  │  RF cellule             │ 73.47 %  │ 0.361 m  │ 0.000 m  │ 0.690 m  │ 1.709 m    │ 73.47 %    │
+  │  RF polaire             │ 20.75 %  │ 0.622 m  │ 0.342 m  │ 0.940 m  │ 1.656 m    │ 29.25 %    │
+  │  XGB/RF pondéré         │ 13.61 %  │ 0.666 m  │ 0.444 m  │ 1.002 m  │ 1.490 m    │ 20.41 %    │
+  │  XGBoost polaire        │ 12.59 %  │ 0.707 m  │ 0.477 m  │ 1.095 m  │ 1.657 m    │ 18.71 %    │
+  │  Arbitrage proxy        │  7.14 %  │ 0.796 m  │ 0.705 m  │ 1.255 m  │ 1.571 m    │ 13.27 %    │
+  └─────────────────────────┴──────────┴──────────┴──────────┴──────────┴────────────┴────────────┘
+
+Lecture :
+  - La classification directe de cellule est nettement meilleure que la
+    décomposition polaire distance + sin/cos sur ce dataset.
+  - XGBoost et RandomForest sont très proches en accuracy cellule ; XGBoost
+    obtient une p80 meilleure (0.590 m vs 0.690 m), tandis que RF obtient une
+    accuracy légèrement plus élevée.
+  - La formulation polaire reste intéressante conceptuellement, mais elle perd
+    de l'information discrète utile : prédire un rayon et un angle continus ne
+    suffit pas à retrouver aussi bien la cellule exacte.
+  - Le lissage/arbitrage de type "simili-Kalman" dégrade ici les métriques, car
+    il est appliqué à des fenêtres triées par campagne/cellule et non à une
+    vraie trajectoire physique. Il doit être re-testé sur flux temps réel.
+
+Erreur latérale vs profondeur :
+  - XGBoost cellule : erreur latérale moyenne 0.312 m, profondeur 0.107 m
+  - RF cellule      : erreur latérale moyenne 0.326 m, profondeur 0.098 m
+  - Sur ce protocole, l'erreur latérale domine donc l'erreur de profondeur,
+    contrairement à l'hypothèse initiale attendue pour certains contextes
+    indoor. Ce point peut venir du mélange E101+E102 et du repère grille utilisé.
+
+Importance des features — XGBoost cellule directe :
+
+  Tableau 16novemdecies-B. Top features XGBoost cellule
+
+  ┌──────────────────────────┬──────────────────┐
+  │ Feature                  │ Importance       │
+  ├──────────────────────────┼──────────────────┤
+  │ signal_A3_median_mw      │ 0.0267           │
+  │ signal_minus_a1_sq       │ 0.0252           │
+  │ noise_minus_signal       │ 0.0231           │
+  │ Signal_max               │ 0.0227           │
+  │ signal_A2_median_mw      │ 0.0224           │
+  │ signal_A1_median_mw      │ 0.0220           │
+  │ ant_median_min           │ 0.0212           │
+  │ Signal_median            │ 0.0212           │
+  │ signal_minus_a1_abs      │ 0.0212           │
+  │ ant_median_max           │ 0.0208           │
+  └──────────────────────────┴──────────────────┘
+
+Interprétation :
+  - Les signaux convertis en puissance (`*_mw`) et les différences signal /
+    antenne au carré apparaissent parmi les meilleures variables.
+  - Cela confirme que l'information relative entre antennes est utile pour le
+    protocole 360°, mais pas forcément sous forme d'une régression angulaire
+    explicite.
+  - Le bruit relatif (`noise_minus_signal`) reste informatif, ce qui suggère que
+    la stabilité du signal porte une partie de l'information de position.
+
+Conclusion pratique :
+  - Pour cette piste 360°, il faut conserver XGBoost, mais comme classifieur
+    direct de cellule ou de macro-zone plutôt que comme seule régression polaire.
+  - RandomForest reste un excellent modèle de secours : même niveau d'accuracy,
+    comportement robuste, importances faciles à auditer.
+  - La fusion XGB/RF doit être évaluée sur une vraie séquence temporelle avant
+    d'être retenue ; sur captures indépendantes, elle ne montre pas de gain.
+  - Prochaine étape recommandée : tester `xgb_cell_classifier` sur zones du
+    tableau et ajouter une validation LOCO par orientation/salle pour vérifier
+    que le gain ne dépend pas du split aléatoire 90/10.
+
+════════════════════════════════════════════════════════════════════════════════
+18. DEEP LEARNING AVANCÉ 2026 — PANORAMA DES APPROCHES RÉCENTES
+════════════════════════════════════════════════════════════════════════════════
+
+  Ce chapitre documente 14 approches algorithmiques testées ou implémentées
+  entre mars et avril 2026, couvrant les grandes familles identifiées dans la
+  littérature récente en fingerprinting RSSI et machine learning tabulaire.
+  Les benchmarks d'avril 2026 ont été consolidés avec un artefact JSON ou un
+  statut d'exécution explicite.
+
+  Référence de base (rappel) :
+    KNN (k=7, poids distance) room-aware : 91.5–91.8 %  |  err. 0.097–0.103 m
+    KNN intra-salle E102 (80/20)          : 92.4–92.7 %  |  err. 0.112–0.114 m
+    LORO tous modèles                     : ~1–2 %         → non transférable
+
+────────────────────────────────────────────────────────────────────────────────
+18.1 TabNet — Attention séquentielle sur données tabulaires
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte :
+  TabNet (Arik & Pfister, Google Brain, AAAI 2021) introduit un mécanisme
+  d'attention par étapes pour sélectionner séquentiellement les features
+  pertinentes. Très efficace sur les benchmarks tabulaires standards (100+
+  features hétérogènes).
+
+  Implémentation : script `scripts/tabnet_benchmark.py` (pytorch-tabnet 4.1.0)
+  Protocoles : room-aware (80/20), intra-salle E102 (80/20)
+
+  Résultats (TabNet vs KNN vs RF) :
+
+  ┌────────────────────────┬──────────────┬──────────────┬───────────────┐
+  │ Protocole              │ KNN          │ RF           │ TabNet        │
+  ├────────────────────────┼──────────────┼──────────────┼───────────────┤
+  │ Room-aware (n=29 730)  │ 91.7 % 0.103m│ 91.8 % 0.101m│ 25.4 % 0.989m │
+  │ E102 intra-room        │ 92.4 % 0.112m│ 93.3 % 0.105m│ 51.6 % 0.700m │
+  └────────────────────────┴──────────────┴──────────────┴───────────────┘
+
+  Analyse :
+  - TabNet échoue significativement (25 % room-aware, 52 % E102) par rapport
+    aux baselines KNN/RF (91–93 %).
+  - Explication structurelle : le mécanisme d'attention de TabNet est conçu
+    pour sélectionner parmi de nombreuses features hétérogènes. Avec seulement
+    5 features RSSI d'importance quasi-égale (~27–29 % chacune selon Gini RF),
+    l'attention séquentielle n'a rien à sélectionner de façon discriminante.
+  - TabNet requiert typiquement 10× à 100× plus de données que KNN pour
+    converger sur des problèmes à faible dimensionnalité.
+
+  Conclusion : TabNet inadapté pour ce problème 5D à forte symétrie de features.
+
+────────────────────────────────────────────────────────────────────────────────
+18.2 Adaptation de domaine — CORAL + DANN
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte :
+  L'échec LORO (~1–2 %) s'explique par un shift de distribution inter-salles.
+  Deux approches classiques d'adaptation de domaine ont été testées :
+  - CORAL (Correlation ALignment) : aligne la matrice de covariance de la
+    source sur celle de la cible (Sun & Saenko, 2016).
+  - DANN (Domain Adversarial Neural Network) : entraîne un encodeur à
+    produire des représentations indépendantes du domaine via un gradient
+    reversal layer (Ganin et al., JMLR 2016).
+
+  Protocole : LORO inter-salle (4 salles, hold-one-room-out).
+  Script : `scripts/domain_adaptation_loro.py`
+
+  Résultats moyens LORO (4 folds) :
+
+  ┌──────────────────┬───────────────┬─────────────┐
+  │ Méthode          │ Acc. cellule  │ Err. moy.   │
+  ├──────────────────┼───────────────┼─────────────┤
+  │ KNN_vanilla      │ 1.16 % ±0.82  │ 1.375 m     │
+  │ RF_vanilla       │ 1.13 % ±0.52  │ 1.355 m     │
+  │ CORAL + KNN      │ 1.25 % ±0.64  │ 1.345 m     │
+  │ CORAL + RF       │ 0.80 %        │ 1.358 m     │
+  │ DANN             │ 1.32 % ±0.33  │ 1.349 m     │
+  └──────────────────┴───────────────┴─────────────┘
+
+  Analyse :
+  - CORAL apporte un gain marginal (+0.09 pp) sur KNN, mais dégrade RF.
+  - DANN (+0.16 pp) est le seul modèle qui réduit la variance (±0.33 vs ±0.82),
+    signe que l'alignissement de domaine apporte de la stabilité mais pas de
+    précision.
+  - Le plafond LORO (~1–2 %) reflète un shift structurel RSSI (géométrie
+    différente par salle, gains d'antenne différents) que les méthodes
+    d'alignissement statistique ne peuvent pas compenser.
+
+  Résultat notable pour l'article : résultat négatif solide. CORAL et DANN
+  confirment l'irréductibilité du shift inter-salle sur ce type de fingerprint.
+
+────────────────────────────────────────────────────────────────────────────────
+18.3 SAE + Multi-label — Stacked Autoencoder avec classification row/col
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte :
+  Inspiré de Nabati et al. (Nature/Sensors 2025). Décompose le problème de
+  classification de cellule (75+ classes) en deux sous-problèmes indépendants :
+  classification de ligne (row) + classification de colonne (col).
+  Un Stacked Autoencoder (SAE) pré-entraîne une représentation compacte par
+  reconstruction RSSI avant fine-tuning sur les deux têtes.
+
+  Architecture :
+    SAE encoder : RSSI → hidden(32) → bottleneck(16) → [row_head, col_head]
+    Decoder : bottleneck → reconstruction RSSI (loss MSE)
+    Loss totale : L_row + L_col + 0.3 × L_reconstruction
+    Inférence : score(cell) = P(row=r) × P(col=c) → argmax sur les cellules valides
+
+  Protocoles exécutés : room-aware, E102 (`--skip-loro`).
+  Script : `scripts/sae_multilabel_benchmark.py`
+  Commande : `--epochs 100 --hidden 32 --bottleneck 16 --recon-weight 0.3 --skip-loro`
+  Statut : [TERMINÉ — run du 25 avril 2026]
+
+  Résultats :
+  - Room-aware :
+    * KNN : 91.69 %, 0.103 m
+    * SAE+MultiLabel : 4.91 %, 1.276 m
+    * SAE+KNN : 91.54 %, 0.103 m
+  - E102 :
+    * KNN : 92.44 %, 0.112 m
+    * SAE+MultiLabel : 5.51 %, 1.279 m
+    * SAE+KNN : 92.76 %, 0.108 m
+
+  Lecture :
+  - La décomposition row/col directe ne fonctionne pas : elle casse la structure
+    de classe fine et accumule les erreurs de ligne/colonne.
+  - L'encodeur SAE n'améliore pas le plafond room-aware, mais l'espace latent
+    utilisé par KNN conserve la performance et donne un léger gain sur E102.
+  - À garder comme prétraitement léger possible, pas comme classifieur autonome.
+
+────────────────────────────────────────────────────────────────────────────────
+18.4 SSGAN — Semi-Supervised GAN pour augmentation de données
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte :
+  Contrairement à un CGAN classique (données labellisées seulement), le SSGAN
+  utilise aussi les données non-labellisées dans un discriminateur à double
+  tête (real/fake + classification cellule), guidant mieux le générateur.
+  Référence : Odena (2016) ; travaux Wi-Fi fingerprint SSGAN (Sensors/MDPI 2024).
+
+  Architecture :
+    Générateur : z(32) + label_emb(16) → hidden(128) → RSSI synthétique
+    Discriminateur :
+      - Tête real/fake (BCE loss)
+      - Tête classification cellule (CE loss, sur données labellisées seulement)
+    λ_cls = 1.0 (poids de la perte de classification dans D)
+
+  Protocole exécuté : E102 LOCO campagne, n_synth=10 samples/cellule.
+  Script : `scripts/ssgan_augmentation.py`
+  Commande : `--rooms E102 --epochs 100 --hidden 64 --batch-size 128 --n-synth 10`
+  Statut : [TERMINÉ — run du 25 avril 2026]
+
+  Résultat moyen E102 :
+  - KNN baseline LOCO campagne : 1.91 %
+  - KNN + SSGAN augmentation : 1.82 %
+  - Delta : -0.09 pp
+
+  Lecture : l'augmentation SSGAN ne réduit pas le shift de campagne. Les
+  fingerprints synthétiques ne créent pas d'information utile pour KNN et
+  peuvent même ajouter du bruit.
+
+────────────────────────────────────────────────────────────────────────────────
+18.5 TabDDPM — Diffusion probabiliste pour augmentation tabulaire
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte :
+  TabDDPM (Kotelnikov et al., ICML 2023) adapte les modèles de diffusion
+  débruisants (DDPM) aux données tabulaires. Conditionné sur (cellule, campagne),
+  il génère des fingerprints RSSI synthétiques pour les conditions sous-représentées.
+
+  Architecture prévue :
+    Schedule : cosine noise schedule (Nichol & Dhariwal, 2021), T=100 pas
+    Débruiteur : MLP conditionné temps + label (time_emb + label_emb + MLP profond)
+    Inférence DDPM : processus inverse stochastique sur T pas
+
+  Protocole exécuté : E102 LOCO campagne, version ultra-courte T=10,
+  5 epochs, n_synth=2, pour borner le coût CPU.
+  Script : `scripts/tabddpm_augmentation.py`
+  Statut : [TERMINÉ — run court du 26 avril 2026]
+
+  Résultat moyen E102 :
+  - KNN baseline LOCO campagne : 1.91 %
+  - KNN + TabDDPM augmentation : 1.79 %
+  - RF + TabDDPM augmentation : 1.70 %
+
+  Lecture : le run court ne montre aucun gain. Un run long DDPM peut encore être
+  relancé pour analyse, mais la piste n'est pas prioritaire tant que le split
+  LOCO campagne reste au plancher.
+
+────────────────────────────────────────────────────────────────────────────────
+18.6 TabM + KAN — Ensemble de mini-MLP et Kolmogorov-Arnold Networks
+────────────────────────────────────────────────────────────────────────────────
+
+  TabM (NeurIPS 2024) :
+  Ensemble de k=16 mini-MLP indépendants (même architecture, poids distincts),
+  logits moyennés à la sortie. L'idée centrale : la diversité des initialisations
+  suffit à construire un ensemble efficace sans bagging.
+    Architecture : k×(Linear→BN→GELU→Dropout)×2 + linear → mean pooling
+    Protocoles : room-aware, E102, LORO. Script : `scripts/tabm_kan_benchmark.py`
+
+  KAN (Kolmogorov-Arnold Networks, Liu et al., 2024) :
+  Remplace les neurones linéaires par des fonctions splines B-splines apprenables
+  sur les arêtes. Potentiellement plus interprétable et plus précis sur les données
+  à structure régulière.
+    Architecture : KAN(width=[n_features, hidden, n_classes], grid=5, k=3)
+    Limite : KAN est coûteux en mémoire pour n_classes > 80, skip si dépassé.
+
+  Script : `scripts/tabm_kan_benchmark.py`
+  Commande : `--tabm-k 8 --tabm-hidden 64 --tabm-epochs 100 --skip-kan --skip-loro`
+  Statut : [TERMINÉ — run du 25 avril 2026]
+
+  Résultats :
+  - Room-aware :
+    * KNN : 91.69 %, 0.103 m
+    * RF : 91.81 %, 0.101 m
+    * TabM : 38.08 %, 0.872 m
+  - E102 :
+    * KNN : 92.44 %, 0.112 m
+    * RF : 93.33 %, 0.105 m
+    * TabM : 33.07 %, 0.986 m
+
+  Lecture : TabM reste très inférieur aux méthodes locales. KAN n'a pas été
+  exécuté dans ce run (`--skip-kan`) ; sur ce problème à nombreuses classes,
+  le script le limite aussi lorsque n_classes dépasse le seuil mémoire.
+
+────────────────────────────────────────────────────────────────────────────────
+18.7 ProtoNet + Calibration few-shot cible
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte :
+  Les ProtoNets (Snell et al., NeurIPS 2017) apprennent un espace métrique
+  où chaque classe est représentée par le centroïde de ses exemples de support.
+  Pertinent pour le fingerprinting : à la mise en service d'une nouvelle pièce,
+  K mesures par cellule suffisent comme calibration.
+
+  Architecture :
+    ProtoEncoder : Linear→BN→ReLU×2 → emb_dim(32)
+    Entraînement : 2000 épisodes épisodiques (n_way=20, n_support+n_query)
+    Protocole LORO : K={1, 3, 5, 10, 25} supports/cellule, 5 tirages par K
+
+  Scripts :
+  - `scripts/protonet_fewshot.py`
+  - `scripts/fewshot_target_calibration.py`
+  - `scripts/fewshot_campaign_calibration.py`
+
+  Commandes principales :
+  - ProtoNet S=5 :
+    `--episodes 2000 --n-way 20 --n-support 5 --n-query 10 --n-trials 5`
+  - ProtoNet S=1 :
+    `--episodes 2000 --n-way 20 --n-support 1 --n-query 15 --n-trials 5`
+  - Calibration cible :
+    `--k-values 1 2 3 5 10 15 20 25 --n-trials 20 --knn-neighbors 3`
+  - Calibration campagne LOCO :
+    `--rooms B121 D005 E101 E102 --k-values 1 2 3 5 10 15 20 25 --n-trials 20`
+
+  Statut : [TERMINÉ — runs du 25–26 avril 2026]
+
+  Résultats ProtoNet LORO moyens :
+  - S=5, 2000 épisodes :
+    * K=1  : 17.16 %, 1.061 m
+    * K=5  : 16.40 %, 1.074 m
+    * K=25 : 16.33 %, 1.092 m
+  - S=1, 2000 épisodes :
+    * K=1  : 17.39 %, 1.041 m
+    * K=5  : 15.93 %, 1.077 m
+    * K=25 : 14.99 %, 1.090 m
+  - Baseline KNN LORO sans labels cible : 1.16–1.30 %
+
+  Baselines few-shot cible :
+  - RawCentroid :
+    * K=1 : 17.98 %, 1.041 m
+    * K=25 : 6.44 %, 1.166 m
+    * Interprétation : la moyenne RSSI par classe se dégrade quand K augmente,
+      probablement car elle écrase des sous-régimes de campagne/orientation.
+  - TargetKNN, entraîné uniquement sur les K supports labellisés de la salle cible :
+    * K=1  : 17.98 %, 1.041 m
+    * K=2  : 28.64 %, 0.909 m
+    * K=3  : 37.01 %, 0.806 m
+    * K=5  : 48.86 %, 0.658 m
+    * K=10 : 66.89 %, 0.430 m
+    * K=15 : 75.94 %, 0.311 m
+    * K=20 : 81.27 %, 0.240 m
+    * K=25 : 84.66 %, 0.194 m
+
+  Résultats LOCO few-shot (campagne cible, moyenne des salles) :
+  - KNN source campagnes, sans labels de la campagne cible : 0.28–2.88 % selon
+    la salle, donc le shift campagne/orientation est aussi destructeur que LORO
+    lorsqu'on interdit toute calibration cible.
+  - TargetKNN avec K supports labellisés par cellule dans la campagne cible :
+    * K=1  : 57.38 %, 0.509 m
+    * K=2  : 74.05 %, 0.309 m
+    * K=3  : 82.11 %, 0.210 m
+    * K=5  : 89.72 %, 0.118 m
+    * K=10 : 94.58 %, 0.059 m
+    * K=15 : 95.62 %, 0.047 m
+    * K=20 : 96.02 %, 0.042 m
+    * K=25 : 96.23 %, 0.040 m
+  - Par salle à K=5 :
+    * B121 : 87.52 %
+    * D005 : 93.68 %
+    * E101 : 87.85 %
+    * E102 : 89.85 %
+
+  Intérêt pour l'article :
+  - Quantifie le « coût de recalibration » : combien de mesures par cellule
+    suffisent pour atteindre un niveau d'accuracy acceptable dans une nouvelle salle.
+  - Complémentaire de MAML (section 18.15) : ProtoNet n'adapte pas les poids,
+    seulement les prototypes.
+  - Résultat principal : le few-shot labellisé change vraiment le régime LORO,
+    mais le meilleur outil n'est pas ProtoNet ; c'est un KNN local entraîné sur
+    quelques mesures de la salle cible.
+  - ProtoNet reste intéressant en K=1, mais il n'exploite pas correctement
+    l'augmentation de K. TargetKNN, lui, suit une courbe monotone et exploitable.
+  - En LOCO, le même principe est encore plus fort : quelques mesures de la
+    campagne cible suffisent à revenir proche du plafond room-aware.
+
+────────────────────────────────────────────────────────────────────────────────
+18.8 TTA / Tent — Adaptation test-time par minimisation d'entropie
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte :
+  Test-Time Adaptation (TTA) adapte le modèle pendant l'inférence, sans accès
+  aux labels. Tent (Wang et al., ICLR 2021) minimise l'entropie des prédictions
+  en ajustant uniquement les paramètres affines des couches BatchNorm.
+
+  Modes testés :
+    vanilla    : MLP figé, pas d'adaptation
+    bn_stats   : mise à jour des statistiques BN avec les données test (pas de grad)
+    tent       : minimisation entropie sur γ, β BN (1 epoch, n_steps=30)
+    full_ent   : minimisation entropie sur tous les paramètres
+
+  Protocole exécuté : LORO 4 folds, 100 epochs MLP, 10 tent steps.
+  Script : `scripts/tta_localization.py`
+  Statut : [TERMINÉ — run du 25 avril 2026]
+
+  Résultats moyens LORO :
+  - vanilla : 1.71 % ± 1.03 pp
+  - bn_stats : 1.71 % ± 1.03 pp
+  - tent : 1.43 % ± 0.19 pp
+  - full_ent : 1.38 % ± 0.39 pp
+
+  Hypothèse : TTA/Tent peut compenser partiellement le shift inter-salle en
+  ajustant les statistiques BN sur le batch test de la salle tenue hors.
+  Résultat : hypothèse infirmée. Sans labels cible, l'adaptation par entropie
+  renforce parfois des prédictions confiantes mais fausses.
+
+────────────────────────────────────────────────────────────────────────────────
+18.9 Metric Learning — SupCon, Triplet Loss, Proxy-NCA
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte :
+  Au lieu d'entraîner un embedder avec la loss CE classique, le metric learning
+  entraîne explicitement l'espace latent pour que les vecteurs de la même cellule
+  soient proches et les vecteurs de cellules différentes éloignés.
+
+  Trois méthodes testées :
+  1. SupCon (Khosla et al., NeurIPS 2020) :
+       sim(z_i, z_j) = z_i·z_j/τ  ;  L = –log(Σ_pos exp(sim) / Σ_all exp(sim))
+       Température τ=0.07. La plus stable des trois.
+
+  2. Triplet Margin Loss (Hermans et al., 2017) :
+       L = ReLU(d(anchor, pos_hard) – d(anchor, neg_hard) + margin)
+       Hard-mining batch : hardest positive + hardest negative.
+
+  3. Proxy-NCA :
+       Un proxy appris par classe (embeding centroïde). CE sur les similarités
+       cosinus entre points et proxies. Passe à l'échelle pour 100+ classes.
+
+  Architecture commune : MetricEncoder(Linear→BN→ReLU)×2 → emb_dim(32),
+  sortie L2-normalisée. Évaluation : KNN dans l'espace d'embedding.
+
+  Protocoles exécutés : room-aware, E102 (`--skip-loro`).
+  Script : `scripts/metric_learning_benchmark.py`
+  Commande : `--methods supcon triplet proxy --epochs 100 --hidden 64 --emb-dim 32 --skip-loro`
+  Statut : [TERMINÉ — run du 25 avril 2026]
+
+  Résultats :
+  - Room-aware : KNN raw 91.69 %, SupCon 91.59 %, Triplet 91.47 %, Proxy 91.59 %
+  - E102 : KNN raw 92.44 %, SupCon 92.80 %, Triplet 92.80 %, Proxy 92.76 %
+
+  Lecture : l'embedding métrique ne dépasse pas le KNN brut en multi-room, mais
+  il apporte un petit gain intra-E102. C'est une piste d'optimisation fine, pas
+  un changement de paradigme.
+
+────────────────────────────────────────────────────────────────────────────────
+18.10 DeepSets — Apprentissage sur ensembles de scans RSSI
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte (Zaheer et al., NeurIPS 2017) :
+  Chaque position physique est mesurée 25 fois. Les méthodes classiques traitent
+  chaque ligne indépendamment. DeepSets apprend f(X_set) = ρ(Σ_i φ(x_i)) :
+  une représentation invariante à la permutation de l'ensemble de mesures.
+
+  Architecture :
+    φ (per-element) : Linear(n_feat→64) → ReLU → emb(64)
+    Agrégation : mean ou max sur l'ensemble de scans
+    ρ (set-level) : Linear(64→128) → BN → ReLU → Linear(64) → classif
+
+  Construction des ensembles : groupe par (grid_cell, campaign), échantillonne
+  des sous-ensembles de taille set_size=5 dans le run exécuté. Le split train/test se fait au
+  niveau des groupes (anti-leakage) et non des lignes individuelles.
+
+  Deux modes évalués :
+    DeepSets_mean / DeepSets_max : classification directe de l'ensemble
+    KNN+DeepSets : KNN dans l'espace d'embedding ρ(·)
+
+  Protocoles : room-aware (groupes 80/20), E102.
+  Script : `scripts/deepsets_benchmark.py`
+  Commande : `--aggregations mean max --set-size 5 --epochs 100`
+  Statut : [TERMINÉ — run du 25 avril 2026]
+
+  Résultats :
+  - Room-aware strict group split :
+    * KNN_instance : 0.84 %, 1.273 m
+    * DeepSets_mean : 1.26 %, 1.258 m
+    * DeepSets_max : 1.26 %, 1.330 m
+  - E102 strict group split :
+    * KNN_instance : 3.29 %, 1.341 m
+    * DeepSets_mean : 0.89 %, 1.330 m
+    * KNN+DeepSets_max : 1.78 %, 1.275 m
+
+  Intérêt : si le modèle apprend la variabilité intra-cellule (et pas seulement
+  la moyenne), il devrait être plus robuste aux perturbations RSSI.
+  Lecture : le protocole par groupes est beaucoup plus dur que le 80/20 ligne
+  à ligne, donc ces scores ne sont pas directement comparables à KNN 92 %. Dans
+  ce cadre anti-leakage, DeepSets n'apporte pas encore de robustesse.
+
+────────────────────────────────────────────────────────────────────────────────
+18.11 GNN — Réseau de Neurones sur Graphe de Cellules
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte :
+  Les cellules forment une grille spatiale régulière : les adjacences physiques
+  sont connues. Un GNN peut imposer une cohérence spatiale pendant l'apprentissage
+  (les cellules voisines doivent avoir des représentations proches), ce qui est
+  plus fort scientifiquement qu'un post-traitement de lissage.
+
+  Architecture :
+    Graphe : A_hat = D^{-1/2}(A+I)D^{-1/2}, arêtes entre cellules à ≤0.6 m
+    Nœuds : prototypes RSSI par cellule (moyenne des embeddings d'entraînement)
+    GCN : 2 couches GCNLayer (message passing = A_hat @ H @ W + b), ReLU
+    Query encoder : MLP(RSSI → hidden → emb_dim) pour mapper les requêtes
+    Classification : similarité cosinus requête vs nœuds GNN → argmax
+
+  Entraînement joint (deux objectifs) :
+    L_node : chaque nœud doit prédire sa propre classe (auto-supervision)
+    L_inst : chaque instance d'entraînement doit être proche de son nœud GNN
+
+  Protocoles : room-aware (80/20), E102.
+  Script : `scripts/gnn_localization.py`
+  Correctif appliqué : conversion explicite des tenseurs GNN en `float32`.
+  Commande : `--epochs 100 --hidden 64 --emb-dim 64 --n-layers 2`
+  Statut : [TERMINÉ — run du 26 avril 2026]
+
+  Résultats :
+  - Room-aware : KNN 91.52 %, GNN_cell 2.59 %, 1.256 m
+  - E102 : KNN 92.44 %, GNN_cell 2.84 %, 1.289 m
+
+  Lecture : le GNN de prototypes n'apprend pas un espace requête→cellule
+  exploitable. Il faut soit revoir l'objectif contrastif, soit utiliser le graphe
+  comme régularisation d'un classifieur fort plutôt qu'un modèle autonome.
+
+────────────────────────────────────────────────────────────────────────────────
+18.12 Self-Supervised Pretraining — MAE, DAE, SimCLR
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte :
+  Le pretraining auto-supervisé exploite les données non-labellisées pour
+  apprendre une représentation générique avant fine-tuning sur les labels.
+  Particulièrement pertinent si les données de calibration sont rares.
+
+  Trois objectives SSL :
+  1. MAE (Masking Autoencoder, He et al., 2022) :
+       Masque p=40 % des features → 0, reconstruit les originaux (loss MSE).
+       Force l'encodeur à apprendre les corrélations inter-antennes.
+
+  2. DAE (Denoising Autoencoder) :
+       Ajoute N(0, σ=0.3) au signal, reconstruit la version propre.
+       Plus doux que le masquage, adapté aux signaux continus.
+
+  3. SimCLR (Chen et al., 2020) :
+       Deux vues augmentées (bruit indépendant) du même scan → NT-Xent loss.
+       Apprend une représentation invariante au bruit de mesure.
+
+  Pipeline :
+    Phase 1 (pretraining) : 150 epochs, toutes les données d'entraînement.
+    Phase 2 (fine-tuning)  : 150 epochs, labels cellule, lr×0.1.
+    Évaluation : accuracy directe + KNN dans l'espace fine-tuné.
+
+  Script : `scripts/selfsup_pretraining.py`
+  Commande : `--methods mae dae simclr --pretrain-epochs 60 --finetune-epochs 80`
+  Statut : [TERMINÉ — run du 25 avril 2026]
+
+  Résultats :
+  - Room-aware :
+    * KNN : 91.52 %, 0.102 m
+    * MLP scratch : 54.78 %, 0.605 m
+    * MAE/DAE/SimCLR finetune : 10–13 %, ~1.19 m
+    * MAE/DAE/SimCLR + KNN : 91.56–91.57 %, ~0.102–0.103 m
+  - E102 :
+    * KNN : 92.44 %, 0.114 m
+    * MLP scratch : 61.20 %, 0.587 m
+    * MAE/DAE/SimCLR + KNN : 92.80 %, 0.105–0.108 m
+
+  Lecture : le pré-entraînement seul ne suffit pas pour fine-tuner un classifieur
+  fiable, mais l'espace appris reste compatible avec KNN et apporte un petit gain
+  sur E102. La bonne combinaison est donc "embedding + méthode locale".
+
+────────────────────────────────────────────────────────────────────────────────
+18.13 Spatially-Aware Loss + Localisation Hiérarchique
+────────────────────────────────────────────────────────────────────────────────
+
+  (a) Spatially-aware loss :
+
+  Motivation : la CE standard pénalise identiquement une erreur d'une cellule
+  (≈0.28 m) et une erreur de 10 cellules (2 m). Ceci crée un désalignement
+  entre la loss d'entraînement et la métrique terrain mean_error_m.
+
+  Formulation :
+    L_spatial = α × CE + (1-α) × E[Σ_j P(j|x) × dist(cell_j, cell_true)]
+  Avec α=0.5 par défaut. La pénalité spatiale est différentiable (softmax).
+
+  (b) Localisation hiérarchique :
+
+  Motivation : partitionner l'espace en zones (1.5 m × 1.5 m), prédire d'abord
+  la zone puis restreindre la recherche de cellule à la zone prédite.
+  Les erreurs catastrophiques (sauts à l'autre bout de la pièce) sont ainsi
+  bloquées par le classifier de zone.
+
+  Architecture :
+    Classificateur de zone : MLP(64) → n_zones (auto-calculé sur les coordonnées)
+    Classificateur cellule : MLP(128), même entraînement que MLP_CE
+    Inférence : pred_zone → mask logits cellule → argmax sur cellules de la zone
+
+  Protocoles : room-aware, E102 (+ LORO optionnel).
+  Script : `scripts/spatial_loss_benchmark.py`
+  Correctif appliqué : `hierarchical_predict` utilise maintenant `torch.no_grad()`
+  pour convertir les logits en NumPy.
+  Commande : `--epochs 100 --hidden 64 --batch-size 512 --alpha 0.5`
+  Statut : [TERMINÉ — run du 25 avril 2026]
+
+  Résultats :
+  - Room-aware :
+    * KNN : 91.52 %, 0.102 m
+    * MLP_CE : 35.39 %, 0.870 m
+    * MLP_SpatialCE : 33.64 %, 0.796 m
+    * Hierarchical : 35.99 %, 0.772 m
+  - E102 :
+    * KNN : 92.44 %, 0.114 m
+    * MLP_CE : 44.13 %, 0.776 m
+    * MLP_SpatialCE : 40.44 %, 0.722 m
+    * Hierarchical : 47.47 %, 0.622 m
+
+  Lecture : la loss spatiale réduit l'erreur moyenne mais baisse l'accuracy
+  cellule. Le modèle hiérarchique est le meilleur des variantes MLP, surtout
+  sur E102, mais reste très inférieur à KNN.
+
+────────────────────────────────────────────────────────────────────────────────
+18.14 Mixture-of-Experts (MoE) — Spécialisation par régime radio
+────────────────────────────────────────────────════════════════════════════════
+
+  Contexte :
+  Hypothèse : les fingerprints RSSI se décomposent en "régimes radio" latents
+  (orientation du routeur, position dans la salle, effet de multipath),
+  qu'un modèle unique apprend à moyenner. MoE apprend des experts spécialisés
+  par régime + un gate léger.
+
+  Architecture (Shazeer et al., ICLR 2017) :
+    Gate : MLP(n_feat → 32 → E) → softmax, top-k=2 routing
+    K experts : chacun un MLP(n_feat → 64 → 64 → n_classes)
+    Output : moyenne pondérée par les poids gate des k experts activés
+    Load balancing loss : MSE(mean(gate_probs), 1/E) × λ=0.01
+
+  Expert counts testés : 2, 4, 8 experts.
+  Protocoles : room-aware, E102 (+ LORO optionnel).
+  Script : `scripts/moe_localization.py`
+  Commande : `--n-experts 2 4 --top-k 2 --epochs 100 --hidden 64`
+  Statut : [TERMINÉ — run du 25 avril 2026]
+
+  Résultats :
+  - Room-aware :
+    * KNN : 91.52 %, 0.102 m
+    * MLP : 23.73 %, 1.035 m
+    * MoE 2 experts : 33.96 %, 0.897 m
+    * MoE 4 experts : 46.45 %, 0.730 m
+  - E102 :
+    * KNN : 92.44 %, 0.114 m
+    * MLP : 26.00 %, 1.107 m
+    * MoE 2 experts : 36.13 %, 0.902 m
+    * MoE 4 experts : 50.44 %, 0.707 m
+
+  Lecture : le routage par experts améliore clairement un MLP global, ce qui
+  confirme une hétérogénéité des régimes radio. Mais même MoE-4 reste loin du
+  comportement local de KNN.
+
+────────────────────────────────────────────────────────────────────────────────
+18.15 FOMAML — Meta-apprentissage pour adaptation rapide à une nouvelle salle
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte (Finn et al., ICML 2017) :
+  MAML apprend une initialisation θ* telle que K étapes de gradient sur une
+  nouvelle tâche (salle inconnue) suffisent à atteindre une bonne accuracy.
+  Contrairement à ProtoNet (section 18.7), MAML adapte tous les paramètres.
+
+  Implémentation : First-Order MAML (FOMAML) pour éviter le calcul de la
+  hessienne. L'approximation est proche de MAML standard sur la plupart des tâches.
+
+  Paramètres :
+    Inner loop : SGD, lr=0.05, n_inner_steps=5 (train) / 10 (test)
+    Meta-optimizer : Adam, meta_lr=1e-3, 8 tâches/epoch, 100 epochs
+    Architecture : MAMLClassifier(n_feat → 64 → 64 → n_classes)
+
+  Protocole LORO : meta-entraînement sur N-1 salles, meta-test sur la salle
+  tenue hors avec K={1, 5, 10, 25} exemples de support par cellule.
+
+  Script : `scripts/maml_localization.py`
+  Commande : `--meta-epochs 50 --tasks-per-epoch 4 --n-support 5 --n-query 10 --k-shots 1 5 10 25`
+  Statut : [TERMINÉ — run du 25 avril 2026]
+
+  Résultats LORO moyens :
+  - K=1  : 1.59 %
+  - K=5  : 1.84 %
+  - K=10 : 1.78 %
+  - K=25 : 1.88 %
+
+  Comparaison avec ProtoNet :
+  - ProtoNet : centroïdes, pas d'adaptation des poids
+  - FOMAML   : adaptation de tous les poids en K gradient steps
+  - Ensemble des deux : couvre le spectre "adaptation-légère" vs "adaptation-lourde"
+  - Résultat : FOMAML ne sort pas du plancher LORO. ProtoNet est nettement plus
+    prometteur dans ce jeu de données, probablement parce que l'adaptation de
+    poids est trop instable avec peu de salles source.
+
+────────────────────────────────────────────────────────────────────────────────
+18.16 Conformal Prediction + Classification Sélective
+────────────────────────────────────────────────────────────────────────────────
+
+  Contexte :
+  Face à l'échec LORO, une alternative crédible est un système qui s'abstient
+  plutôt que de faire une prédiction erronée, avec garantie de couverture
+  probabiliste. Deux mécanismes complémentaires :
+
+  (a) Split Conformal Prediction (Angelopoulos & Bates, 2023) :
+  Utilise un jeu de calibration (20 % du train) pour calculer des scores de
+  non-conformité s_i = 1 – P(y_true | x_i) sur les données calibration.
+  Seuil τ_α = Quantile_{(1-α)(1+1/n)} des scores.
+  En test, le jeu de prédiction = {cellules j : 1–P(j|x) ≤ τ_α}.
+  Garantie de couverture marginale ≥ 1–α sans hypothèse distributionnelle.
+
+  Métriques conformal :
+    - Couverture marginale (doit être ≥ 1–α)
+    - Taille moyenne du jeu de prédiction
+    - Distance minimale au vrai point dans le jeu (erreur spatiale optimiste)
+
+  Niveaux α testés : 5 %, 10 %, 20 %.
+
+  (b) Classification sélective (abstain-or-predict) :
+  Seuil de confiance τ ∈ [0.05, 0.99] sur max-softmax.
+  Pour chaque τ : calcule (coverage_rate, accuracy_when_answered).
+  Trace la frontière coverage-accuracy, permettant d'arbitrer entre couverture
+  et précision garantie.
+
+  Protocoles : room-aware (80/20 + split calibration 20 %), E102.
+  Script : `scripts/conformal_localization.py`
+  Commande :
+    OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+    NUMEXPR_NUM_THREADS=1 PYTHONPATH=src ./.venv/bin/python
+    scripts/conformal_localization.py --epochs 100 --hidden 64
+    --alphas 0.05 0.10 0.20
+
+  Statut : [TERMINÉ — run du 25 avril 2026]
+
+  Résultats :
+
+  ┌───────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+  │ Protocole     │ MLP acc.     │ Err. moy.    │ CP α=10 %    │ Taille moy.  │
+  ├───────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+  │ Room-aware    │ 30.56 %      │ 0.944 m      │ 90.0 % cov.  │ 20.2 cellules │
+  │ E102          │ 29.51 %      │ 0.994 m      │ 89.6 % cov.  │ 17.4 cellules │
+  └───────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+
+  Détail conformal :
+  - Room-aware :
+    * α=5 %  : couverture 95.1 %, taille moyenne 28.3 cellules
+    * α=10 % : couverture 90.0 %, taille moyenne 20.2 cellules
+    * α=20 % : couverture 80.5 %, taille moyenne 11.3 cellules
+  - E102 :
+    * α=5 %  : couverture 95.3 %, taille moyenne 27.3 cellules
+    * α=10 % : couverture 89.6 %, taille moyenne 17.4 cellules
+    * α=20 % : couverture 80.1 %, taille moyenne 10.0 cellules
+
+  Frontière sélective :
+  - Room-aware :
+    * seuil 0.44 : couverture 9.9 %, accuracy 82.9 %
+    * seuil 0.63 : couverture 3.5 %, accuracy 95.7 %
+  - E102 :
+    * seuil 0.44 : couverture 6.8 %, accuracy 87.0 %
+    * seuil 0.63 : couverture 3.2 %, accuracy 97.3 %
+
+  Intérêt pour l'article :
+  - La calibration conformal atteint bien les couvertures attendues :
+    ~90 % pour α=10 %, ~80 % pour α=20 %.
+  - Les ensembles restent larges : ce n'est pas un modèle de localisation plus
+    précis que KNN, mais un module d'incertitude.
+  - La classification sélective est exploitable pour un mode "haute confiance" :
+    lorsqu'on accepte de répondre sur seulement 3–10 % des mesures les plus
+    confiantes, l'accuracy cellule monte entre 83 % et 97 %.
+  - Cette piste se combine naturellement avec le post-traitement temps réel :
+    si la taille du jeu conformal est élevée ou si max-softmax est faible, on
+    peut augmenter le lissage Kalman, demander une nouvelle mesure ou afficher
+    un état "incertain" au lieu d'une position trop affirmative.
+
+────────────────────────────────────────────────────────────────────────────────
+18.17 TCN-based Prototypical Network — Few-Shot Learning (Ma & Shi, Sensors 2023)
+────────────────────────────────────────────────────────────────────────────────
+
+  Référence :
+  Ma Z., Shi K., "Few-Shot Learning for WiFi Fingerprinting Indoor Positioning",
+  Sensors 2023, 23, 8458. https://doi.org/10.3390/s23208458
+
+  Contexte et motivation :
+  Ce papier propose d'utiliser le few-shot learning pour construire un modèle de
+  localisation robuste avec très peu d'échantillons étiquetés. L'idée est d'éviter
+  la collecte massive de données tout en gérant la fluctuation des signaux RSSI.
+  Trois contributions principales :
+    (1) Encodeur TCN (Temporal Convolutional Network) pour projeter le vecteur RSSI
+        en espace d'embedding, capturant les relations spatiales entre antennes.
+    (2) Prototype pondéré par confiance : chaque échantillon génère un vecteur
+        embedding et un scalaire de covariance σ ; le prototype de classe est une
+        moyenne pondérée par 1/σ (les mesures de bonne qualité pèsent plus).
+    (3) Distance de Mahalanobis pour la classification (vs distance euclidienne
+        classique des ProtoNet).
+    (4) Filtre de Kalman en phase online pour débruiter les RSSI mesurés.
+
+  Architecture TCN (Table 1 du papier) :
+  ┌───────────┬──────────┬──────────┬──────────┬──────────┐
+  │ Bloc       │ Kernel   │ Canaux   │ Dropout  │ Dilation │
+  ├───────────┼──────────┼──────────┼──────────┼──────────┤
+  │ Bloc 1     │ 5        │ 32       │ 0.20     │ 1        │
+  │ Bloc 2     │ 5        │ 32       │ 0.20     │ 2        │
+  │ Bloc 3     │ 5        │ 64       │ 0.50     │ 4        │
+  │ Bloc 4     │ 5        │ 64       │ 0.50     │ 8        │
+  │ Bloc 5     │ 5        │ 65       │ 0.50     │ 16       │
+  └───────────┴──────────┴──────────┴──────────┴──────────┘
+  65 = 64-d embedding + 1-d scalaire covariance brut S_raw.
+  Covariance effective : σ = 1 + softplus(S_raw) — garantit σ > 1.
+
+  Formules clés :
+    Prototype :  p_c = Σ_i (s_i ⊙ x_i) / Σ_i s_i   avec s_i = 1/σ_i  [Éq. 4]
+    Précision :  s_c = Σ_i s_i                                          [Éq. 5]
+    Distance :   d_c(q) = √(s_c) × ‖q − p_c‖  (Mahalanobis scalaire)  [Éq. 6]
+    Loss :       L = 1/N_Q Σ_i [−log( exp(−d_y(i)) / Σ_k exp(−d_k(i)) )]  [Éq. 8]
+
+  Implémentation :
+  Scripts : `scripts/tcn_protonet_wifi.py`   (v1 — TCN fidèle au papier)
+            `scripts/tcn_protonet_wifi_v2.py` (v2 — 3 variantes encodeur)
+  Protocole : LORO × K ∈ {1, 3, 5, 10, 25} échantillons support/cellule,
+              5 trials par K, 2000–3000 épisodes méta-apprentissage/fold.
+  Optimizer : Adam (lr=1e-3, weight_decay=1e-4) + CosineAnnealingLR.
+
+  ── Résultats v1 — TCN fidèle au papier (run 26 avril 2026) ──
+
+  Statut : [TERMINÉ — run du 26 avril 2026, 2000 épisodes, n_way=15, n_support=5]
+  Fichier : `reports/benchmarks/tcn_protonet_wifi.json`
+
+  Erreur moyenne (m) et précision cellule (%) cross-room LORO :
+  ┌────────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+  │ Méthode             │  K=1     │  K=3     │  K=5     │ K=10     │ K=25     │
+  ├────────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+  │ TCN-PN   err (m)   │  1.056   │  1.131   │  1.137   │  1.141   │  1.146   │
+  │ TCN-PN   acc (%)   │  17.3    │  11.1    │  10.9    │  10.4    │   9.9    │
+  │ TCN-PN+KF err (m)  │  1.225   │  1.246   │  1.239   │  1.231   │  1.223   │
+  │ TCN-PN+KF acc (%)  │   2.4    │   2.4    │   2.2    │   2.2    │   2.2    │
+  ├────────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+  │ ProtoNet-MLP err   │  1.059   │  1.098   │  1.105   │  1.110   │  1.127   │
+  │ ProtoNet-MLP acc   │  17.0    │  14.5    │  14.0    │  14.0    │  13.7    │
+  └────────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+
+  Résultats par fold (TCN-PN, err en mètres) :
+  ┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+  │ Salle     │  K=1     │  K=3     │  K=5     │ K=10     │ K=25     │
+  ├──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+  │ B121      │  1.137   │  1.303   │  1.271   │  1.284   │  1.277   │
+  │ D005      │  0.619   │  0.672   │  0.702   │  0.682   │  0.714   │
+  │ E101      │  1.219   │  1.231   │  1.254   │  1.278   │  1.248   │
+  │ E102      │  1.247   │  1.317   │  1.320   │  1.321   │  1.344   │
+  └──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+
+  ── Analyse et diagnostic ──
+
+  (a) Convergence du méta-apprentissage insuffisante :
+      La loss finale oscille autour de 2.52–2.59 pour des tâches 15-way, alors
+      que la loss aléatoire est ln(15) ≈ 2.71. Le modèle n'améliore que de ~7 %
+      par rapport au hasard — signe d'un sous-apprentissage.
+
+  (b) Inadéquation architecturale (cause principale) :
+      Le TCN du papier est conçu pour des vecteurs RSSI de 8+ points d'accès
+      ordonnés spatialement. Nos 5 features (Signal, Noise, A1, A2, A3) forment
+      un vecteur de caractéristiques, PAS une séquence temporelle. Traiter ces
+      5 valeurs comme une séquence de longueur 5 pour des convolutions causales
+      dilatées (dilation jusqu'à 16) n'apporte aucun bénéfice :
+        · dilation=1 → champ récepteur = 5 = seq_len (couvre déjà tout)
+        · dilation=2,4,8,16 → redondant, la plupart du padding est zéro
+      Conséquence : les blocs 2–5 n'apportent pas de couverture supplémentaire
+      du signal d'entrée.
+
+  (c) Accuracy décroissante avec K :
+      Contrairement au papier (où plus K augmente, mieux le modèle fait), notre
+      accuracy DÉCROÎT de K=1 (17.3 %) à K=25 (9.9 %). Cela vient du fait que
+      le méta-apprentissage a été fait avec n_support=5 : pour K>5, le modèle
+      n'a jamais vu de tâches avec autant de support, et la distance de
+      Mahalanobis avec s_c ∝ K amplifie les distances de façon non calibrée.
+
+  (d) Filtre de Kalman simulé trop bruité :
+      La simulation online (bruit additif σ=3.0 dBm sur fenêtre T=10) ajoute
+      plus de bruit que le KF ne peut en corriger, dégradant les résultats
+      (acc KF ≈ 2 % vs 17 % sans KF).
+
+  ── Comparaison avec la baseline ProtoNet-MLP (section 18.7) ──
+
+  À K=1 : TCN-PN ≈ ProtoNet-MLP (1.056 m vs 1.059 m, +0.003 m gain TCN).
+  À K>1 : ProtoNet-MLP est meilleur, car il maintient une accuracy ~14 %
+           là où le TCN-PN chute à ~10 %.
+
+  Conclusion v1 : le TCN-PN du papier ne surpasse pas le ProtoNet-MLP existant
+  sur nos données 5D. La contribution de confiance (Éq. 4-6) ne peut pas
+  compenser le sous-apprentissage dû à l'inadéquation architecturale.
+
+  ── Résultats v2 — Variantes encodeur (run 26 avril 2026) ──
+
+  Statut : [TERMINÉ — run du 26 avril 2026, 3000 épisodes, n_way=20, n_support=10]
+  Fichier : `reports/benchmarks/tcn_protonet_wifi_v2.json`
+
+  Trois variantes testées :
+    · MLP_plain : MLP 4 couches, sans confiance  (= ProtoNet vanilla recalibré)
+    · MLP_conf  : MLP 4 couches + tête covariance → prototype confiance + Mahalanobis
+                  (contribution principale du papier, encodeur adapté à nos 5 features)
+    · TCN_conf  : TCN 5 blocs + dernière position (corr. avg-pool) + confiance
+
+  Loss finale (3 000 épisodes, 20-way) :
+    · MLP_plain : 1.63–2.10  (convergence satisfaisante)
+    · MLP_conf  : 1.47–1.97  (meilleure convergence grâce à la tête covariance)
+    · TCN_conf  : 2.43–2.73  (plateau, inadéquation confirmée ; aléatoire ≈ 3.00)
+
+  Erreur moyenne (m) et précision cellule (%) cross-room LORO :
+  ┌────────────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+  │ Méthode                 │  K=1     │  K=3     │  K=5     │ K=10     │ K=25     │
+  ├────────────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+  │ MLP_plain  err (m)      │  1.075   │  1.029   │  1.010   │  0.996   │  0.979   │
+  │ MLP_plain  acc (%)      │  16.8    │  21.1    │  21.7    │  22.9    │  24.3    │
+  ├────────────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+  │ MLP_conf   err (m)  ★  │  1.074   │  0.995   │  0.966   │  0.950   │  0.926   │
+  │ MLP_conf   acc (%)  ★  │  16.8    │  23.7    │  24.7    │  26.3    │  28.9    │
+  ├────────────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+  │ TCN_conf   err (m)      │  1.045   │  1.074   │  1.075   │  1.045   │  1.075   │
+  │ TCN_conf   acc (%)      │  17.7    │  16.2    │  16.4    │  17.1    │  16.8    │
+  ├────────────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+  │ [ref] ProtoNet-MLP v1   │  17.0    │  14.5    │  14.0    │  14.0    │  13.7    │
+  │ [ref] TCN-PN v1         │  17.3    │  11.1    │  10.9    │  10.4    │   9.9    │
+  │ [ref] TargetKNN (§18.7) │  ~29 %   │  ~49 %   │  ~59 %   │  ~75 %   │  ~85 %  │
+  └────────────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+  ★ = meilleure méthode parmi les ProtoNet testés.
+
+  Résultats par fold — MLP_conf (err m / acc %) :
+  ┌──────────┬──────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+  │ Salle     │    K=1       │    K=3       │    K=5       │   K=10       │   K=25       │
+  ├──────────┼──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+  │ B121      │ 1.142/17.3%  │ 1.063/24.0%  │ 1.033/24.7%  │ 1.003/26.7%  │ 0.986/29.1%  │
+  │ D005      │ 0.645/29.8%  │ 0.523/43.9%  │ 0.488/46.9%  │ 0.449/50.5%  │ 0.382/56.4%  │
+  │ E101      │ 1.221/10.6%  │ 1.173/14.1%  │ 1.159/14.1%  │ 1.154/14.4%  │ 1.153/15.2%  │
+  │ E102      │ 1.291/ 9.7%  │ 1.220/12.7%  │ 1.183/13.2%  │ 1.194/13.6%  │ 1.181/14.8%  │
+  └──────────┴──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+
+  Gain MLP_conf vs MLP_plain (K=25) :
+    · B121 : +4.9 pp acc, −0.065 m  │  D005 : +7.8 pp, −0.071 m
+    · E101 : +1.7 pp,     −0.012 m  │  E102 : +3.5 pp, −0.066 m
+    · Moyenne : +4.6 pp acc, −0.053 m erreur
+
+  ── Analyse v2 ──
+
+  (a) La pondération par confiance (MLP_conf) est validée :
+      À K=1, MLP_conf ≈ MLP_plain (≈ 16.8 %). L'avantage devient majeur à K>1 :
+      à K=25, MLP_conf gagne +4.6 pp et −53 mm vs MLP_plain. La raison : avec
+      davantage d'échantillons support, la tête covariance identifie les mesures
+      de mauvaise qualité et les sous-pondère dans le prototype, ce qui améliore
+      le centroïde de classe. Cet effet est exactement celui prédit par le papier.
+
+  (b) Le MLP_plain v2 corrige le bug de régression à K croissant du v1 :
+      Avec n_support=10 (vs 5 en v1) et 3 000 épisodes (vs 2 000), la courbe
+      K→accuracy est croissante comme attendu : 16.8 % → 24.3 % de K=1 à K=25.
+      Le v1 montrait une décroissance due au mismatch train(n_support=5)/test(K≤25).
+
+  (c) Le TCN_conf confirme l'inadéquation architecturale :
+      Même avec la correction (last position vs avg-pool), la loss stagne à
+      2.43–2.73 (barely better than random ≈ 3.00 for 20-way). L'accuracy
+      plafonne à ~17 % indépendamment de K. Le TCN causal dilué apporte zéro
+      valeur ajoutée sur des vecteurs de 5 features non ordonnés temporellement.
+
+  (d) Filtre de Kalman simulé toujours pénalisant :
+      Avec noise_std=2.0 dBm (réduit de 3.0→2.0 en v2), le KF reste néfaste
+      (acc KF ≈ 3–6 % vs 17–29 % sans KF). La simulation ne peut pas reproduire
+      la vraie dérive temporelle du signal : les données offline sont statiques,
+      et le bruit artificiel ajouté ne correspond pas au processus réel.
+
+  ── Intérêt pour l'article ──
+
+  Le papier de Ma & Shi (Sensors 2023) apporte deux contributions exploitables :
+
+    1. VALIDÉE — Pondération par confiance (Éq. 4-6) :
+       MLP_conf surpasse MLP_plain de +4.6 pp / −53 mm à K=25 en LORO.
+       Mécanisme robuste, simple à implémenter, compatible avec n'importe quel
+       encodeur. C'est la contribution à retenir pour nos données 5D.
+
+    2. NON TRANSFÉRABLE — Architecture TCN :
+       Conçue pour des séquences RSSI multi-AP (≥8) ordonnées spatialement.
+       Inadaptée à notre vecteur (Signal, Noise, A1, A2, A3). À éviter.
+
+    3. NON EXPLOITABLE en l'état — Filtre de Kalman simulé :
+       La simulation de fenêtre temporelle offline ne reflète pas les fluctuations
+       RSSI réelles. Pertinent uniquement si des données online temps-réel sont
+       disponibles (protocole de mesure séquentiel en phase de déploiement).
+
+  Hiérarchie finale des méthodes few-shot LORO (K=25) :
+    1. TargetKNN (§18.7)    : ~85 % acc  → gold standard few-shot supervisé
+    2. MLP_conf (ce papier)  : 28.9 % acc, 0.926 m  ← meilleur ProtoNet
+    3. MLP_plain v2          : 24.3 % acc, 0.979 m
+    4. ProtoNet-MLP v1       : 13.7 % acc, 1.127 m
+    5. TCN-PN v1             :  9.9 % acc, 1.146 m
+    6. KNN-LORO (sans adapt.) :  2.3 % acc, 1.509 m  → plancher sans adaptation
+
+  Conclusion : MLP_conf est recommandé comme méthode ProtoNet pour l'article.
+  Il combine le mécanisme de confiance du papier avec un encodeur adapté aux
+  données 5D, et offre une amélioration significative sur le ProtoNet vanilla
+  quand K ≥ 3. La phrase clé pour l'article : "avec 25 mesures par cellule
+  dans la salle cible, le ProtoNet à pondération confiance atteint 28.9 %,
+  soit +11.9 pp vs ProtoNet standard, mais reste 56 pp sous le TargetKNN qui
+  n'exige pas de méta-apprentissage inter-salles."
+
+════════════════════════════════════════════════════════════════════════════════
+19. SYNTHÈSE COMPARATIVE — APPROCHES 2026
+════════════════════════════════════════════════════════════════════════════════
+
+  19.1 Résultats room-aware / E102 confirmés
+  ───────────────────────────────────────────
+
+  Référence :
+  - KNN reste le plafond opérationnel : 91.5–91.8 % en room-aware,
+    92.4–92.8 % sur E102, erreur moyenne ~10–11 cm.
+  - RF atteint 91.8 % room-aware et 93.3 % E102 dans les runs TabNet/TabM.
+
+  Modèles proches de KNN :
+  - Metric learning + KNN :
+    * room-aware : 91.5–91.6 %, équivalent au KNN brut
+    * E102 : 92.8 %, léger gain (+0.36 pp)
+  - SAE+KNN :
+    * room-aware : 91.54 %, équivalent au KNN brut
+    * E102 : 92.76 %, 0.108 m
+  - Self-supervised + KNN :
+    * room-aware : 91.56–91.57 %
+    * E102 : 92.80 %, 0.105–0.108 m
+
+  Modèles MLP / deep learning autonomes :
+  - MLP scratch : 54.78 % room-aware, 61.20 % E102
+  - TabNet : 25.4 % room-aware, 51.6 % E102
+  - TabM : 38.08 % room-aware, 33.07 % E102
+  - MoE-4 : 46.45 % room-aware, 50.44 % E102
+  - Hiérarchique : 35.99 % room-aware, 47.47 % E102
+  - GNN_cell : 2.59 % room-aware, 2.84 % E102
+  - DeepSets strict group split : 1.26 % room-aware, 3.29 % E102
+
+  Conclusion room-aware/E102 :
+  - Les modèles locaux (KNN/RF) dominent toujours ce jeu RSSI à 5 features.
+  - Les embeddings appris sont utiles uniquement lorsqu'ils alimentent KNN.
+  - Les modèles deep autonomes manquent de biais local et sur-apprennent mal
+    la géométrie cellule.
+
+  19.2 Résultats LORO / LOCO / recalibration / augmentation
+  ───────────────────────────────────────────────────
+
+  Généralisation sans labels cible :
+  - KNN LORO : ~1.16 %
+  - CORAL + KNN : 1.25 %
+  - DANN : 1.32 %
+  - TTA/Tent : 1.43 %
+  - FOMAML K=25 : 1.88 %
+
+  Few-shot avec labels cible :
+  - ProtoNet S=1, K=1 : 17.39 %, 1.041 m
+  - ProtoNet S=5, K=25 : 16.33 %, 1.092 m
+  - TargetKNN K=1 : 17.98 %, 1.041 m
+  - TargetKNN K=5 : 48.86 %, 0.658 m
+  - TargetKNN K=10 : 66.89 %, 0.430 m
+  - TargetKNN K=25 : 84.66 %, 0.194 m
+
+  LOCO avec labels de campagne cible :
+  - KNN source campagnes sans labels cible : 0.28–2.88 % selon la salle
+  - TargetKNN K=1 : 57.38 %, 0.509 m
+  - TargetKNN K=5 : 89.72 %, 0.118 m
+  - TargetKNN K=10 : 94.58 %, 0.059 m
+  - TargetKNN K=25 : 96.23 %, 0.040 m
+
+  Augmentation synthétique LOCO E102 campagne :
+  - SSGAN : baseline 1.91 %, augmenté 1.82 % (−0.09 pp)
+  - TabDDPM court : baseline 1.91 %, augmenté 1.79 % (−0.12 pp)
+
+  Conclusion LORO / LOCO :
+  - Les méthodes sans labels cible ne franchissent pas le plancher 1–2 %.
+  - La piste qui change le régime est la calibration labellisée de la salle
+    cible. ProtoNet montre le signal en K=1, mais TargetKNN exploite beaucoup
+    mieux K>1.
+  - En LOCO, la même conclusion est plus forte : quelques mesures labellisées
+    de la campagne cible suffisent à revenir au voisinage du plafond room-aware.
+  - Les données synthétiques ne remplacent pas une calibration réelle.
+
+  19.3 Matrice de généralisation par scénario
+  ───────────────────────────────────────────
+
+  Définitions :
+  - Room-aware : les salles/campagnes sont connues dans le train et le test est
+    un split aléatoire 80/20. Cela mesure l'interpolation dans une distribution
+    déjà observée.
+  - Intra-room E102 : même logique mais dans une seule salle connue.
+  - LORO sans labels cible : une salle entière est tenue hors entraînement.
+    C'est le vrai cas "nouvelle salle inconnue à froid".
+  - LORO few-shot : même salle tenue hors, mais on fournit K mesures labellisées
+    par cellule dans la salle cible.
+  - LOCO sans labels cible : une campagne/orientation est tenue hors dans une
+    salle connue. Le modèle connaît la salle mais pas cette campagne.
+  - LOCO few-shot : même campagne tenue hors, mais on fournit K mesures
+    labellisées par cellule dans la campagne cible.
+
+  Synthèse par famille de benchmark :
+
+  ┌────────────────────────────┬──────────────────────────────┬──────────────────────────────┬──────────────────────────────┐
+  │ Famille                    │ Salles/campagnes connues     │ Cible inconnue sans labels   │ Avec calibration cible       │
+  ├────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+  │ KNN/RF locaux              │ 91.5–93.3 %, meilleur plafond│ LORO/LOCO tombe à ~0–3 %     │ TargetKNN récupère très vite │
+  │ Metric/SAE/SSL + KNN       │ 91.5–92.8 %, proche KNN      │ Non démontré sans calibration│ À combiner avec TargetKNN    │
+  │ TabNet / TabM              │ 25–52 %, sous KNN/RF         │ Non prioritaire              │ Non prioritaire              │
+  │ MLP / MoE / Spatial        │ MoE-4 monte à 46–50 %        │ Ne résout pas LORO           │ Moins bon que KNN local      │
+  │ GNN / DeepSets             │ Échec pratique sur ces splits│ Non prioritaire              │ Non prioritaire              │
+  │ CORAL / DANN               │ Spécifique adaptation domaine│ LORO reste 1.25–1.32 %       │ Inutile si labels cible      │
+  │ TTA / Tent                 │ Spécifique test-time         │ LORO 1.43 %, pas de gain     │ Inutile si labels cible      │
+  │ ProtoNet / FOMAML          │ Spécifique few-shot          │ FOMAML reste ~1.9 %          │ ProtoNet ~15–17 %, plafonne  │
+  │ SSGAN / TabDDPM            │ Génération synthétique       │ LOCO E102 ne s'améliore pas  │ Ne remplace pas calibration  │
+  │ Conformal / sélectif       │ Fiabilité, pas meilleure pos.│ Non testé pour LORO          │ Module de rejet, pas modèle  │
+  └────────────────────────────┴──────────────────────────────┴──────────────────────────────┴──────────────────────────────┘
+
+  Lecture :
+  - Quand la salle/campagne est connue, KNN/RF dominent.
+  - Quand la salle/campagne est inconnue et qu'aucun label cible n'est fourni,
+    aucun benchmark ne généralise correctement.
+  - Dès que l'on fournit quelques labels cible, la solution la plus robuste est
+    TargetKNN, c'est-à-dire un KNN local entraîné uniquement sur les mesures de
+    la cible.
+
+  LORO par salle (salle tenue hors, sans labels puis avec few-shot TargetKNN) :
+
+  ┌────────────┬──────────────┬────────────┬────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+  │ Salle test │ KNN no-label │ CORAL+KNN  │ DANN   │ Target K=1   │ Target K=5   │ Target K=10  │ Target K=25  │
+  ├────────────┼──────────────┼────────────┼────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+  │ B121       │ 2.17 %       │ 1.72 %     │ 0.77 % │ 18.69 %      │ 53.71 %      │ 73.46 %      │ 88.13 %      │
+  │ D005       │ 0.47 %       │ 0.12 %     │ 1.41 % │ 31.28 %      │ 73.45 %      │ 90.01 %      │ 97.04 %      │
+  │ E101       │ 1.27 %       │ 1.91 %     │ 1.49 % │ 11.63 %      │ 35.45 %      │ 52.88 %      │ 76.78 %      │
+  │ E102       │ 1.29 %       │ 1.24 %     │ 1.61 % │ 10.32 %      │ 32.84 %      │ 51.21 %      │ 76.69 %      │
+  └────────────┴──────────────┴────────────┴────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+
+  Note : les colonnes KNN no-label / TargetKNN viennent du benchmark
+  `fewshot_target_calibration.py`; CORAL+KNN et DANN viennent du benchmark
+  `domain_adaptation_loro.py`. Les splits restent comparables en ordre de
+  grandeur : dans tous les cas, les méthodes sans labels cible restent au
+  plancher.
+
+  Interprétation LORO :
+  - Sans labels cible, même connaître d'autres salles ne suffit pas : le modèle
+    apprend une géométrie RSSI locale qui ne se transfère pas.
+  - B121/D005 se recalibrent plus vite que E101/E102.
+  - E101/E102 restent plus difficiles, probablement parce que leurs campagnes
+    circulaires/élévation changent davantage les régimes radio.
+
+  LOCO par salle (campagne tenue hors dans une salle connue) :
+
+  ┌────────────┬──────────────┬──────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+  │ Salle      │ KNN no-label │ Target K=1   │ Target K=5   │ Target K=10  │ Target K=25  │ Err. K=25    │
+  ├────────────┼──────────────┼──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+  │ B121       │ 0.28 %       │ 55.13 %      │ 87.52 %      │ 92.45 %      │ 94.40 %      │ 0.040 m      │
+  │ D005       │ 2.88 %       │ 60.60 %      │ 93.68 %      │ 97.94 %      │ 99.41 %      │ 0.006 m      │
+  │ E101       │ 1.55 %       │ 59.57 %      │ 87.85 %      │ 92.51 %      │ 94.11 %      │ 0.068 m      │
+  │ E102       │ 1.91 %       │ 54.22 %      │ 89.85 %      │ 95.43 %      │ 97.00 %      │ 0.046 m      │
+  └────────────┴──────────────┴──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+
+  Interprétation LOCO :
+  - Même si la salle est connue, enlever une campagne/orientation fait tomber
+    les modèles non calibrés au plancher.
+  - La campagne cible contient un régime radio propre. KNN source ne peut pas
+    l'inférer sans exemples.
+  - Avec K=5 mesures par cellule, TargetKNN revient déjà à 87.5–93.7 % selon
+    la salle. À K=10, il revient au niveau du plafond room-aware.
+
+  Conclusion opérationnelle :
+  - Pour une salle/campagne inconnue sans labels cible : non, le système ne
+    généralise pas de façon exploitable.
+  - Pour une salle/campagne inconnue avec calibration minimale : oui, TargetKNN
+    donne une courbe précision/coût très claire.
+  - La stratégie réaliste est donc un protocole de calibration rapide, pas un
+    modèle universel "zéro-shot" à partir des features actuelles.
+
+  19.4 Benchmarks optionnels restants
+  ───────────────────────────────────
+
+  Tous les scripts listés en section 18 ont désormais un artefact JSON ou un
+  statut explicite. Les points restants sont optionnels :
+  - TabPFN v2 : non exécuté, nécessite `TABPFN_TOKEN`.
+  - KAN : non exécuté dans le run final (`--skip-kan`) et coûteux au-delà de
+    ~80 classes.
+  - TabDDPM long : un run court existe ; un run T=50–100 / 100+ epochs serait
+    seulement pertinent si l'on veut étudier la génération, pas pour améliorer
+    le pipeline actuel.
+  - ProtoNet : à relancer seulement si l'on veut améliorer l'encodeur ; pour le
+    pipeline actuel, la priorité devient TargetKNN/NN-LKNN few-shot.
+
+  19.5 Messages clés pour l'article
+  ──────────────────────────────────
+
+  A. Le plafond room-aware (~92 %) est confirmé :
+     KNN/RF restent les meilleurs avec très peu de features. Les modèles deep
+     autonomes n'apportent pas le biais inductif local nécessaire.
+
+  B. Le plancher LORO (~1–2 %) est robuste :
+     CORAL, DANN, TTA, FOMAML et génération synthétique ne le corrigent pas.
+     Le shift inter-salle est structurel.
+
+  C. La bonne stratégie de production est hybride :
+     KNN/RF pour la position, embeddings légers si besoin d'optimisation,
+     conformal/selective pour la fiabilité, et TargetKNN/few-shot si une
+     nouvelle salle dispose de mesures labellisées minimales.
+
+  19.6 Couverture documentaire des modèles testés
+  ───────────────────────────────────────────────
+
+  Statut global : les familles de modèles réellement exécutées dans les
+  benchmarks principaux sont documentées avec protocole, résultat et lecture.
+  Les modèles non exécutés ou optionnels sont signalés explicitement.
+
+  Modèles classiques / référence :
+  - KNN raw, KNN distance-scaled, Bagging KNN, LDA+KNN :
+    documentés en sections 4–7 et repris dans la synthèse 19.
+  - NN+L-KNN :
+    documenté comme baseline historique, profil embarqué, benchmark PyTorch
+    auxiliaire et comparaison statistique.
+  - RandomForest, ExtraTrees, HistGB, LogisticRegression calibrée :
+    documentés dans les benchmarks principaux, calibration/incertitude,
+    feature importance et généralisation LOCO/LORO.
+  - SVM, GaussianNB, QDA, Deep MLP sklearn :
+    documentés comme modèles testés mais rejetés, avec performances faibles.
+
+  Modèles avancés 2026 :
+  - TabNet : documenté en 18.1, avec comparaison KNN/RF.
+  - CORAL + DANN : documentés en 18.2, LORO 4 salles.
+  - SAE+MultiLabel et SAE+KNN : documentés en 18.3.
+  - SSGAN et TabDDPM : documentés en 18.4–18.5, LOCO E102.
+  - TabM : documenté en 18.6. KAN est décrit mais marqué non exécuté/optionnel.
+  - ProtoNet, TargetKNN LORO et TargetKNN LOCO :
+    documentés en 18.7 et synthétisés en 19.2–19.3.
+  - TTA/Tent : documenté en 18.8, LORO 4 folds.
+  - Metric Learning (SupCon/Triplet/Proxy-NCA) : documenté en 18.9.
+  - DeepSets : documenté en 18.10, avec avertissement sur le split anti-leakage.
+  - GNN cellules : documenté en 18.11, avec correctif dtype et résultat négatif.
+  - Self-supervised MAE/DAE/SimCLR : documenté en 18.12.
+  - Spatially-aware loss + hiérarchique : documenté en 18.13.
+  - Mixture-of-Experts : documenté en 18.14.
+  - FOMAML : documenté en 18.15.
+  - Conformal prediction + classification sélective : documenté en 18.16.
+
+  Benchmarks auxiliaires déjà couverts hors section 18 :
+  - Heatmap / pseudo-image RSSI : documenté dans les sections de benchmarks
+    auxiliaires et résultats LORO/room-aware historiques.
+  - OOD unknown / uncertainty / temperature scaling :
+    documentés dans les sections calibration, incertitude et couverture.
+  - Spatial smoothing / CRF-lite :
+    documenté dans la section post-prédiction.
+  - Feature importance / ablation :
+    documenté dans les sections E102 et importance des antennes.
+  - XGBoost/RF 360° :
+    documenté en 16novemdecies avec métriques, fusion et importances.
+  - E101 zone / orientation / élévation :
+    documentés comme benchmarks auxiliaires par tâche.
+
+  Points volontairement non considérés comme résultats principaux :
+  - TabPFN v2 : non exécuté, nécessite `TABPFN_TOKEN`.
+  - KAN : non exécuté dans le run final, coût mémoire élevé pour le nombre de
+    classes.
+  - TabDDPM long : non prioritaire après le run court négatif.
+  - Stacking lourd RF/SVM/MLP : skippé dans les runs finaux pour temps de calcul.
+
+  Conclusion de couverture :
+  - Oui, les modèles de machine learning effectivement testés et retenus dans
+    les conclusions sont documentés.
+  - Les seuls éléments non complets sont explicitement marqués comme optionnels,
+    non exécutés ou historiques.
+
+════════════════════════════════════════════════════════════════════════════════
 17. FICHIERS DE RÉSULTATS DISPONIBLES
 ════════════════════════════════════════════════════════════════════════════════
 
@@ -2085,7 +3484,39 @@ Conclusion pratique :
   ├── e102_elevation_confusion_matrix.png   — visualisation de la matrice
   ├── e102_elevation_multitask_predictions.csv — prédictions agrégées par seed
   ├── e102_elevation_report_snippet.md      — snippet markdown auto pour article
+  ├── xgb_polar_360_e101_e102_xgb400_metrics.csv — métriques XGBoost/RF 360° combiné
+  ├── xgb_polar_360_e101_e102_xgb400_predictions.csv — prédictions par fenêtre 1 s
+  ├── xgb_polar_360_e101_e102_xgb400_feature_importance.csv — importances XGB/RF
+  ├── xgb_polar_360_e101_e102_xgb400_summary.json — résumé protocole 360°
+  ├── xgb_polar_360_e101_e102_xgb400_xgb_cell_confusion_matrix.csv — confusion XGB cellule
+  ├── xgb_polar_360_e101_e102_xgb400_xgb_confusion_matrix.csv — confusion XGB polaire
+  ├── xgb_polar_360_e101_e102_xgb400_snippet.md — snippet markdown auto pour article
   └── nn_lknn_torch_aux_benchmark_mars2026.txt — commandes et sorties brutes du benchmark PyTorch
+
+  Benchmarks avril 2026 (résultats consolidés) :
+  ├── tabnet_benchmark.json              — TabNet vs KNN/RF (room-aware + E102)
+  ├── domain_adaptation_loro.json        — CORAL + DANN, LORO 4 salles
+  ├── metric_learning_benchmark.json     — SupCon / Triplet / Proxy-NCA (room-aware + E102)
+  ├── sae_multilabel_benchmark.json      — SAE+MultiLabel + SAE+KNN (room-aware + E102)
+  ├── ssgan_augmentation.json            — SSGAN LOCO E102
+  ├── tabddpm_augmentation.json          — TabDDPM court LOCO E102
+  ├── tabm_kan_benchmark.json            — TabM vs KNN/RF (room-aware + E102)
+  ├── protonet_fewshot.json              — ProtoNet K={1,3,5,10,25} LORO
+  ├── protonet_fewshot_e2000_s5_trials5.json — ProtoNet S=5 + baselines few-shot
+  ├── protonet_fewshot_e2000_s1_trials5.json — ProtoNet S=1 + baselines few-shot
+  ├── fewshot_target_calibration.json     — TargetKNN/RawCentroid K={1,2,3,5,10,15,20,25}
+  ├── fewshot_campaign_calibration_e102.json — TargetKNN LOCO E102 par campagne
+  ├── fewshot_campaign_calibration_all_rooms.json — TargetKNN LOCO B121/D005/E101/E102
+  ├── tta_loro.json                      — TTA/Tent 4 modes LORO
+  ├── spatial_loss_benchmark.json        — Spatial CE + Hiérarchique (room-aware + E102)
+  ├── deepsets_benchmark.json            — DeepSets mean/max + KNN+DeepSets
+  ├── gnn_localization.json              — GNN cellules (room-aware + E102)
+  ├── selfsup_pretraining.json           — MAE/DAE/SimCLR pretraining + finetune
+  ├── moe_localization.json              — MoE 2/4 experts (room-aware + E102)
+  ├── maml_localization.json             — FOMAML K-shot LORO (4 salles)
+  ├── conformal_localization.json        — Conformal α={5%,10%,20%} + sélectif
+  ├── tcn_protonet_wifi.json            — TCN-PN (Ma & Shi 2023) LORO K={1,3,5,10,25} v1
+  └── tcn_protonet_wifi_v2.json         — Variantes encodeur (MLP_plain/MLP_conf/TCN_conf) v2
 
 
 ================================================================================

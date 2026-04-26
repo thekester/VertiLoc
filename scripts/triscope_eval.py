@@ -5,6 +5,7 @@ Runs 50 random draws of samples and reports aggregated accuracies.
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 import time
 import sys
@@ -21,6 +22,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from localization.data import CampaignSpec, load_measurements  # noqa: E402
+from localization.constants import RSSI_FEATURE_COLUMNS  # noqa: E402
 from localization.embedding_knn import EmbeddingKnnConfig, EmbeddingKnnLocalizer  # noqa: E402
 
 # Campaign folders grouped by room, excluding circular trajectories.
@@ -34,7 +36,7 @@ ROOM_CAMPAIGNS = {
         ROOT / "data" / "E101" / "dcinqmetres",
     ],
 }
-FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3"]
+FEATURE_COLUMNS = list(RSSI_FEATURE_COLUMNS)
 
 
 def load_cross_room() -> pd.DataFrame:
@@ -149,15 +151,30 @@ def eval_split(df: pd.DataFrame, test_size: float = 0.2, seed: int = 99):
     }
 
 
-def main():
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="TriScope RSSI multi-task smoke/evaluation runner.")
+    parser.add_argument("--iterations", type=int, default=50, help="Number of random draws.")
+    parser.add_argument("--sample-size", type=int, default=20, help="Samples per random draw.")
+    parser.add_argument("--seed", type=int, default=7, help="Random seed for draw sampling.")
+    parser.add_argument("--split-test-size", type=float, default=0.2, help="Held-out ratio for the fixed split.")
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None):
+    args = parse_args(argv)
     df = load_cross_room()
     print(
         f"Loaded {len(df)} samples | rooms={sorted(df['room'].unique())} | "
         f"cells={df['grid_cell'].nunique()} | distances={sorted(df['router_distance_m'].unique())}"
     )
     print("Fitting TriScope (embedding + distance/room heads)...", flush=True)
-    metrics = evaluate_triscope(df, iterations=50, sample_size=20, seed=7)
-    print("TriScope (50 random draws):")
+    metrics = evaluate_triscope(
+        df,
+        iterations=int(args.iterations),
+        sample_size=int(args.sample_size),
+        seed=int(args.seed),
+    )
+    print(f"TriScope ({args.iterations} random draws):")
     summary_line = (
         f"cell_acc={metrics['cell_acc_mean']:.3f}±{metrics['cell_acc_std']:.3f} | "
         f"dist_acc={metrics['router_dist_acc_mean']:.3f}±{metrics['router_dist_acc_std']:.3f} | "
@@ -181,7 +198,7 @@ def main():
     out_path.write_text(json.dumps(metrics, indent=2))
     print(f"Saved to {out_path}")
 
-    split_metrics = eval_split(df, test_size=0.2, seed=99)
+    split_metrics = eval_split(df, test_size=float(args.split_test_size), seed=99)
     print("TriScope (fixed 80/20 split):")
     print(
         f"cell_acc={split_metrics['cell_acc']:.3f} | "

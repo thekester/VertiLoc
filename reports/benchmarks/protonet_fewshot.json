@@ -1,0 +1,179 @@
+{
+  "folds": {
+    "B121": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.023076923076923078,
+        "mean_error_m": 1.5085912137644168,
+        "n": 5980
+      },
+      "ProtoNet_K1": {
+        "cell_acc": 0.18016949152542372,
+        "cell_acc_std": 0.003598120526122178,
+        "mean_error_m": 1.0932953960412302,
+        "k": 1,
+        "n_trials": 3
+      },
+      "ProtoNet_K3": {
+        "cell_acc": 0.1421602787456446,
+        "cell_acc_std": 0.004312213290531234,
+        "mean_error_m": 1.2167404796587606,
+        "k": 3,
+        "n_trials": 3
+      },
+      "ProtoNet_K5": {
+        "cell_acc": 0.13267622461170847,
+        "cell_acc_std": 0.005958762647329747,
+        "mean_error_m": 1.2476356402033943,
+        "k": 5,
+        "n_trials": 3
+      },
+      "ProtoNet_K10": {
+        "cell_acc": 0.13391248391248392,
+        "cell_acc_std": 0.0022751183435860555,
+        "mean_error_m": 1.2251820801318845,
+        "k": 10,
+        "n_trials": 3
+      },
+      "ProtoNet_K25": {
+        "cell_acc": 0.13023450586264657,
+        "cell_acc_std": 0.008394450260184805,
+        "mean_error_m": 1.2492515571696154,
+        "k": 25,
+        "n_trials": 3
+      }
+    },
+    "D005": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.0,
+        "mean_error_m": 1.1900258173813585,
+        "n": 1700
+      },
+      "ProtoNet_K1": {
+        "cell_acc": 0.2891156462585034,
+        "cell_acc_std": 0.01107149686455136,
+        "mean_error_m": 0.6463052934796698,
+        "k": 1,
+        "n_trials": 3
+      },
+      "ProtoNet_K3": {
+        "cell_acc": 0.2857738840216938,
+        "cell_acc_std": 0.007921083665434935,
+        "mean_error_m": 0.6206244160446751,
+        "k": 3,
+        "n_trials": 3
+      },
+      "ProtoNet_K5": {
+        "cell_acc": 0.275599128540305,
+        "cell_acc_std": 0.012404915769487379,
+        "mean_error_m": 0.6459403236822405,
+        "k": 5,
+        "n_trials": 3
+      },
+      "ProtoNet_K10": {
+        "cell_acc": 0.28063725490196084,
+        "cell_acc_std": 0.018768813450075146,
+        "mean_error_m": 0.6307191599790563,
+        "k": 10,
+        "n_trials": 3
+      },
+      "ProtoNet_K25": {
+        "cell_acc": 0.27215686274509804,
+        "cell_acc_std": 0.022204529673556187,
+        "mean_error_m": 0.626222153505966,
+        "k": 25,
+        "n_trials": 3
+      }
+    },
+    "E101": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.010555555555555556,
+        "mean_error_m": 1.3838040589431433,
+        "n": 10800
+      },
+      "ProtoNet_K1": {
+        "cell_acc": 0.11692145165299528,
+        "cell_acc_std": 0.003957908193868032,
+        "mean_error_m": 1.219975607710228,
+        "k": 1,
+        "n_trials": 3
+      },
+      "ProtoNet_K3": {
+        "cell_acc": 0.08720710506424793,
+        "cell_acc_std": 0.00591753549083298,
+        "mean_error_m": 1.2399932420964737,
+        "k": 3,
+        "n_trials": 3
+      },
+      "ProtoNet_K5": {
+        "cell_acc": 0.08454661558109833,
+        "cell_acc_std": 0.0034290058035335537,
+        "mean_error_m": 1.233868283148907,
+        "k": 5,
+        "n_trials": 3
+      },
+      "ProtoNet_K10": {
+        "cell_acc": 0.08128306878306878,
+        "cell_acc_std": 0.0026978939225358618,
+        "mean_error_m": 1.2736404120167877,
+        "k": 10,
+        "n_trials": 3
+      },
+      "ProtoNet_K25": {
+        "cell_acc": 0.07788888888888888,
+        "cell_acc_std": 0.0039793706721669014,
+        "mean_error_m": 1.297065020129541,
+        "k": 25,
+        "n_trials": 3
+      }
+    },
+    "E102": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.012888888888888889,
+        "mean_error_m": 1.419113542537462,
+        "n": 11250
+      },
+      "ProtoNet_K1": {
+        "cell_acc": 0.09533184190902312,
+        "cell_acc_std": 0.005509637119424964,
+        "mean_error_m": 1.275700758196291,
+        "k": 1,
+        "n_trials": 3
+      },
+      "ProtoNet_K3": {
+        "cell_acc": 0.0635222978080121,
+        "cell_acc_std": 0.0029112993178438606,
+        "mean_error_m": 1.3164964274426907,
+        "k": 3,
+        "n_trials": 3
+      },
+      "ProtoNet_K5": {
+        "cell_acc": 0.06798467432950192,
+        "cell_acc_std": 0.0007292185289422422,
+        "mean_error_m": 1.2943575175604691,
+        "k": 5,
+        "n_trials": 3
+      },
+      "ProtoNet_K10": {
+        "cell_acc": 0.06374603174603174,
+        "cell_acc_std": 0.001177602348634376,
+        "mean_error_m": 1.3113992721202539,
+        "k": 10,
+        "n_trials": 3
+      },
+      "ProtoNet_K25": {
+        "cell_acc": 0.06915555555555557,
+        "cell_acc_std": 0.004628508545743945,
+        "mean_error_m": 1.3371271068502637,
+        "k": 25,
+        "n_trials": 3
+      }
+    }
+  },
+  "k_values": [
+    1,
+    3,
+    5,
+    10,
+    25
+  ]
+}

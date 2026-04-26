@@ -1,0 +1,451 @@
+{
+  "config": {
+    "k_values": [
+      1,
+      2,
+      3,
+      5,
+      10,
+      15,
+      20,
+      25
+    ],
+    "n_trials": 20,
+    "knn_neighbors": 3,
+    "seed": 42,
+    "output_name": "fewshot_target_calibration.json"
+  },
+  "folds": {
+    "B121": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.021739130434782608,
+        "mean_error_m": 1.52688393211055,
+        "n": 5980
+      },
+      "RawCentroid_K1": {
+        "cell_acc": 0.18684745762711866,
+        "cell_acc_std": 0.00804368994948508,
+        "mean_error_m": 1.111789445885353
+      },
+      "TargetKNN_K1": {
+        "cell_acc": 0.18689830508474575,
+        "cell_acc_std": 0.008135257761445512,
+        "mean_error_m": 1.1134615556073517
+      },
+      "RawCentroid_K2": {
+        "cell_acc": 0.09702749140893471,
+        "cell_acc_std": 0.012046634250752891,
+        "mean_error_m": 1.250534171802372
+      },
+      "TargetKNN_K2": {
+        "cell_acc": 0.3065292096219931,
+        "cell_acc_std": 0.009874270121128279,
+        "mean_error_m": 0.9477849183096396
+      },
+      "RawCentroid_K3": {
+        "cell_acc": 0.0845383275261324,
+        "cell_acc_std": 0.012332338415615506,
+        "mean_error_m": 1.2616264998623068
+      },
+      "TargetKNN_K3": {
+        "cell_acc": 0.4043118466898955,
+        "cell_acc_std": 0.014203775699046628,
+        "mean_error_m": 0.8080784597516268
+      },
+      "RawCentroid_K5": {
+        "cell_acc": 0.07629928315412185,
+        "cell_acc_std": 0.00838220819911071,
+        "mean_error_m": 1.2595076113715027
+      },
+      "TargetKNN_K5": {
+        "cell_acc": 0.5370967741935484,
+        "cell_acc_std": 0.013702354733774394,
+        "mean_error_m": 0.6123978512358745
+      },
+      "RawCentroid_K10": {
+        "cell_acc": 0.06831081081081081,
+        "cell_acc_std": 0.007989637104953956,
+        "mean_error_m": 1.2842374151398437
+      },
+      "TargetKNN_K10": {
+        "cell_acc": 0.7346138996138996,
+        "cell_acc_std": 0.011312658953144122,
+        "mean_error_m": 0.334160922523477
+      },
+      "RawCentroid_K15": {
+        "cell_acc": 0.06693514644351464,
+        "cell_acc_std": 0.009526635953901503,
+        "mean_error_m": 1.2852302006585903
+      },
+      "TargetKNN_K15": {
+        "cell_acc": 0.8168305439330543,
+        "cell_acc_std": 0.007347974574286214,
+        "mean_error_m": 0.21999832609942477
+      },
+      "RawCentroid_K20": {
+        "cell_acc": 0.06348173515981734,
+        "cell_acc_std": 0.008905712008954646,
+        "mean_error_m": 1.293372278241815
+      },
+      "TargetKNN_K20": {
+        "cell_acc": 0.8594748858447488,
+        "cell_acc_std": 0.00634337630014655,
+        "mean_error_m": 0.16333717245254573
+      },
+      "RawCentroid_K25": {
+        "cell_acc": 0.06440954773869348,
+        "cell_acc_std": 0.006345041988785298,
+        "mean_error_m": 1.2840146952230347
+      },
+      "TargetKNN_K25": {
+        "cell_acc": 0.8813065326633165,
+        "cell_acc_std": 0.0057385526564846965,
+        "mean_error_m": 0.13204842846913362
+      }
+    },
+    "D005": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.004705882352941176,
+        "mean_error_m": 1.1908026080892766,
+        "n": 1700
+      },
+      "RawCentroid_K1": {
+        "cell_acc": 0.31284513805522207,
+        "cell_acc_std": 0.022379861626646153,
+        "mean_error_m": 0.5980806672137421
+      },
+      "TargetKNN_K1": {
+        "cell_acc": 0.31284513805522207,
+        "cell_acc_std": 0.022379861626646153,
+        "mean_error_m": 0.5980806672137421
+      },
+      "RawCentroid_K2": {
+        "cell_acc": 0.1861825980392157,
+        "cell_acc_std": 0.025427278915760545,
+        "mean_error_m": 0.6996034284474867
+      },
+      "TargetKNN_K2": {
+        "cell_acc": 0.4744791666666667,
+        "cell_acc_std": 0.03065641251523109,
+        "mean_error_m": 0.4558629635318371
+      },
+      "RawCentroid_K3": {
+        "cell_acc": 0.1750938673341677,
+        "cell_acc_std": 0.017938896487778636,
+        "mean_error_m": 0.7035136426227071
+      },
+      "TargetKNN_K3": {
+        "cell_acc": 0.5912703379224029,
+        "cell_acc_std": 0.02332940568689399,
+        "mean_error_m": 0.3487236155540875
+      },
+      "RawCentroid_K5": {
+        "cell_acc": 0.156078431372549,
+        "cell_acc_std": 0.023642249408855183,
+        "mean_error_m": 0.7287087055707009
+      },
+      "TargetKNN_K5": {
+        "cell_acc": 0.7345424836601306,
+        "cell_acc_std": 0.03569924529055211,
+        "mean_error_m": 0.22555889001225599
+      },
+      "RawCentroid_K10": {
+        "cell_acc": 0.12698529411764703,
+        "cell_acc_std": 0.017848270781680612,
+        "mean_error_m": 0.7477811239015952
+      },
+      "TargetKNN_K10": {
+        "cell_acc": 0.9001102941176471,
+        "cell_acc_std": 0.014794357017710305,
+        "mean_error_m": 0.08390251248450369
+      },
+      "RawCentroid_K15": {
+        "cell_acc": 0.10802521008403361,
+        "cell_acc_std": 0.020945241185294276,
+        "mean_error_m": 0.7577665863606482
+      },
+      "TargetKNN_K15": {
+        "cell_acc": 0.9454201680672266,
+        "cell_acc_std": 0.00883542615349651,
+        "mean_error_m": 0.04701483008225973
+      },
+      "RawCentroid_K20": {
+        "cell_acc": 0.10093137254901959,
+        "cell_acc_std": 0.018494039793446538,
+        "mean_error_m": 0.7585139827493433
+      },
+      "TargetKNN_K20": {
+        "cell_acc": 0.9609803921568629,
+        "cell_acc_std": 0.0077853261553301216,
+        "mean_error_m": 0.034102273836935336
+      },
+      "RawCentroid_K25": {
+        "cell_acc": 0.09294117647058822,
+        "cell_acc_std": 0.016566945035825682,
+        "mean_error_m": 0.7671062048983235
+      },
+      "TargetKNN_K25": {
+        "cell_acc": 0.9703529411764708,
+        "cell_acc_std": 0.00760258561007225,
+        "mean_error_m": 0.02523391414300456
+      }
+    },
+    "E101": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.012685185185185185,
+        "mean_error_m": 1.360733893018582,
+        "n": 10800
+      },
+      "RawCentroid_K1": {
+        "cell_acc": 0.11632643549589858,
+        "cell_acc_std": 0.006435985915100438,
+        "mean_error_m": 1.199903985971552
+      },
+      "TargetKNN_K1": {
+        "cell_acc": 0.11627982848620433,
+        "cell_acc_std": 0.006461653040384764,
+        "mean_error_m": 1.1989979380234528
+      },
+      "RawCentroid_K2": {
+        "cell_acc": 0.05123404654654655,
+        "cell_acc_std": 0.006468249482177907,
+        "mean_error_m": 1.2831842646394533
+      },
+      "TargetKNN_K2": {
+        "cell_acc": 0.19282563813813813,
+        "cell_acc_std": 0.008462762443994727,
+        "mean_error_m": 1.0721741873704815
+      },
+      "RawCentroid_K3": {
+        "cell_acc": 0.0458994708994709,
+        "cell_acc_std": 0.007395708402294171,
+        "mean_error_m": 1.272348653161289
+      },
+      "TargetKNN_K3": {
+        "cell_acc": 0.2521258503401361,
+        "cell_acc_std": 0.009325999884008083,
+        "mean_error_m": 0.988003633021256
+      },
+      "RawCentroid_K5": {
+        "cell_acc": 0.0432088122605364,
+        "cell_acc_std": 0.006218452477603911,
+        "mean_error_m": 1.2881447155901269
+      },
+      "TargetKNN_K5": {
+        "cell_acc": 0.35454980842911876,
+        "cell_acc_std": 0.010165290526424686,
+        "mean_error_m": 0.8494324602725627
+      },
+      "RawCentroid_K10": {
+        "cell_acc": 0.04285714285714286,
+        "cell_acc_std": 0.004768720320968937,
+        "mean_error_m": 1.292891206993586
+      },
+      "TargetKNN_K10": {
+        "cell_acc": 0.5288045634920635,
+        "cell_acc_std": 0.009807854727381861,
+        "mean_error_m": 0.6160385475155247
+      },
+      "RawCentroid_K15": {
+        "cell_acc": 0.04293724279835391,
+        "cell_acc_std": 0.004441332524895077,
+        "mean_error_m": 1.2947808261926868
+      },
+      "TargetKNN_K15": {
+        "cell_acc": 0.6414146090534979,
+        "cell_acc_std": 0.011145991727706413,
+        "mean_error_m": 0.46270527615383683
+      },
+      "RawCentroid_K20": {
+        "cell_acc": 0.04152243589743589,
+        "cell_acc_std": 0.00416451223613005,
+        "mean_error_m": 1.293399194570934
+      },
+      "TargetKNN_K20": {
+        "cell_acc": 0.7169497863247863,
+        "cell_acc_std": 0.008104692334164835,
+        "mean_error_m": 0.3614018727344698
+      },
+      "RawCentroid_K25": {
+        "cell_acc": 0.04195555555555556,
+        "cell_acc_std": 0.004222573084837032,
+        "mean_error_m": 1.292713138141674
+      },
+      "TargetKNN_K25": {
+        "cell_acc": 0.7678055555555555,
+        "cell_acc_std": 0.010410457408624738,
+        "mean_error_m": 0.29232393499174525
+      }
+    },
+    "E102": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.012888888888888889,
+        "mean_error_m": 1.4139505037891398,
+        "n": 11250
+      },
+      "RawCentroid_K1": {
+        "cell_acc": 0.1032841163310962,
+        "cell_acc_std": 0.005395357257433306,
+        "mean_error_m": 1.2535845877930338
+      },
+      "TargetKNN_K1": {
+        "cell_acc": 0.10322595078299776,
+        "cell_acc_std": 0.005415864812755659,
+        "mean_error_m": 1.2536589053037042
+      },
+      "RawCentroid_K2": {
+        "cell_acc": 0.05234684684684685,
+        "cell_acc_std": 0.005366487148913579,
+        "mean_error_m": 1.3030720262890738
+      },
+      "TargetKNN_K2": {
+        "cell_acc": 0.17172072072072073,
+        "cell_acc_std": 0.006223908284320145,
+        "mean_error_m": 1.1600518812751905
+      },
+      "RawCentroid_K3": {
+        "cell_acc": 0.0442312925170068,
+        "cell_acc_std": 0.006613188875318942,
+        "mean_error_m": 1.3244977627834753
+      },
+      "TargetKNN_K3": {
+        "cell_acc": 0.23268934240362812,
+        "cell_acc_std": 0.007648544564557123,
+        "mean_error_m": 1.0787087737993528
+      },
+      "RawCentroid_K5": {
+        "cell_acc": 0.04565977011494253,
+        "cell_acc_std": 0.0062267524040535965,
+        "mean_error_m": 1.3217410830749985
+      },
+      "TargetKNN_K5": {
+        "cell_acc": 0.32839540229885056,
+        "cell_acc_std": 0.007279141096202752,
+        "mean_error_m": 0.9430703074055765
+      },
+      "RawCentroid_K10": {
+        "cell_acc": 0.04567142857142857,
+        "cell_acc_std": 0.004720243950035401,
+        "mean_error_m": 1.313031824655878
+      },
+      "TargetKNN_K10": {
+        "cell_acc": 0.5121190476190476,
+        "cell_acc_std": 0.012159069475973148,
+        "mean_error_m": 0.6846086994429631
+      },
+      "RawCentroid_K15": {
+        "cell_acc": 0.04534814814814815,
+        "cell_acc_std": 0.004707628704896681,
+        "mean_error_m": 1.3028028015145943
+      },
+      "TargetKNN_K15": {
+        "cell_acc": 0.6341234567901235,
+        "cell_acc_std": 0.01061250538459358,
+        "mean_error_m": 0.5162623218077286
+      },
+      "RawCentroid_K20": {
+        "cell_acc": 0.04641025641025641,
+        "cell_acc_std": 0.005443874166754615,
+        "mean_error_m": 1.3151610937793423
+      },
+      "TargetKNN_K20": {
+        "cell_acc": 0.7132051282051284,
+        "cell_acc_std": 0.00817133264443822,
+        "mean_error_m": 0.4021291989111802
+      },
+      "RawCentroid_K25": {
+        "cell_acc": 0.047392000000000004,
+        "cell_acc_std": 0.005193264697877648,
+        "mean_error_m": 1.3044743176739517
+      },
+      "TargetKNN_K25": {
+        "cell_acc": 0.76688,
+        "cell_acc_std": 0.005457175500608745,
+        "mean_error_m": 0.3268097831205841
+      }
+    }
+  },
+  "averages": {
+    "RawCentroid_K1": {
+      "cell_acc_mean": 0.1798257868773339,
+      "cell_acc_std": 0.08311775773530063,
+      "mean_error_m": 1.0408396717159203
+    },
+    "RawCentroid_K2": {
+      "cell_acc_mean": 0.09669774571038596,
+      "cell_acc_std": 0.0548671069498888,
+      "mean_error_m": 1.1340984727945964
+    },
+    "RawCentroid_K3": {
+      "cell_acc_mean": 0.08744073956919445,
+      "cell_acc_std": 0.05311362376993402,
+      "mean_error_m": 1.1404966396074445
+    },
+    "RawCentroid_K5": {
+      "cell_acc_mean": 0.08031157422553745,
+      "cell_acc_std": 0.04564558465812436,
+      "mean_error_m": 1.1495255289018322
+    },
+    "RawCentroid_K10": {
+      "cell_acc_mean": 0.07095616908925732,
+      "cell_acc_std": 0.0338198689756305,
+      "mean_error_m": 1.1594853926727258
+    },
+    "RawCentroid_K15": {
+      "cell_acc_mean": 0.06581143686851258,
+      "cell_acc_std": 0.026101917132236994,
+      "mean_error_m": 1.16014510368163
+    },
+    "RawCentroid_K20": {
+      "cell_acc_mean": 0.06308645000413231,
+      "cell_acc_std": 0.023321109267984294,
+      "mean_error_m": 1.1651116373353587
+    },
+    "RawCentroid_K25": {
+      "cell_acc_mean": 0.06167456994120932,
+      "cell_acc_std": 0.01986147099211742,
+      "mean_error_m": 1.162077088984246
+    },
+    "TargetKNN_K1": {
+      "cell_acc_mean": 0.1798123056022925,
+      "cell_acc_std": 0.08314113195664306,
+      "mean_error_m": 1.0410497665370628
+    },
+    "TargetKNN_K2": {
+      "cell_acc_mean": 0.28638868378687965,
+      "cell_acc_std": 0.12009002435223003,
+      "mean_error_m": 0.9089684876217872
+    },
+    "TargetKNN_K3": {
+      "cell_acc_mean": 0.37009934433901565,
+      "cell_acc_std": 0.143949954531044,
+      "mean_error_m": 0.8058786205315808
+    },
+    "TargetKNN_K5": {
+      "cell_acc_mean": 0.48864611714541206,
+      "cell_acc_std": 0.1631522301822031,
+      "mean_error_m": 0.6576148772315674
+    },
+    "TargetKNN_K10": {
+      "cell_acc_mean": 0.6689119512106645,
+      "cell_acc_std": 0.15967428917716883,
+      "mean_error_m": 0.4296776704916171
+    },
+    "TargetKNN_K15": {
+      "cell_acc_mean": 0.7594471944609755,
+      "cell_acc_std": 0.1299197118900286,
+      "mean_error_m": 0.3114951885358125
+    },
+    "TargetKNN_K20": {
+      "cell_acc_mean": 0.8126525481328817,
+      "cell_acc_std": 0.10397390125602504,
+      "mean_error_m": 0.24024262948378278
+    },
+    "TargetKNN_K25": {
+      "cell_acc_mean": 0.8465862573488356,
+      "cell_acc_std": 0.08526895094230327,
+      "mean_error_m": 0.19410401518111686
+    }
+  },
+  "knn_loro_baseline_acc_mean": 0.013004771715449464
+}

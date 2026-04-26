@@ -1,0 +1,38 @@
+{
+  "room_aware": {
+    "KNN_raw": {
+      "cell_acc": 0.9169189371005718,
+      "mean_error_m": 0.10332257995215899
+    },
+    "KNN+supcon": {
+      "cell_acc": 0.9159098553649512,
+      "mean_error_m": 0.10333088187810407
+    },
+    "KNN+triplet": {
+      "cell_acc": 0.9147325933400605,
+      "mean_error_m": 0.10514215429755114
+    },
+    "KNN+proxy": {
+      "cell_acc": 0.9159098553649512,
+      "mean_error_m": 0.10130636326477803
+    }
+  },
+  "e102": {
+    "KNN_raw": {
+      "cell_acc": 0.9244444444444444,
+      "mean_error_m": 0.11207765319132036
+    },
+    "KNN+supcon": {
+      "cell_acc": 0.928,
+      "mean_error_m": 0.10845476585350139
+    },
+    "KNN+triplet": {
+      "cell_acc": 0.928,
+      "mean_error_m": 0.1085911789590465
+    },
+    "KNN+proxy": {
+      "cell_acc": 0.9275555555555556,
+      "mean_error_m": 0.10962243570323778
+    }
+  }
+}

@@ -31,12 +31,12 @@ from .data import (
     load_measurements,
 )
 from .board_geometry import BoardGeometry, add_board_geometry, add_board_zones
+from .constants import DEFAULT_RUN_NAME, RSSI_FEATURE_COLUMNS
 from .embedding_knn import EmbeddingKnnConfig, EmbeddingKnnLocalizer
-from .inference import DEFAULT_RUN_NAME
 
 # Only use RSSI-derived signals as inputs. Router distance stays out of features to
 # avoid leaking the target context; the model must infer distance implicitly.
-FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3"]
+FEATURE_COLUMNS = list(RSSI_FEATURE_COLUMNS)
 META_COLUMNS = ["grid_x", "grid_y", "coord_x_m", "coord_y_m"]
 REPORT_DIR = Path("reports")
 MODEL_PATH = REPORT_DIR / "localizer.joblib"

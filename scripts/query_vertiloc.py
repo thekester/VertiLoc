@@ -15,9 +15,9 @@ SRC_DIR = ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from localization import DEFAULT_RUN_NAME, VertiLocInferenceModel
+from localization import DEFAULT_RUN_NAME, RSSI_FEATURE_COLUMNS, VertiLocInferenceModel
 
-FEATURE_COLUMNS = ["Signal", "Noise", "signal_A1", "signal_A2", "signal_A3"]
+FEATURE_COLUMNS = list(RSSI_FEATURE_COLUMNS)
 DEFAULT_MODEL = ROOT / "reports/localizer.joblib"
 METRICS_PATH = ROOT / "reports/latest_metrics.json"
 

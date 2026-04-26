@@ -1,0 +1,46 @@
+{
+  "room_aware": {
+    "KNN_instance": {
+      "cell_acc": 0.008403361344537815,
+      "mean_error_m": 1.2729109112089496
+    },
+    "DeepSets_mean": {
+      "cell_acc": 0.012605042016806723,
+      "mean_error_m": 1.2575337627287928
+    },
+    "KNN+DeepSets_mean": {
+      "cell_acc": 0.007563025210084034,
+      "mean_error_m": 1.2610843693959681
+    },
+    "DeepSets_max": {
+      "cell_acc": 0.012605042016806723,
+      "mean_error_m": 1.3303089540674693
+    },
+    "KNN+DeepSets_max": {
+      "cell_acc": 0.0025210084033613447,
+      "mean_error_m": 1.3012503434320473
+    }
+  },
+  "e102": {
+    "KNN_instance": {
+      "cell_acc": 0.03288888888888889,
+      "mean_error_m": 1.3405857831901882
+    },
+    "DeepSets_mean": {
+      "cell_acc": 0.008888888888888889,
+      "mean_error_m": 1.3302981972533163
+    },
+    "KNN+DeepSets_mean": {
+      "cell_acc": 0.008888888888888889,
+      "mean_error_m": 1.345777771557965
+    },
+    "DeepSets_max": {
+      "cell_acc": 0.006666666666666667,
+      "mean_error_m": 1.2906173830764616
+    },
+    "KNN+DeepSets_max": {
+      "cell_acc": 0.017777777777777778,
+      "mean_error_m": 1.2748920058583573
+    }
+  }
+}

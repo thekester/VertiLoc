@@ -24,6 +24,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Run unit tests
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests
+
       - name: Run localization pipeline smoke test
         env:
           PYTHONPATH: src
@@ -44,12 +49,21 @@ jobs:
       - name: Run cross-room benchmarks (NN+L-KNN, LogisticRegression heads)
         env:
           PYTHONPATH: src
-        run: python scripts/benchmark_models.py
+        run: |
+          python scripts/benchmark_models.py \
+            --room D005 \
+            --distances 2 4 \
+            --skip-optional \
+            --no-stacking \
+            --skip-heatmap \
+            --skip-significance \
+            --skip-coverage-risk \
+            --num-seeds 1
 
-      - name: Run TriScope multihead evaluation (50 draws)
+      - name: Run TriScope multihead smoke test
         env:
           PYTHONPATH: src
-        run: python scripts/triscope_eval.py
+        run: python scripts/triscope_eval.py --iterations 5 --sample-size 10
 
       - name: Run VertiLoc query CLI (2 m sample)
         run: |

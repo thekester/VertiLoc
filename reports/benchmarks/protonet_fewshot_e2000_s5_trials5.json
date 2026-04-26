@@ -1,0 +1,541 @@
+{
+  "config": {
+    "episodes": 2000,
+    "n_way": 20,
+    "n_support": 5,
+    "n_query": 10,
+    "hidden": 64,
+    "emb_dim": 32,
+    "lr": 0.001,
+    "n_trials": 5,
+    "k_values": [
+      1,
+      3,
+      5,
+      10,
+      25
+    ],
+    "seed": 42,
+    "output_name": "protonet_fewshot_e2000_s5_trials5.json"
+  },
+  "folds": {
+    "B121": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.023076923076923078,
+        "mean_error_m": 1.5085912137644168,
+        "n": 5980
+      },
+      "ProtoNet_K1": {
+        "cell_acc": 0.17979661016949153,
+        "cell_acc_std": 0.006080377072932051,
+        "mean_error_m": 1.1203250882854454,
+        "k": 1,
+        "n_trials": 5
+      },
+      "RawCentroid_K1": {
+        "cell_acc": 0.18366101694915254,
+        "cell_acc_std": 0.006935165750532574,
+        "mean_error_m": 1.080124060808243,
+        "k": 1,
+        "n_trials": 5
+      },
+      "TargetKNN_K1": {
+        "cell_acc": 0.18366101694915254,
+        "cell_acc_std": 0.006935165750532574,
+        "mean_error_m": 1.0834912702447226,
+        "k": 1,
+        "n_trials": 5
+      },
+      "ProtoNet_K3": {
+        "cell_acc": 0.15588850174216026,
+        "cell_acc_std": 0.014548613488965554,
+        "mean_error_m": 1.1693752991474988,
+        "k": 3,
+        "n_trials": 5
+      },
+      "RawCentroid_K3": {
+        "cell_acc": 0.09156794425087109,
+        "cell_acc_std": 0.009354346257384643,
+        "mean_error_m": 1.2752512328417733,
+        "k": 3,
+        "n_trials": 5
+      },
+      "TargetKNN_K3": {
+        "cell_acc": 0.4027526132404181,
+        "cell_acc_std": 0.0162230204628821,
+        "mean_error_m": 0.8084311931968149,
+        "k": 3,
+        "n_trials": 5
+      },
+      "ProtoNet_K5": {
+        "cell_acc": 0.15999999999999998,
+        "cell_acc_std": 0.012127413739168638,
+        "mean_error_m": 1.1727348461827556,
+        "k": 5,
+        "n_trials": 5
+      },
+      "RawCentroid_K5": {
+        "cell_acc": 0.0738709677419355,
+        "cell_acc_std": 0.008482137731742542,
+        "mean_error_m": 1.2700566825591177,
+        "k": 5,
+        "n_trials": 5
+      },
+      "TargetKNN_K5": {
+        "cell_acc": 0.5345161290322581,
+        "cell_acc_std": 0.015921645606956573,
+        "mean_error_m": 0.6080286446016878,
+        "k": 5,
+        "n_trials": 5
+      },
+      "ProtoNet_K10": {
+        "cell_acc": 0.16034749034749035,
+        "cell_acc_std": 0.006416240332923855,
+        "mean_error_m": 1.1799957770499598,
+        "k": 10,
+        "n_trials": 5
+      },
+      "RawCentroid_K10": {
+        "cell_acc": 0.06629343629343629,
+        "cell_acc_std": 0.009648338867255477,
+        "mean_error_m": 1.2966505438284919,
+        "k": 10,
+        "n_trials": 5
+      },
+      "TargetKNN_K10": {
+        "cell_acc": 0.7307722007722008,
+        "cell_acc_std": 0.0064855671347014915,
+        "mean_error_m": 0.34433755951505846,
+        "k": 10,
+        "n_trials": 5
+      },
+      "ProtoNet_K25": {
+        "cell_acc": 0.16120603015075377,
+        "cell_acc_std": 0.0053052571940579605,
+        "mean_error_m": 1.185840370203047,
+        "k": 25,
+        "n_trials": 5
+      },
+      "RawCentroid_K25": {
+        "cell_acc": 0.06477386934673367,
+        "cell_acc_std": 0.0051428423123621,
+        "mean_error_m": 1.2741205192838525,
+        "k": 25,
+        "n_trials": 5
+      },
+      "TargetKNN_K25": {
+        "cell_acc": 0.8773869346733669,
+        "cell_acc_std": 0.005327581218371282,
+        "mean_error_m": 0.1359877107706152,
+        "k": 25,
+        "n_trials": 5
+      }
+    },
+    "D005": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.0,
+        "mean_error_m": 1.1900258173813585,
+        "n": 1700
+      },
+      "ProtoNet_K1": {
+        "cell_acc": 0.29183673469387755,
+        "cell_acc_std": 0.01652307374221873,
+        "mean_error_m": 0.658842816558311,
+        "k": 1,
+        "n_trials": 5
+      },
+      "RawCentroid_K1": {
+        "cell_acc": 0.30996398559423766,
+        "cell_acc_std": 0.018739030519951117,
+        "mean_error_m": 0.615603756930983,
+        "k": 1,
+        "n_trials": 5
+      },
+      "TargetKNN_K1": {
+        "cell_acc": 0.30996398559423766,
+        "cell_acc_std": 0.018739030519951117,
+        "mean_error_m": 0.615603756930983,
+        "k": 1,
+        "n_trials": 5
+      },
+      "ProtoNet_K3": {
+        "cell_acc": 0.3281602002503129,
+        "cell_acc_std": 0.027802202221534393,
+        "mean_error_m": 0.6101353976871622,
+        "k": 3,
+        "n_trials": 5
+      },
+      "RawCentroid_K3": {
+        "cell_acc": 0.16770963704630787,
+        "cell_acc_std": 0.009862772618195518,
+        "mean_error_m": 0.7232155992687359,
+        "k": 3,
+        "n_trials": 5
+      },
+      "TargetKNN_K3": {
+        "cell_acc": 0.6038798498122653,
+        "cell_acc_std": 0.012408805564901548,
+        "mean_error_m": 0.34900093686665573,
+        "k": 3,
+        "n_trials": 5
+      },
+      "ProtoNet_K5": {
+        "cell_acc": 0.337516339869281,
+        "cell_acc_std": 0.014027794431682412,
+        "mean_error_m": 0.5863394328433774,
+        "k": 5,
+        "n_trials": 5
+      },
+      "RawCentroid_K5": {
+        "cell_acc": 0.16875816993464052,
+        "cell_acc_std": 0.01216740002951121,
+        "mean_error_m": 0.738053810155542,
+        "k": 5,
+        "n_trials": 5
+      },
+      "TargetKNN_K5": {
+        "cell_acc": 0.7500653594771242,
+        "cell_acc_std": 0.026418814857242824,
+        "mean_error_m": 0.2247608254301933,
+        "k": 5,
+        "n_trials": 5
+      },
+      "ProtoNet_K10": {
+        "cell_acc": 0.340735294117647,
+        "cell_acc_std": 0.010487676076279668,
+        "mean_error_m": 0.5921363515162004,
+        "k": 10,
+        "n_trials": 5
+      },
+      "RawCentroid_K10": {
+        "cell_acc": 0.13970588235294118,
+        "cell_acc_std": 0.014476146708617308,
+        "mean_error_m": 0.7598789891827936,
+        "k": 10,
+        "n_trials": 5
+      },
+      "TargetKNN_K10": {
+        "cell_acc": 0.9079411764705883,
+        "cell_acc_std": 0.008692656885959804,
+        "mean_error_m": 0.08154064198899244,
+        "k": 10,
+        "n_trials": 5
+      },
+      "ProtoNet_K25": {
+        "cell_acc": 0.34141176470588236,
+        "cell_acc_std": 0.029701164447714378,
+        "mean_error_m": 0.5730966842700849,
+        "k": 25,
+        "n_trials": 5
+      },
+      "RawCentroid_K25": {
+        "cell_acc": 0.10023529411764706,
+        "cell_acc_std": 0.012437247328378833,
+        "mean_error_m": 0.769068936996296,
+        "k": 25,
+        "n_trials": 5
+      },
+      "TargetKNN_K25": {
+        "cell_acc": 0.968,
+        "cell_acc_std": 0.002723726330068303,
+        "mean_error_m": 0.02596068197066669,
+        "k": 25,
+        "n_trials": 5
+      }
+    },
+    "E101": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.010555555555555556,
+        "mean_error_m": 1.3838040589431433,
+        "n": 10800
+      },
+      "ProtoNet_K1": {
+        "cell_acc": 0.11603281133482475,
+        "cell_acc_std": 0.008523330089324118,
+        "mean_error_m": 1.2110099131833605,
+        "k": 1,
+        "n_trials": 5
+      },
+      "RawCentroid_K1": {
+        "cell_acc": 0.11752423564504103,
+        "cell_acc_std": 0.0067802931972850925,
+        "mean_error_m": 1.2088155211449014,
+        "k": 1,
+        "n_trials": 5
+      },
+      "TargetKNN_K1": {
+        "cell_acc": 0.11752423564504103,
+        "cell_acc_std": 0.0067802931972850925,
+        "mean_error_m": 1.2075808100650005,
+        "k": 1,
+        "n_trials": 5
+      },
+      "ProtoNet_K3": {
+        "cell_acc": 0.08303099017384731,
+        "cell_acc_std": 0.00850432513668716,
+        "mean_error_m": 1.251591401075678,
+        "k": 3,
+        "n_trials": 5
+      },
+      "RawCentroid_K3": {
+        "cell_acc": 0.04293272864701436,
+        "cell_acc_std": 0.007679633422904327,
+        "mean_error_m": 1.2880349804246793,
+        "k": 3,
+        "n_trials": 5
+      },
+      "TargetKNN_K3": {
+        "cell_acc": 0.24952758881330306,
+        "cell_acc_std": 0.008677564709639396,
+        "mean_error_m": 1.0092579541707736,
+        "k": 3,
+        "n_trials": 5
+      },
+      "ProtoNet_K5": {
+        "cell_acc": 0.0895785440613027,
+        "cell_acc_std": 0.0030377125889524607,
+        "mean_error_m": 1.25050837938215,
+        "k": 5,
+        "n_trials": 5
+      },
+      "RawCentroid_K5": {
+        "cell_acc": 0.045957854406130275,
+        "cell_acc_std": 0.005124082410415495,
+        "mean_error_m": 1.2896061108711625,
+        "k": 5,
+        "n_trials": 5
+      },
+      "TargetKNN_K5": {
+        "cell_acc": 0.35371647509578547,
+        "cell_acc_std": 0.00660027717475827,
+        "mean_error_m": 0.866768931364799,
+        "k": 5,
+        "n_trials": 5
+      },
+      "ProtoNet_K10": {
+        "cell_acc": 0.07785714285714286,
+        "cell_acc_std": 0.009289952905892537,
+        "mean_error_m": 1.2699248183073877,
+        "k": 10,
+        "n_trials": 5
+      },
+      "RawCentroid_K10": {
+        "cell_acc": 0.04279761904761904,
+        "cell_acc_std": 0.004888608655130659,
+        "mean_error_m": 1.3148621253627597,
+        "k": 10,
+        "n_trials": 5
+      },
+      "TargetKNN_K10": {
+        "cell_acc": 0.5316468253968253,
+        "cell_acc_std": 0.0027614314956677373,
+        "mean_error_m": 0.6133198998479731,
+        "k": 10,
+        "n_trials": 5
+      },
+      "ProtoNet_K25": {
+        "cell_acc": 0.08733333333333333,
+        "cell_acc_std": 0.0068294930491685805,
+        "mean_error_m": 1.2773892035889516,
+        "k": 25,
+        "n_trials": 5
+      },
+      "RawCentroid_K25": {
+        "cell_acc": 0.04491111111111111,
+        "cell_acc_std": 0.003558609799304176,
+        "mean_error_m": 1.303314904364834,
+        "k": 25,
+        "n_trials": 5
+      },
+      "TargetKNN_K25": {
+        "cell_acc": 0.7691555555555556,
+        "cell_acc_std": 0.010068555133142771,
+        "mean_error_m": 0.2856950860015256,
+        "k": 25,
+        "n_trials": 5
+      }
+    },
+    "E102": {
+      "KNN_vanilla_LORO": {
+        "cell_acc": 0.012888888888888889,
+        "mean_error_m": 1.419113542537462,
+        "n": 11250
+      },
+      "ProtoNet_K1": {
+        "cell_acc": 0.09882774049217002,
+        "cell_acc_std": 0.004341511318435586,
+        "mean_error_m": 1.2528613499044676,
+        "k": 1,
+        "n_trials": 5
+      },
+      "RawCentroid_K1": {
+        "cell_acc": 0.102496644295302,
+        "cell_acc_std": 0.005851445859341588,
+        "mean_error_m": 1.2586104214360014,
+        "k": 1,
+        "n_trials": 5
+      },
+      "TargetKNN_K1": {
+        "cell_acc": 0.102496644295302,
+        "cell_acc_std": 0.005851445859341588,
+        "mean_error_m": 1.2586552421637642,
+        "k": 1,
+        "n_trials": 5
+      },
+      "ProtoNet_K3": {
+        "cell_acc": 0.06751927437641723,
+        "cell_acc_std": 0.0076118311575259605,
+        "mean_error_m": 1.2705188412880886,
+        "k": 3,
+        "n_trials": 5
+      },
+      "RawCentroid_K3": {
+        "cell_acc": 0.040961451247165534,
+        "cell_acc_std": 0.003102306018287904,
+        "mean_error_m": 1.3195435964808724,
+        "k": 3,
+        "n_trials": 5
+      },
+      "TargetKNN_K3": {
+        "cell_acc": 0.2301496598639456,
+        "cell_acc_std": 0.004121787862741397,
+        "mean_error_m": 1.0806754631731885,
+        "k": 3,
+        "n_trials": 5
+      },
+      "ProtoNet_K5": {
+        "cell_acc": 0.0688,
+        "cell_acc_std": 0.006151277409341891,
+        "mean_error_m": 1.2859521101098674,
+        "k": 5,
+        "n_trials": 5
+      },
+      "RawCentroid_K5": {
+        "cell_acc": 0.0463448275862069,
+        "cell_acc_std": 0.0031388529654893917,
+        "mean_error_m": 1.303806658953997,
+        "k": 5,
+        "n_trials": 5
+      },
+      "TargetKNN_K5": {
+        "cell_acc": 0.33005977011494253,
+        "cell_acc_std": 0.006408238850764715,
+        "mean_error_m": 0.9355155986189894,
+        "k": 5,
+        "n_trials": 5
+      },
+      "ProtoNet_K10": {
+        "cell_acc": 0.06798095238095239,
+        "cell_acc_std": 0.005902733906733062,
+        "mean_error_m": 1.2931915666295999,
+        "k": 10,
+        "n_trials": 5
+      },
+      "RawCentroid_K10": {
+        "cell_acc": 0.047752380952380956,
+        "cell_acc_std": 0.0033005737149884354,
+        "mean_error_m": 1.2865889317462547,
+        "k": 10,
+        "n_trials": 5
+      },
+      "TargetKNN_K10": {
+        "cell_acc": 0.5102857142857143,
+        "cell_acc_std": 0.010954616749020197,
+        "mean_error_m": 0.6915297732760153,
+        "k": 10,
+        "n_trials": 5
+      },
+      "ProtoNet_K25": {
+        "cell_acc": 0.06331733333333332,
+        "cell_acc_std": 0.0053399851851646364,
+        "mean_error_m": 1.3317926535028246,
+        "k": 25,
+        "n_trials": 5
+      },
+      "RawCentroid_K25": {
+        "cell_acc": 0.047808,
+        "cell_acc_std": 0.004508051858126253,
+        "mean_error_m": 1.3184759436689062,
+        "k": 25,
+        "n_trials": 5
+      },
+      "TargetKNN_K25": {
+        "cell_acc": 0.7628160000000002,
+        "cell_acc_std": 0.005682280606313717,
+        "mean_error_m": 0.33586846905681855,
+        "k": 25,
+        "n_trials": 5
+      }
+    }
+  },
+  "k_values": [
+    1,
+    3,
+    5,
+    10,
+    25
+  ],
+  "averages": {
+    "ProtoNet_K1": {
+      "cell_acc_mean": 0.17162347417259097,
+      "mean_error_m": 1.0607597919828962
+    },
+    "ProtoNet_K3": {
+      "cell_acc_mean": 0.15864974163568443,
+      "mean_error_m": 1.0754052347996068
+    },
+    "ProtoNet_K5": {
+      "cell_acc_mean": 0.1639737209826459,
+      "mean_error_m": 1.0738836921295376
+    },
+    "ProtoNet_K10": {
+      "cell_acc_mean": 0.16173021992580813,
+      "mean_error_m": 1.0838121283757869
+    },
+    "ProtoNet_K25": {
+      "cell_acc_mean": 0.16331711538082572,
+      "mean_error_m": 1.092029727891227
+    },
+    "RawCentroid_K1": {
+      "cell_acc_mean": 0.17841147062093332,
+      "mean_error_m": 1.0407884400800322
+    },
+    "RawCentroid_K3": {
+      "cell_acc_mean": 0.08579294029783971,
+      "mean_error_m": 1.1515113522540152
+    },
+    "RawCentroid_K5": {
+      "cell_acc_mean": 0.08373295491722829,
+      "mean_error_m": 1.1503808156349549
+    },
+    "RawCentroid_K10": {
+      "cell_acc_mean": 0.07413732966159436,
+      "mean_error_m": 1.1644951475300749
+    },
+    "RawCentroid_K25": {
+      "cell_acc_mean": 0.06443206864387296,
+      "mean_error_m": 1.1662450760784722
+    },
+    "TargetKNN_K1": {
+      "cell_acc_mean": 0.17841147062093332,
+      "mean_error_m": 1.0413327698511177
+    },
+    "TargetKNN_K3": {
+      "cell_acc_mean": 0.37157742793248305,
+      "mean_error_m": 0.8118413868518582
+    },
+    "TargetKNN_K5": {
+      "cell_acc_mean": 0.4920894334300276,
+      "mean_error_m": 0.6587685000039174
+    },
+    "TargetKNN_K10": {
+      "cell_acc_mean": 0.6701614792313322,
+      "mean_error_m": 0.4326819686570098
+    },
+    "TargetKNN_K25": {
+      "cell_acc_mean": 0.8443396225572306,
+      "mean_error_m": 0.19587798694990652
+    }
+  },
+  "knn_loro_baseline_acc_mean": 0.01163034188034188
+}

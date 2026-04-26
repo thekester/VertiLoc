@@ -1,0 +1,165 @@
+{
+  "datasets": [
+    "E101"
+  ],
+  "n_raw_samples": 7200,
+  "n_windows": 1440,
+  "n_train": 1296,
+  "n_test": 144,
+  "window_size": 5,
+  "test_size": 0.1,
+  "origin": {
+    "x_m": 0.875,
+    "y_m": 0.7499999999999999
+  },
+  "feature_count": 65,
+  "feature_columns": [
+    "Signal_mean",
+    "Signal_std",
+    "Signal_median",
+    "Signal_min",
+    "Signal_max",
+    "Noise_mean",
+    "Noise_std",
+    "Noise_median",
+    "Noise_min",
+    "Noise_max",
+    "signal_A1_mean",
+    "signal_A1_std",
+    "signal_A1_median",
+    "signal_A1_min",
+    "signal_A1_max",
+    "signal_A2_mean",
+    "signal_A2_std",
+    "signal_A2_median",
+    "signal_A2_min",
+    "signal_A2_max",
+    "signal_A3_mean",
+    "signal_A3_std",
+    "signal_A3_median",
+    "signal_A3_min",
+    "signal_A3_max",
+    "ant_median_mean",
+    "ant_median_std",
+    "ant_median_min",
+    "ant_median_max",
+    "ant_median_range",
+    "signal_minus_ant_mean",
+    "noise_minus_signal",
+    "a1_minus_a2",
+    "a1_minus_a2_abs",
+    "a1_minus_a2_sq",
+    "a1_minus_a3",
+    "a1_minus_a3_abs",
+    "a1_minus_a3_sq",
+    "a2_minus_a3",
+    "a2_minus_a3_abs",
+    "a2_minus_a3_sq",
+    "signal_minus_a1",
+    "signal_minus_a1_abs",
+    "signal_minus_a1_sq",
+    "signal_minus_a2",
+    "signal_minus_a2_abs",
+    "signal_minus_a2_sq",
+    "signal_minus_a3",
+    "signal_minus_a3_abs",
+    "signal_minus_a3_sq",
+    "a1_over_a2_mw",
+    "a1_over_a3_mw",
+    "a2_over_a3_mw",
+    "Signal_median_log_abs",
+    "Signal_median_mw",
+    "Noise_median_log_abs",
+    "Noise_median_mw",
+    "signal_A1_median_log_abs",
+    "signal_A1_median_mw",
+    "signal_A2_median_log_abs",
+    "signal_A2_median_mw",
+    "signal_A3_median_log_abs",
+    "signal_A3_median_mw",
+    "orientation_sin_input",
+    "orientation_cos_input"
+  ],
+  "grid_search": true,
+  "xgb_grid_search": {
+    "target_radius_m": {
+      "best_params": {
+        "model__learning_rate": 0.08,
+        "model__max_depth": 3,
+        "model__n_estimators": 220
+      }
+    },
+    "target_sin": {
+      "best_params": {
+        "model__learning_rate": 0.08,
+        "model__max_depth": 3,
+        "model__n_estimators": 220
+      }
+    },
+    "target_cos": {
+      "best_params": {
+        "model__learning_rate": 0.08,
+        "model__max_depth": 3,
+        "model__n_estimators": 220
+      }
+    }
+  },
+  "fusion_weight_xgb": 0.7,
+  "agreement_threshold_m": 0.1,
+  "agreement_rate": 0.19444444444444445,
+  "metrics": [
+    {
+      "model": "rf_polar",
+      "n_test": 144,
+      "mean_error_m": 0.3882974333389644,
+      "median_error_m": 0.20397158552421643,
+      "p80_error_m": 0.5761747561664359,
+      "p90_error_m": 0.813384751930464,
+      "within_0_10m": 0.2361111111111111,
+      "within_0_22m": 0.5138888888888888,
+      "cell_accuracy": 0.4027777777777778,
+      "mean_lateral_error_m": 0.2878175557345093,
+      "mean_depth_error_m": 0.20936301775270064
+    },
+    {
+      "model": "weighted_xgb_rf",
+      "n_test": 144,
+      "mean_error_m": 0.5707811978056656,
+      "median_error_m": 0.41321269612536277,
+      "p80_error_m": 0.7986502431070182,
+      "p90_error_m": 1.3178172275986813,
+      "within_0_10m": 0.0763888888888889,
+      "within_0_22m": 0.25,
+      "cell_accuracy": 0.14583333333333334,
+      "mean_lateral_error_m": 0.4424894349875378,
+      "mean_depth_error_m": 0.27001256967591464
+    },
+    {
+      "model": "xgb_polar",
+      "n_test": 144,
+      "mean_error_m": 0.6704671112081597,
+      "median_error_m": 0.4759677721573823,
+      "p80_error_m": 0.8967560876803732,
+      "p90_error_m": 1.4708983086463663,
+      "within_0_10m": 0.06944444444444445,
+      "within_0_22m": 0.20833333333333334,
+      "cell_accuracy": 0.09027777777777778,
+      "mean_lateral_error_m": 0.5210513084606585,
+      "mean_depth_error_m": 0.31920929328480935
+    },
+    {
+      "model": "arbitrated_proxy",
+      "n_test": 144,
+      "mean_error_m": 0.802427269494066,
+      "median_error_m": 0.7547727316250064,
+      "p80_error_m": 1.2521260786717479,
+      "p90_error_m": 1.4489418634166094,
+      "within_0_10m": 0.05555555555555555,
+      "within_0_22m": 0.1388888888888889,
+      "cell_accuracy": 0.0763888888888889,
+      "mean_lateral_error_m": 0.7306261180093069,
+      "mean_depth_error_m": 0.20450109701790894
+    }
+  ],
+  "confusion_matrix_csv": "/home/test/Documents/projetretd/reports/benchmarks/xgb_polar_360_e101_grid_xgb_confusion_matrix.csv"
+}

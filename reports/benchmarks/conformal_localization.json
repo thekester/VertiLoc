@@ -1,0 +1,424 @@
+{
+  "room_aware": {
+    "MLP_baseline": {
+      "cell_acc": 0.30558358560376725,
+      "mean_error_m": 0.9442428531173787
+    },
+    "conformal": {
+      "alpha_0.05": {
+        "target_alpha": 0.05,
+        "marginal_coverage": 0.9505549949545913,
+        "avg_set_size": 28.34796501849983,
+        "empty_rate": 0.0,
+        "mean_min_dist_m": 0.016139011859372672,
+        "tau": 0.9948104216016489
+      },
+      "alpha_0.1": {
+        "target_alpha": 0.1,
+        "marginal_coverage": 0.900100908173562,
+        "avg_set_size": 20.234947864110325,
+        "empty_rate": 0.0,
+        "mean_min_dist_m": 0.03481107300207869,
+        "tau": 0.989938656134041
+      },
+      "alpha_0.2": {
+        "target_alpha": 0.2,
+        "marginal_coverage": 0.8047426841574168,
+        "avg_set_size": 11.34695593676421,
+        "empty_rate": 0.0,
+        "mean_min_dist_m": 0.08062514992336994,
+        "tau": 0.9777591228485107
+      }
+    },
+    "selective_frontier": [
+      {
+        "threshold": 0.05,
+        "coverage_rate": 0.9991590985536495,
+        "cell_acc_when_answered": 0.3058407675475509,
+        "mean_error_m_when_answered": 0.9444063296811873
+      },
+      {
+        "threshold": 0.08241379310344828,
+        "coverage_rate": 0.9382778338378742,
+        "cell_acc_when_answered": 0.3212045169385194,
+        "mean_error_m_when_answered": 0.9121645304622552
+      },
+      {
+        "threshold": 0.11482758620689655,
+        "coverage_rate": 0.7581567440295998,
+        "cell_acc_when_answered": 0.3755545696539485,
+        "mean_error_m_when_answered": 0.8374516390007444
+      },
+      {
+        "threshold": 0.1472413793103448,
+        "coverage_rate": 0.5829128826101581,
+        "cell_acc_when_answered": 0.4448932487016734,
+        "mean_error_m_when_answered": 0.7381904123212176
+      },
+      {
+        "threshold": 0.17965517241379308,
+        "coverage_rate": 0.4643457786747393,
+        "cell_acc_when_answered": 0.504889532777979,
+        "mean_error_m_when_answered": 0.6587976022714055
+      },
+      {
+        "threshold": 0.21206896551724136,
+        "coverage_rate": 0.35486041035990584,
+        "cell_acc_when_answered": 0.5772511848341232,
+        "mean_error_m_when_answered": 0.5542125081593716
+      },
+      {
+        "threshold": 0.24448275862068963,
+        "coverage_rate": 0.29112008072653883,
+        "cell_acc_when_answered": 0.6117850953206239,
+        "mean_error_m_when_answered": 0.5025006430927506
+      },
+      {
+        "threshold": 0.2768965517241379,
+        "coverage_rate": 0.23242515977127481,
+        "cell_acc_when_answered": 0.678726483357453,
+        "mean_error_m_when_answered": 0.42468428839930183
+      },
+      {
+        "threshold": 0.3093103448275862,
+        "coverage_rate": 0.18768920282542886,
+        "cell_acc_when_answered": 0.7302867383512545,
+        "mean_error_m_when_answered": 0.36073975787869655
+      },
+      {
+        "threshold": 0.34172413793103446,
+        "coverage_rate": 0.15876219307097209,
+        "cell_acc_when_answered": 0.7658898305084746,
+        "mean_error_m_when_answered": 0.31080081731586134
+      },
+      {
+        "threshold": 0.37413793103448273,
+        "coverage_rate": 0.13185334678775648,
+        "cell_acc_when_answered": 0.7959183673469388,
+        "mean_error_m_when_answered": 0.26484782393052475
+      },
+      {
+        "threshold": 0.406551724137931,
+        "coverage_rate": 0.11167171207534476,
+        "cell_acc_when_answered": 0.7996987951807228,
+        "mean_error_m_when_answered": 0.28437923204804333
+      },
+      {
+        "threshold": 0.4389655172413793,
+        "coverage_rate": 0.09905819038008745,
+        "cell_acc_when_answered": 0.8285229202037352,
+        "mean_error_m_when_answered": 0.2611833023093683
+      },
+      {
+        "threshold": 0.47137931034482755,
+        "coverage_rate": 0.08106289942818702,
+        "cell_acc_when_answered": 0.8609958506224067,
+        "mean_error_m_when_answered": 0.17488773232132995
+      },
+      {
+        "threshold": 0.5037931034482759,
+        "coverage_rate": 0.07029936091490077,
+        "cell_acc_when_answered": 0.8875598086124402,
+        "mean_error_m_when_answered": 0.13065919691960276
+      },
+      {
+        "threshold": 0.5362068965517242,
+        "coverage_rate": 0.05684493777329297,
+        "cell_acc_when_answered": 0.9230769230769231,
+        "mean_error_m_when_answered": 0.10577635839742108
+      },
+      {
+        "threshold": 0.5686206896551724,
+        "coverage_rate": 0.04843592330978809,
+        "cell_acc_when_answered": 0.9375,
+        "mean_error_m_when_answered": 0.09246885804471792
+      },
+      {
+        "threshold": 0.6010344827586207,
+        "coverage_rate": 0.042885973763874874,
+        "cell_acc_when_answered": 0.9450980392156862,
+        "mean_error_m_when_answered": 0.08857971063359117
+      },
+      {
+        "threshold": 0.633448275862069,
+        "coverage_rate": 0.035149680457450386,
+        "cell_acc_when_answered": 0.9569377990430622,
+        "mean_error_m_when_answered": 0.06293284421241963
+      },
+      {
+        "threshold": 0.6658620689655173,
+        "coverage_rate": 0.029431550622267072,
+        "cell_acc_when_answered": 0.96,
+        "mean_error_m_when_answered": 0.06087408251654687
+      },
+      {
+        "threshold": 0.6982758620689655,
+        "coverage_rate": 0.026236125126135216,
+        "cell_acc_when_answered": 0.9551282051282052,
+        "mean_error_m_when_answered": 0.06828823359228015
+      },
+      {
+        "threshold": 0.7306896551724138,
+        "coverage_rate": 0.02186343760511268,
+        "cell_acc_when_answered": 0.9461538461538461,
+        "mean_error_m_when_answered": 0.08194588031073617
+      },
+      {
+        "threshold": 0.7631034482758621,
+        "coverage_rate": 0.016818028927009756,
+        "cell_acc_when_answered": 0.97,
+        "mean_error_m_when_answered": 0.038020806956935035
+      },
+      {
+        "threshold": 0.7955172413793103,
+        "coverage_rate": 0.012781701984527414,
+        "cell_acc_when_answered": 0.9605263157894737,
+        "mean_error_m_when_answered": 0.050027377574914524
+      },
+      {
+        "threshold": 0.8279310344827586,
+        "coverage_rate": 0.009081735620585268,
+        "cell_acc_when_answered": 0.9814814814814815,
+        "mean_error_m_when_answered": 0.004629629629629629
+      },
+      {
+        "threshold": 0.8603448275862069,
+        "coverage_rate": 0.007399932727884292,
+        "cell_acc_when_answered": 0.9772727272727273,
+        "mean_error_m_when_answered": 0.005681818181818182
+      },
+      {
+        "threshold": 0.8927586206896552,
+        "coverage_rate": 0.005213588967373024,
+        "cell_acc_when_answered": 0.967741935483871,
+        "mean_error_m_when_answered": 0.008064516129032258
+      },
+      {
+        "threshold": 0.9251724137931034,
+        "coverage_rate": 0.004709048099562731,
+        "cell_acc_when_answered": 0.9642857142857143,
+        "mean_error_m_when_answered": 0.008928571428571428
+      },
+      {
+        "threshold": 0.9575862068965517,
+        "coverage_rate": 0.001849983181971073,
+        "cell_acc_when_answered": 1.0,
+        "mean_error_m_when_answered": 0.0
+      },
+      {
+        "threshold": 0.99,
+        "coverage_rate": 0.00016818028927009755,
+        "cell_acc_when_answered": 1.0,
+        "mean_error_m_when_answered": 0.0
+      }
+    ]
+  },
+  "e102": {
+    "MLP_baseline": {
+      "cell_acc": 0.2951111111111111,
+      "mean_error_m": 0.9940104921606912
+    },
+    "conformal": {
+      "alpha_0.05": {
+        "target_alpha": 0.05,
+        "marginal_coverage": 0.9533333333333334,
+        "avg_set_size": 27.322222222222223,
+        "empty_rate": 0.0,
+        "mean_min_dist_m": 0.013886851149904464,
+        "tau": 0.9944373584124777
+      },
+      "alpha_0.1": {
+        "target_alpha": 0.1,
+        "marginal_coverage": 0.8955555555555555,
+        "avg_set_size": 17.415555555555557,
+        "empty_rate": 0.0,
+        "mean_min_dist_m": 0.035661254981617124,
+        "tau": 0.987359344959259
+      },
+      "alpha_0.2": {
+        "target_alpha": 0.2,
+        "marginal_coverage": 0.8013333333333333,
+        "avg_set_size": 9.977777777777778,
+        "empty_rate": 0.0,
+        "mean_min_dist_m": 0.091205422680409,
+        "tau": 0.9737932682037354
+      }
+    },
+    "selective_frontier": [
+      {
+        "threshold": 0.05,
+        "coverage_rate": 0.9995555555555555,
+        "cell_acc_when_answered": 0.29524232992441085,
+        "mean_error_m_when_answered": 0.9943413105209227
+      },
+      {
+        "threshold": 0.08241379310344828,
+        "coverage_rate": 0.9688888888888889,
+        "cell_acc_when_answered": 0.30229357798165135,
+        "mean_error_m_when_answered": 0.9780398134026104
+      },
+      {
+        "threshold": 0.11482758620689655,
+        "coverage_rate": 0.7933333333333333,
+        "cell_acc_when_answered": 0.34509803921568627,
+        "mean_error_m_when_answered": 0.9158207415238065
+      },
+      {
+        "threshold": 0.1472413793103448,
+        "coverage_rate": 0.5866666666666667,
+        "cell_acc_when_answered": 0.4159090909090909,
+        "mean_error_m_when_answered": 0.7803365861146337
+      },
+      {
+        "threshold": 0.17965517241379308,
+        "coverage_rate": 0.436,
+        "cell_acc_when_answered": 0.46381243628950053,
+        "mean_error_m_when_answered": 0.6839938283507477
+      },
+      {
+        "threshold": 0.21206896551724136,
+        "coverage_rate": 0.3328888888888889,
+        "cell_acc_when_answered": 0.5100133511348465,
+        "mean_error_m_when_answered": 0.6147783944588326
+      },
+      {
+        "threshold": 0.24448275862068963,
+        "coverage_rate": 0.2528888888888889,
+        "cell_acc_when_answered": 0.5641476274165202,
+        "mean_error_m_when_answered": 0.5370179085086073
+      },
+      {
+        "threshold": 0.2768965517241379,
+        "coverage_rate": 0.1831111111111111,
+        "cell_acc_when_answered": 0.6237864077669902,
+        "mean_error_m_when_answered": 0.4733897526829845
+      },
+      {
+        "threshold": 0.3093103448275862,
+        "coverage_rate": 0.13422222222222221,
+        "cell_acc_when_answered": 0.6986754966887417,
+        "mean_error_m_when_answered": 0.45178060936227427
+      },
+      {
+        "threshold": 0.34172413793103446,
+        "coverage_rate": 0.10533333333333333,
+        "cell_acc_when_answered": 0.7172995780590717,
+        "mean_error_m_when_answered": 0.45596598285117435
+      },
+      {
+        "threshold": 0.37413793103448273,
+        "coverage_rate": 0.088,
+        "cell_acc_when_answered": 0.7727272727272727,
+        "mean_error_m_when_answered": 0.34347129529704995
+      },
+      {
+        "threshold": 0.406551724137931,
+        "coverage_rate": 0.07866666666666666,
+        "cell_acc_when_answered": 0.7909604519774012,
+        "mean_error_m_when_answered": 0.3345060471241837
+      },
+      {
+        "threshold": 0.4389655172413793,
+        "coverage_rate": 0.06844444444444445,
+        "cell_acc_when_answered": 0.8701298701298701,
+        "mean_error_m_when_answered": 0.18830457330012954
+      },
+      {
+        "threshold": 0.47137931034482755,
+        "coverage_rate": 0.058222222222222224,
+        "cell_acc_when_answered": 0.9312977099236641,
+        "mean_error_m_when_answered": 0.0818085872149373
+      },
+      {
+        "threshold": 0.5037931034482759,
+        "coverage_rate": 0.052444444444444446,
+        "cell_acc_when_answered": 0.940677966101695,
+        "mean_error_m_when_answered": 0.07454226825361807
+      },
+      {
+        "threshold": 0.5362068965517242,
+        "coverage_rate": 0.044,
+        "cell_acc_when_answered": 0.9292929292929293,
+        "mean_error_m_when_answered": 0.08884836014067608
+      },
+      {
+        "threshold": 0.5686206896551724,
+        "coverage_rate": 0.04088888888888889,
+        "cell_acc_when_answered": 0.967391304347826,
+        "mean_error_m_when_answered": 0.04126073536877101
+      },
+      {
+        "threshold": 0.6010344827586207,
+        "coverage_rate": 0.03911111111111111,
+        "cell_acc_when_answered": 0.9772727272727273,
+        "mean_error_m_when_answered": 0.008875283722621197
+      },
+      {
+        "threshold": 0.633448275862069,
+        "coverage_rate": 0.03244444444444444,
+        "cell_acc_when_answered": 0.9726027397260274,
+        "mean_error_m_when_answered": 0.010698972158776236
+      },
+      {
+        "threshold": 0.6658620689655173,
+        "coverage_rate": 0.029333333333333333,
+        "cell_acc_when_answered": 0.9696969696969697,
+        "mean_error_m_when_answered": 0.011833711630161595
+      },
+      {
+        "threshold": 0.6982758620689655,
+        "coverage_rate": 0.020444444444444446,
+        "cell_acc_when_answered": 1.0,
+        "mean_error_m_when_answered": 0.0
+      },
+      {
+        "threshold": 0.7306896551724138,
+        "coverage_rate": 0.014222222222222223,
+        "cell_acc_when_answered": 1.0,
+        "mean_error_m_when_answered": 0.0
+      },
+      {
+        "threshold": 0.7631034482758621,
+        "coverage_rate": 0.014222222222222223,
+        "cell_acc_when_answered": 1.0,
+        "mean_error_m_when_answered": 0.0
+      },
+      {
+        "threshold": 0.7955172413793103,
+        "coverage_rate": 0.008888888888888889,
+        "cell_acc_when_answered": 1.0,
+        "mean_error_m_when_answered": 0.0
+      },
+      {
+        "threshold": 0.8279310344827586,
+        "coverage_rate": 0.008888888888888889,
+        "cell_acc_when_answered": 1.0,
+        "mean_error_m_when_answered": 0.0
+      },
+      {
+        "threshold": 0.8603448275862069,
+        "coverage_rate": 0.006222222222222222,
+        "cell_acc_when_answered": 1.0,
+        "mean_error_m_when_answered": 0.0
+      },
+      {
+        "threshold": 0.8927586206896552,
+        "coverage_rate": 0.004,
+        "cell_acc_when_answered": 1.0,
+        "mean_error_m_when_answered": 0.0
+      },
+      {
+        "threshold": 0.9251724137931034,
+        "coverage_rate": 0.0022222222222222222,
+        "cell_acc_when_answered": 1.0,
+        "mean_error_m_when_answered": 0.0
+      },
+      {
+        "threshold": 0.9575862068965517,
+        "coverage_rate": 0.0013333333333333333,
+        "cell_acc_when_answered": 1.0,
+        "mean_error_m_when_answered": 0.0
+      }
+    ]
+  }
+}

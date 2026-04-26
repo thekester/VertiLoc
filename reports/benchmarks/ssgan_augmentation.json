@@ -1,0 +1,70 @@
+{
+  "E102": {
+    "exp1": {
+      "baseline": {
+        "cell_acc": 0.0144,
+        "mean_error_m": 1.437125524007655
+      },
+      "ssgan_augmented": {
+        "cell_acc": 0.0144,
+        "mean_error_m": 1.435876684893269
+      },
+      "delta": 0.0
+    },
+    "exp2": {
+      "baseline": {
+        "cell_acc": 0.023466666666666667,
+        "mean_error_m": 1.3542878317872862
+      },
+      "ssgan_augmented": {
+        "cell_acc": 0.018666666666666668,
+        "mean_error_m": 1.350180435990925
+      },
+      "delta": -0.004799999999999999
+    },
+    "exp3": {
+      "baseline": {
+        "cell_acc": 0.027733333333333332,
+        "mean_error_m": 1.4515454192849544
+      },
+      "ssgan_augmented": {
+        "cell_acc": 0.027733333333333332,
+        "mean_error_m": 1.4582901966223725
+      },
+      "delta": 0.0
+    },
+    "exp4": {
+      "baseline": {
+        "cell_acc": 0.0128,
+        "mean_error_m": 1.4114937064765802
+      },
+      "ssgan_augmented": {
+        "cell_acc": 0.012266666666666667,
+        "mean_error_m": 1.4029498234526996
+      },
+      "delta": -0.0005333333333333336
+    },
+    "exp5": {
+      "baseline": {
+        "cell_acc": 0.009066666666666667,
+        "mean_error_m": 1.431880776947966
+      },
+      "ssgan_augmented": {
+        "cell_acc": 0.009066666666666667,
+        "mean_error_m": 1.4370277399193758
+      },
+      "delta": 0.0
+    },
+    "exp6": {
+      "baseline": {
+        "cell_acc": 0.0272,
+        "mean_error_m": 1.4023457106443484
+      },
+      "ssgan_augmented": {
+        "cell_acc": 0.0272,
+        "mean_error_m": 1.416699873149947
+      },
+      "delta": 0.0
+    }
+  }
+}

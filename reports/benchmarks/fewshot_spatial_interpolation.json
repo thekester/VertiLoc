@@ -1,0 +1,2924 @@
+{
+  "config": {
+    "cell_counts": [
+      1,
+      2,
+      3,
+      5,
+      10,
+      20,
+      40,
+      60
+    ],
+    "shots_per_cell": 1,
+    "n_trials": 3,
+    "source_neighbors": 7,
+    "idw_power": 2.0,
+    "gp_length_scale": 0.75,
+    "gp_noise": 0.05,
+    "seed": 42,
+    "output_name": "fewshot_spatial_interpolation.json",
+    "summary_csv_name": "fewshot_spatial_interpolation_summary.csv",
+    "plot_name": "fewshot_spatial_interpolation_unseen_accuracy.png"
+  },
+  "protocol": "LORO partial target calibration with spatial radio-map interpolation. M target cells are calibrated with K support samples per cell; RSSI prototypes for all target cells are spatially interpolated and used for nearest-prototype localization.",
+  "methods": {
+    "NearestSpatial": "Copy the RSSI prototype of the nearest calibrated cell.",
+    "IDW": "Inverse-distance weighted RSSI interpolation.",
+    "GP_RBF": "Gaussian-process/RBF interpolation, kriging-like with fixed kernel."
+  },
+  "folds": {
+    "B121": {
+      "n_target_samples": 5980,
+      "n_target_cells": 80,
+      "source_knn_all_target": {
+        "cell_acc": 0.021739130434782608,
+        "mean_error_m": 1.52688393211055,
+        "p90_error_m": 2.8935272592460572,
+        "n": 5980
+      },
+      "by_cell_count": {
+        "1": {
+          "requested_cell_count": 1,
+          "effective_cell_count": 1,
+          "coverage_mean": 0.012500000000000002,
+          "n_support_mean": 1.0,
+          "n_query_all_mean": 5979.0,
+          "n_query_unseen_mean": 5905.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.021742766348887773,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.526981833779052,
+            "mean_error_m_std": 7.576133762938899e-05,
+            "p90_error_m_mean": 2.8935272592460577,
+            "p90_error_m_std": 4.440892098500626e-16
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.02201524132091448,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.5315234147374437,
+            "mean_error_m_std": 0.0017008957441982248,
+            "p90_error_m_mean": 3.0004166377354995,
+            "p90_error_m_std": 0.0
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.012543903662819869,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.995557811475879,
+              "mean_error_m_std": 0.00013551261687487788,
+              "p90_error_m_mean": 3.5,
+              "p90_error_m_std": 0.0
+            },
+            "unseen": {
+              "cell_acc_mean": 0.012701100762066047,
+              "cell_acc_std": 1.734723475976807e-18,
+              "mean_error_m_mean": 1.9984975648402117,
+              "mean_error_m_std": 0.01029081206131298,
+              "p90_error_m_mean": 3.5,
+              "p90_error_m_std": 0.0
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.012543903662819869,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.995557811475879,
+              "mean_error_m_std": 0.00013551261687487788,
+              "p90_error_m_mean": 3.5,
+              "p90_error_m_std": 0.0
+            },
+            "unseen": {
+              "cell_acc_mean": 0.012701100762066047,
+              "cell_acc_std": 1.734723475976807e-18,
+              "mean_error_m_mean": 1.9984975648402117,
+              "mean_error_m_std": 0.01029081206131298,
+              "p90_error_m_mean": 3.5,
+              "p90_error_m_std": 0.0
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.012543903662819869,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.995557811475879,
+              "mean_error_m_std": 0.00013551261687487788,
+              "p90_error_m_mean": 3.5,
+              "p90_error_m_std": 0.0
+            },
+            "unseen": {
+              "cell_acc_mean": 0.012701100762066047,
+              "cell_acc_std": 1.734723475976807e-18,
+              "mean_error_m_mean": 1.9984975648402117,
+              "mean_error_m_std": 0.01029081206131298,
+              "p90_error_m_mean": 3.5,
+              "p90_error_m_std": 0.0
+            }
+          }
+        },
+        "2": {
+          "requested_cell_count": 2,
+          "effective_cell_count": 2,
+          "coverage_mean": 0.025000000000000005,
+          "n_support_mean": 2.0,
+          "n_query_all_mean": 5978.0,
+          "n_query_unseen_mean": 5830.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.021746403479424557,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.5269573794872853,
+            "mean_error_m_std": 0.0001371588462402223,
+            "p90_error_m_mean": 2.8935272592460577,
+            "p90_error_m_std": 4.440892098500626e-16
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.020869068038879363,
+            "cell_acc_std": 0.001032331051187409,
+            "mean_error_m_mean": 1.5329761038394523,
+            "mean_error_m_std": 0.012367145460589597,
+            "p90_error_m_mean": 3.0004166377354995,
+            "p90_error_m_std": 0.0
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.01059440169510427,
+              "cell_acc_std": 0.0027122530404851816,
+              "mean_error_m_mean": 1.8317085812235563,
+              "mean_error_m_std": 0.04264724364124922,
+              "p90_error_m_mean": 3.433746208770484,
+              "p90_error_m_std": 0.043439311163123835
+            },
+            "unseen": {
+              "cell_acc_mean": 0.010863350485991996,
+              "cell_acc_std": 0.0027811061193860056,
+              "mean_error_m_mean": 1.8472722748282913,
+              "mean_error_m_std": 0.04091818705778993,
+              "p90_error_m_mean": 3.4455920620158174,
+              "p90_error_m_std": 0.053808383859677275
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.01600312256049961,
+              "cell_acc_std": 0.0019523967213127688,
+              "mean_error_m_mean": 1.437082718143393,
+              "mean_error_m_std": 0.12353964415935346,
+              "p90_error_m_mean": 2.6931078669063013,
+              "p90_error_m_std": 0.3248127930681369
+            },
+            "unseen": {
+              "cell_acc_mean": 0.00440251572327044,
+              "cell_acc_std": 0.001982268247382472,
+              "mean_error_m_mean": 1.4645500058131236,
+              "mean_error_m_std": 0.1289112787529396,
+              "p90_error_m_mean": 2.6931078669063013,
+              "p90_error_m_std": 0.3248127930681369
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.011040481766477083,
+              "cell_acc_std": 0.0017059282414161213,
+              "mean_error_m_mean": 1.5575536667360594,
+              "mean_error_m_std": 0.18153836298096748,
+              "p90_error_m_mean": 2.9007012112067705,
+              "p90_error_m_std": 0.3525135694365644
+            },
+            "unseen": {
+              "cell_acc_mean": 0.006518010291595197,
+              "cell_acc_std": 0.001651175423464111,
+              "mean_error_m_mean": 1.5749815430101677,
+              "mean_error_m_std": 0.18611138761178808,
+              "p90_error_m_mean": 2.914402474492981,
+              "p90_error_m_std": 0.3668672103125656
+            }
+          }
+        },
+        "3": {
+          "requested_cell_count": 3,
+          "effective_cell_count": 3,
+          "coverage_mean": 0.0375,
+          "n_support_mean": 3.0,
+          "n_query_all_mean": 5977.0,
+          "n_query_unseen_mean": 5755.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.02175004182700351,
+            "cell_acc_std": 3.469446951953614e-18,
+            "mean_error_m_mean": 1.5266043889401735,
+            "mean_error_m_std": 0.00016602764544405808,
+            "p90_error_m_mean": 2.8935272592460577,
+            "p90_error_m_std": 4.440892098500626e-16
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.020388068346365477,
+            "cell_acc_std": 0.00016382433389783833,
+            "mean_error_m_mean": 1.5107415852328325,
+            "mean_error_m_std": 0.009380205658737362,
+            "p90_error_m_mean": 2.8935272592460577,
+            "p90_error_m_std": 4.440892098500626e-16
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.018682728236015838,
+              "cell_acc_std": 0.0037618475163772357,
+              "mean_error_m_mean": 1.5601963084048844,
+              "mean_error_m_std": 0.20151468739272427,
+              "p90_error_m_mean": 2.635737741477834,
+              "p90_error_m_std": 0.47387047261460985
+            },
+            "unseen": {
+              "cell_acc_mean": 0.01662322618013322,
+              "cell_acc_std": 0.005611431842355223,
+              "mean_error_m_mean": 1.5607893743682952,
+              "mean_error_m_std": 0.2105344895983989,
+              "p90_error_m_mean": 2.610157517272133,
+              "p90_error_m_std": 0.49454801084199523
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.01678657074340528,
+              "cell_acc_std": 0.005738011763712892,
+              "mean_error_m_mean": 1.5905971230511193,
+              "mean_error_m_std": 0.22373050560139882,
+              "p90_error_m_mean": 2.873583761080532,
+              "p90_error_m_std": 0.4430813934409605
+            },
+            "unseen": {
+              "cell_acc_mean": 0.004112366058499855,
+              "cell_acc_std": 0.0018076439657488835,
+              "mean_error_m_mean": 1.5931014796870127,
+              "mean_error_m_std": 0.2129318969937507,
+              "p90_error_m_mean": 2.83806130178211,
+              "p90_error_m_std": 0.41582213424351877
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.018292342869890135,
+              "cell_acc_std": 0.007052561467642513,
+              "mean_error_m_mean": 1.6001532240867131,
+              "mean_error_m_std": 0.23265432834461042,
+              "p90_error_m_mean": 2.8977237399820432,
+              "p90_error_m_std": 0.4981938646194649
+            },
+            "unseen": {
+              "cell_acc_mean": 0.007993049522154648,
+              "cell_acc_std": 0.003838526852193661,
+              "mean_error_m_mean": 1.6026296852939754,
+              "mean_error_m_std": 0.21909979396705456,
+              "p90_error_m_mean": 2.83806130178211,
+              "p90_error_m_std": 0.4158221342435189
+            }
+          }
+        },
+        "5": {
+          "requested_cell_count": 5,
+          "effective_cell_count": 5,
+          "coverage_mean": 0.0625,
+          "n_support_mean": 5.0,
+          "n_query_all_mean": 5975.0,
+          "n_query_unseen_mean": 5605.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.021757322175732216,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.5267300156091501,
+            "mean_error_m_std": 0.00011468178948206204,
+            "p90_error_m_mean": 2.8935272592460577,
+            "p90_error_m_std": 4.440892098500626e-16
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.022360987213797204,
+            "cell_acc_std": 0.0011774599984075715,
+            "mean_error_m_mean": 1.5357536013431847,
+            "mean_error_m_std": 0.003707289137312094,
+            "p90_error_m_mean": 3.005265320602422,
+            "p90_error_m_std": 0.006857073070047898
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.01377963737796374,
+              "cell_acc_std": 0.002415047232570529,
+              "mean_error_m_mean": 1.5536495109650674,
+              "mean_error_m_std": 0.025361930194184427,
+              "p90_error_m_mean": 2.971123292578014,
+              "p90_error_m_std": 0.15251135575330976
+            },
+            "unseen": {
+              "cell_acc_mean": 0.014689265536723164,
+              "cell_acc_std": 0.002574470511080983,
+              "mean_error_m_mean": 1.5799933528999581,
+              "mean_error_m_std": 0.009246691896376572,
+              "p90_error_m_mean": 2.9662746097110912,
+              "p90_error_m_std": 0.15126667329579496
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.024490934449093445,
+              "cell_acc_std": 0.002699816710195339,
+              "mean_error_m_mean": 1.3955634941262407,
+              "mean_error_m_std": 0.003817113919008962,
+              "p90_error_m_mean": 2.600728854510093,
+              "p90_error_m_std": 0.1170872551502465
+            },
+            "unseen": {
+              "cell_acc_mean": 0.010407374368123699,
+              "cell_acc_std": 0.001221685315740359,
+              "mean_error_m_mean": 1.4442624831958513,
+              "mean_error_m_std": 0.016261752475725467,
+              "p90_error_m_mean": 2.6345404259489453,
+              "p90_error_m_std": 0.12921588153454222
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.024658298465829846,
+              "cell_acc_std": 0.003152886170364248,
+              "mean_error_m_mean": 1.4221422006644702,
+              "mean_error_m_std": 0.028700256500294896,
+              "p90_error_m_mean": 2.6834722125784993,
+              "p90_error_m_std": 0.22504122063683613
+            },
+            "unseen": {
+              "cell_acc_mean": 0.015878679750223015,
+              "cell_acc_std": 0.003161471034196137,
+              "mean_error_m_mean": 1.4543418017549505,
+              "mean_error_m_std": 0.02039645049561894,
+              "p90_error_m_mean": 2.687059345059069,
+              "p90_error_m_std": 0.22215536851163212
+            }
+          }
+        },
+        "10": {
+          "requested_cell_count": 10,
+          "effective_cell_count": 10,
+          "coverage_mean": 0.125,
+          "n_support_mean": 10.0,
+          "n_query_all_mean": 5970.0,
+          "n_query_unseen_mean": 5230.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.021775544388609718,
+            "cell_acc_std": 3.469446951953614e-18,
+            "mean_error_m_mean": 1.5265697073268374,
+            "mean_error_m_std": 0.0006257195391144747,
+            "p90_error_m_mean": 2.8970763506045345,
+            "p90_error_m_std": 0.00501917313326031
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.022434671765455706,
+            "cell_acc_std": 0.001951993987394973,
+            "mean_error_m_mean": 1.5292256950109293,
+            "mean_error_m_std": 0.02602818598122223,
+            "p90_error_m_mean": 2.9433576376930937,
+            "p90_error_m_std": 0.09117282106197314
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.01658291457286432,
+              "cell_acc_std": 0.00284264032637808,
+              "mean_error_m_mean": 1.4131134870337345,
+              "mean_error_m_std": 0.11174999505407705,
+              "p90_error_m_mean": 2.606997342145496,
+              "p90_error_m_std": 0.30724288662172905
+            },
+            "unseen": {
+              "cell_acc_mean": 0.012683237731038877,
+              "cell_acc_std": 0.00793799743884781,
+              "mean_error_m_mean": 1.4533663874595568,
+              "mean_error_m_std": 0.1139551899594383,
+              "p90_error_m_mean": 2.6424648604720056,
+              "p90_error_m_std": 0.2984059782198229
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.03126744835287549,
+              "cell_acc_std": 0.004939401575565935,
+              "mean_error_m_mean": 1.298192788925671,
+              "mean_error_m_std": 0.08074320067045361,
+              "p90_error_m_mean": 2.3543897810018852,
+              "p90_error_m_std": 0.1688651111999212
+            },
+            "unseen": {
+              "cell_acc_mean": 0.00745697896749522,
+              "cell_acc_std": 0.004607461968624045,
+              "mean_error_m_mean": 1.3454758806316722,
+              "mean_error_m_std": 0.0984585455667889,
+              "p90_error_m_mean": 2.378143681853164,
+              "p90_error_m_std": 0.13637923276123745
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.035510887772194306,
+              "cell_acc_std": 0.005978749848433752,
+              "mean_error_m_mean": 1.3247536465539171,
+              "mean_error_m_std": 0.05226679746988802,
+              "p90_error_m_mean": 2.4173167892165104,
+              "p90_error_m_std": 0.07009189614581475
+            },
+            "unseen": {
+              "cell_acc_mean": 0.016252390057361375,
+              "cell_acc_std": 0.008738419283904798,
+              "mean_error_m_mean": 1.367334212034459,
+              "mean_error_m_std": 0.057495958674539854,
+              "p90_error_m_mean": 2.443473256893098,
+              "p90_error_m_std": 0.08121243054692903
+            }
+          }
+        },
+        "20": {
+          "requested_cell_count": 20,
+          "effective_cell_count": 20,
+          "coverage_mean": 0.25,
+          "n_support_mean": 20.0,
+          "n_query_all_mean": 5960.0,
+          "n_query_unseen_mean": 4480.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.021756152125279638,
+            "cell_acc_std": 7.909471825352901e-05,
+            "mean_error_m_mean": 1.526389251167959,
+            "mean_error_m_std": 0.0007559715480176166,
+            "p90_error_m_mean": 2.8970763506045345,
+            "p90_error_m_std": 0.00501917313326031
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.01912202380952381,
+            "cell_acc_std": 0.003184662880808437,
+            "mean_error_m_mean": 1.4917267717106253,
+            "mean_error_m_std": 0.016803727229536252,
+            "p90_error_m_mean": 2.8146935890075135,
+            "p90_error_m_std": 4.440892098500626e-16
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.021700223713646532,
+              "cell_acc_std": 0.00837059818070233,
+              "mean_error_m_mean": 1.4512340378623463,
+              "mean_error_m_std": 0.08061651954997232,
+              "p90_error_m_mean": 2.8011628864548563,
+              "p90_error_m_std": 0.2003825097521366
+            },
+            "unseen": {
+              "cell_acc_mean": 0.012574404761904764,
+              "cell_acc_std": 0.008473000503265929,
+              "mean_error_m_mean": 1.5090622393857682,
+              "mean_error_m_std": 0.07873145439720304,
+              "p90_error_m_mean": 2.8870832867234655,
+              "p90_error_m_std": 0.2478240549032694
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.059228187919463084,
+              "cell_acc_std": 0.0013211422607402365,
+              "mean_error_m_mean": 1.2922625416846711,
+              "mean_error_m_std": 0.08067522251445006,
+              "p90_error_m_mean": 2.5643124586409844,
+              "p90_error_m_std": 0.06558669421940534
+            },
+            "unseen": {
+              "cell_acc_mean": 0.01517857142857143,
+              "cell_acc_std": 0.0018225370109993882,
+              "mean_error_m_mean": 1.3464705584169134,
+              "mean_error_m_std": 0.07739884023728184,
+              "p90_error_m_mean": 2.5643124586409844,
+              "p90_error_m_std": 0.06558669421940534
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.056599552572706935,
+              "cell_acc_std": 0.004609939828857914,
+              "mean_error_m_mean": 1.291739301829179,
+              "mean_error_m_std": 0.06880363923228842,
+              "p90_error_m_mean": 2.606997342145496,
+              "p90_error_m_std": 0.10518962898650862
+            },
+            "unseen": {
+              "cell_acc_mean": 0.01123511904761905,
+              "cell_acc_std": 0.006534076904791711,
+              "mean_error_m_mean": 1.3456956774141444,
+              "mean_error_m_std": 0.05588077865895303,
+              "p90_error_m_mean": 2.5830667245721064,
+              "p90_error_m_std": 0.05614373894409513
+            }
+          }
+        },
+        "40": {
+          "requested_cell_count": 40,
+          "effective_cell_count": 40,
+          "coverage_mean": 0.5,
+          "n_support_mean": 40.0,
+          "n_query_all_mean": 5940.0,
+          "n_query_unseen_mean": 2993.3333333333335,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.021885521885521887,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.5266970364578965,
+            "mean_error_m_std": 0.0005286136971899345,
+            "p90_error_m_mean": 2.8935272592460577,
+            "p90_error_m_std": 4.440892098500626e-16
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.028083519761372105,
+            "cell_acc_std": 0.008005717030048622,
+            "mean_error_m_mean": 1.4884783558063148,
+            "mean_error_m_std": 0.02591523472491539,
+            "p90_error_m_mean": 2.86758040003873,
+            "p90_error_m_std": 0.10559032143327748
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.07255892255892256,
+              "cell_acc_std": 0.008042135294610226,
+              "mean_error_m_mean": 1.2486066262281048,
+              "mean_error_m_std": 0.053591330926769196,
+              "p90_error_m_mean": 2.549872743625164,
+              "p90_error_m_std": 0.172672111193863
+            },
+            "unseen": {
+              "cell_acc_mean": 0.016125279642058166,
+              "cell_acc_std": 0.00830260227541176,
+              "mean_error_m_mean": 1.3942866865543806,
+              "mean_error_m_std": 0.038110257807626884,
+              "p90_error_m_mean": 2.6360997638658623,
+              "p90_error_m_std": 0.09207624528804748
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.10252525252525252,
+              "cell_acc_std": 0.007131903418773176,
+              "mean_error_m_mean": 1.2186900118881552,
+              "mean_error_m_std": 0.0690985591477397,
+              "p90_error_m_mean": 2.5180542645635597,
+              "p90_error_m_std": 0.2026558348035859
+            },
+            "unseen": {
+              "cell_acc_mean": 0.008351976137211036,
+              "cell_acc_std": 0.002721782966307243,
+              "mean_error_m_mean": 1.3695309115751975,
+              "mean_error_m_std": 0.05363041140492099,
+              "p90_error_m_mean": 2.6465464673117123,
+              "p90_error_m_std": 0.15798247696045686
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.10168350168350167,
+              "cell_acc_std": 0.01162794828096917,
+              "mean_error_m_mean": 1.225588975929239,
+              "mean_error_m_std": 0.05905942200790151,
+              "p90_error_m_mean": 2.5814387298823385,
+              "p90_error_m_std": 0.1335692724024748
+            },
+            "unseen": {
+              "cell_acc_mean": 0.011787472035794182,
+              "cell_acc_std": 0.0074654132127221886,
+              "mean_error_m_mean": 1.367474191797801,
+              "mean_error_m_std": 0.04783600186734847,
+              "p90_error_m_mean": 2.6664037171022232,
+              "p90_error_m_std": 0.08198172650143892
+            }
+          }
+        },
+        "60": {
+          "requested_cell_count": 60,
+          "effective_cell_count": 60,
+          "coverage_mean": 0.75,
+          "n_support_mean": 60.0,
+          "n_query_all_mean": 5920.0,
+          "n_query_unseen_mean": 1500.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.021565315315315314,
+            "cell_acc_std": 0.00031851656810204845,
+            "mean_error_m_mean": 1.5276623902811526,
+            "mean_error_m_std": 0.0005197284012716629,
+            "p90_error_m_mean": 2.9362552347928266,
+            "p90_error_m_std": 0.04536896311120642
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.017111111111111108,
+            "cell_acc_std": 0.00925896295822207,
+            "mean_error_m_mean": 1.5829053381499252,
+            "mean_error_m_std": 0.09849784834370379,
+            "p90_error_m_mean": 3.045425253908759,
+            "p90_error_m_std": 0.19676980507207964
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.13451576576576577,
+              "cell_acc_std": 0.00422934954013828,
+              "mean_error_m_mean": 1.190047059845219,
+              "mean_error_m_std": 0.03430870856846684,
+              "p90_error_m_mean": 2.553016608147758,
+              "p90_error_m_std": 0.09316556769182525
+            },
+            "unseen": {
+              "cell_acc_mean": 0.015555555555555557,
+              "cell_acc_std": 0.0106156185888855,
+              "mean_error_m_mean": 1.422492452910465,
+              "mean_error_m_std": 0.04744985788244766,
+              "p90_error_m_mean": 2.683611337047312,
+              "p90_error_m_std": 0.2343007860375325
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.14583333333333334,
+              "cell_acc_std": 0.004478387122781128,
+              "mean_error_m_mean": 1.1752233503792124,
+              "mean_error_m_std": 0.04219434357098608,
+              "p90_error_m_mean": 2.550460746921433,
+              "p90_error_m_std": 0.09652276974699735
+            },
+            "unseen": {
+              "cell_acc_mean": 0.008888888888888889,
+              "cell_acc_std": 0.0024545246704860578,
+              "mean_error_m_mean": 1.3504922048004744,
+              "mean_error_m_std": 0.064745917825465,
+              "p90_error_m_mean": 2.5947503003758148,
+              "p90_error_m_std": 0.12153550386458183
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.14763513513513513,
+              "cell_acc_std": 0.0028500114267666207,
+              "mean_error_m_mean": 1.1747209320120267,
+              "mean_error_m_std": 0.017574094798041288,
+              "p90_error_m_mean": 2.5814387298823385,
+              "p90_error_m_std": 0.1335692724024748
+            },
+            "unseen": {
+              "cell_acc_mean": 0.013777777777777778,
+              "cell_acc_std": 0.0031894889098682934,
+              "mean_error_m_mean": 1.3680887229141792,
+              "mean_error_m_std": 0.06539167430559271,
+              "p90_error_m_mean": 2.6124357550536996,
+              "p90_error_m_std": 0.11260295607578995
+            }
+          }
+        }
+      }
+    },
+    "D005": {
+      "n_target_samples": 1700,
+      "n_target_cells": 34,
+      "source_knn_all_target": {
+        "cell_acc": 0.004705882352941176,
+        "mean_error_m": 1.1908026080892766,
+        "p90_error_m": 2.08806130178211,
+        "n": 1700
+      },
+      "by_cell_count": {
+        "1": {
+          "requested_cell_count": 1,
+          "effective_cell_count": 1,
+          "coverage_mean": 0.02941176470588235,
+          "n_support_mean": 1.0,
+          "n_query_all_mean": 1699.0,
+          "n_query_unseen_mean": 1650.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.004708652148322542,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.1906342063853002,
+            "mean_error_m_std": 8.22945657435216e-05,
+            "p90_error_m_mean": 2.08806130178211,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.0048484848484848485,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.1847832081215395,
+            "mean_error_m_std": 0.0036751926127194592,
+            "p90_error_m_mean": 2.08806130178211,
+            "p90_error_m_std": 2.5639502485114184e-16
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.02942907592701589,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.13057388959796,
+              "mean_error_m_std": 0.00024300497647899982,
+              "p90_error_m_mean": 1.8499999999999999,
+              "p90_error_m_std": 0.0
+            },
+            "unseen": {
+              "cell_acc_mean": 0.030303030303030304,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.1120837932071848,
+              "mean_error_m_std": 0.012511074395086311,
+              "p90_error_m_mean": 1.8003520603043135,
+              "p90_error_m_std": 0.03510639483076061
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.02942907592701589,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.13057388959796,
+              "mean_error_m_std": 0.00024300497647899982,
+              "p90_error_m_mean": 1.8499999999999999,
+              "p90_error_m_std": 0.0
+            },
+            "unseen": {
+              "cell_acc_mean": 0.030303030303030304,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.1120837932071848,
+              "mean_error_m_std": 0.012511074395086311,
+              "p90_error_m_mean": 1.8003520603043135,
+              "p90_error_m_std": 0.03510639483076061
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.02942907592701589,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.13057388959796,
+              "mean_error_m_std": 0.00024300497647899982,
+              "p90_error_m_mean": 1.8499999999999999,
+              "p90_error_m_std": 0.0
+            },
+            "unseen": {
+              "cell_acc_mean": 0.030303030303030304,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.1120837932071848,
+              "mean_error_m_std": 0.012511074395086311,
+              "p90_error_m_mean": 1.8003520603043135,
+              "p90_error_m_std": 0.03510639483076061
+            }
+          }
+        },
+        "2": {
+          "requested_cell_count": 2,
+          "effective_cell_count": 2,
+          "coverage_mean": 0.0588235294117647,
+          "n_support_mean": 2.0,
+          "n_query_all_mean": 1698.0,
+          "n_query_unseen_mean": 1600.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.004711425206124852,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.190478789592477,
+            "mean_error_m_std": 0.000433063847923752,
+            "p90_error_m_mean": 2.08806130178211,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.005,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.1771817607945207,
+            "mean_error_m_std": 0.00945148180858605,
+            "p90_error_m_mean": 2.066165815059963,
+            "p90_error_m_std": 0.030964894277220663
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.026698076168040832,
+              "cell_acc_std": 0.003091483264237068,
+              "mean_error_m_mean": 0.9908674884786298,
+              "mean_error_m_std": 0.060772691982838495,
+              "p90_error_m_mean": 1.7184113148447686,
+              "p90_error_m_std": 0.13685473934117226
+            },
+            "unseen": {
+              "cell_acc_mean": 0.025625,
+              "cell_acc_std": 0.007089458136322314,
+              "mean_error_m_mean": 0.9858186089565898,
+              "mean_error_m_std": 0.06503903848094303,
+              "p90_error_m_mean": 1.7099019513592786,
+              "p90_error_m_std": 0.13379829372752963
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.04711425206124853,
+              "cell_acc_std": 0.007557273873152789,
+              "mean_error_m_mean": 0.893258874617584,
+              "mean_error_m_std": 0.02905334795010272,
+              "p90_error_m_mean": 1.6052734235104689,
+              "p90_error_m_std": 0.12150679996463351
+            },
+            "unseen": {
+              "cell_acc_mean": 0.021458333333333333,
+              "cell_acc_std": 0.015175478209561928,
+              "mean_error_m_mean": 0.9123881238582325,
+              "mean_error_m_std": 0.022178816552312332,
+              "p90_error_m_mean": 1.5967640600249788,
+              "p90_error_m_std": 0.1095956353109588
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.03769140164899882,
+              "cell_acc_std": 0.005545522925726554,
+              "mean_error_m_mean": 0.9202988772007604,
+              "mean_error_m_std": 0.03688584055797949,
+              "p90_error_m_mean": 1.643789904223919,
+              "p90_error_m_std": 0.0980888242267432
+            },
+            "unseen": {
+              "cell_acc_mean": 0.014374999999999999,
+              "cell_acc_std": 0.007971302695712078,
+              "mean_error_m_mean": 0.9377704270897639,
+              "mean_error_m_std": 0.026399384911431043,
+              "p90_error_m_mean": 1.643789904223919,
+              "p90_error_m_std": 0.0980888242267432
+            }
+          }
+        },
+        "3": {
+          "requested_cell_count": 3,
+          "effective_cell_count": 3,
+          "coverage_mean": 0.08823529411764706,
+          "n_support_mean": 3.0,
+          "n_query_all_mean": 1697.0,
+          "n_query_unseen_mean": 1550.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.004714201532115498,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.1903993977057012,
+            "mean_error_m_std": 0.0004419361460373884,
+            "p90_error_m_mean": 2.08806130178211,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.005161290322580645,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.184699149259811,
+            "mean_error_m_std": 0.008586344108027848,
+            "p90_error_m_mean": 2.08806130178211,
+            "p90_error_m_std": 2.5639502485114184e-16
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.025928108426635243,
+              "cell_acc_std": 0.014601663751754706,
+              "mean_error_m_mean": 0.8764820919827038,
+              "mean_error_m_std": 0.057285399504259066,
+              "p90_error_m_mean": 1.4937301451823888,
+              "p90_error_m_std": 0.18148531632081646
+            },
+            "unseen": {
+              "cell_acc_mean": 0.028387096774193547,
+              "cell_acc_std": 0.015986466701114668,
+              "mean_error_m_mean": 0.8909615771730537,
+              "mean_error_m_std": 0.052939972067783087,
+              "p90_error_m_mean": 1.4939682890311918,
+              "p90_error_m_std": 0.18182065715757662
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.054606167747004525,
+              "cell_acc_std": 0.01680783458281784,
+              "mean_error_m_mean": 0.8474670772107141,
+              "mean_error_m_std": 0.035544777247331974,
+              "p90_error_m_mean": 1.558706736971577,
+              "p90_error_m_std": 0.14866060266958941
+            },
+            "unseen": {
+              "cell_acc_mean": 0.024086021505376348,
+              "cell_acc_std": 0.011265205035448428,
+              "mean_error_m_mean": 0.8790001956852548,
+              "mean_error_m_std": 0.03480775255482123,
+              "p90_error_m_mean": 1.5965259161761753,
+              "p90_error_m_std": 0.10926267574591438
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.050874091534079756,
+              "cell_acc_std": 0.011944840538605986,
+              "mean_error_m_mean": 0.8641839653288524,
+              "mean_error_m_std": 0.04344295890624005,
+              "p90_error_m_mean": 1.4855134988463254,
+              "p90_error_m_std": 0.07011641328544094
+            },
+            "unseen": {
+              "cell_acc_mean": 0.029462365591397848,
+              "cell_acc_std": 0.009660678471060731,
+              "mean_error_m_mean": 0.8960164971972473,
+              "mean_error_m_std": 0.04052069213753257,
+              "p90_error_m_mean": 1.4823376010471956,
+              "p90_error_m_std": 0.06773877087288672
+            }
+          }
+        },
+        "5": {
+          "requested_cell_count": 5,
+          "effective_cell_count": 5,
+          "coverage_mean": 0.14705882352941177,
+          "n_support_mean": 5.0,
+          "n_query_all_mean": 1695.0,
+          "n_query_unseen_mean": 1450.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.00471976401179941,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.1906233138594233,
+            "mean_error_m_std": 0.0006886840643201428,
+            "p90_error_m_mean": 2.08806130178211,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.0055172413793103435,
+            "cell_acc_std": 8.673617379884035e-19,
+            "mean_error_m_mean": 1.179387152374017,
+            "mean_error_m_std": 0.030891442933773397,
+            "p90_error_m_mean": 2.0937441739094136,
+            "p90_error_m_std": 0.07896413249309485
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.04228121927236972,
+              "cell_acc_std": 0.002376213564128726,
+              "mean_error_m_mean": 0.8900353793119073,
+              "mean_error_m_std": 0.05581554232206126,
+              "p90_error_m_mean": 1.5837924909933818,
+              "p90_error_m_std": 0.14978210442610035
+            },
+            "unseen": {
+              "cell_acc_mean": 0.04114942528735632,
+              "cell_acc_std": 0.007477451019443952,
+              "mean_error_m_mean": 0.9275560318526105,
+              "mean_error_m_std": 0.08678647071792175,
+              "p90_error_m_mean": 1.628609343613265,
+              "p90_error_m_std": 0.17116738171227872
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.06764995083579155,
+              "cell_acc_std": 0.011564358252105531,
+              "mean_error_m_mean": 0.8707311096374872,
+              "mean_error_m_std": 0.05334151888068737,
+              "p90_error_m_mean": 1.5965259161761753,
+              "p90_error_m_std": 0.10926267574591438
+            },
+            "unseen": {
+              "cell_acc_mean": 0.02091954022988506,
+              "cell_acc_std": 0.007989952734244951,
+              "mean_error_m_mean": 0.9137529904274141,
+              "mean_error_m_std": 0.0951694071918729,
+              "p90_error_m_mean": 1.5452181949274355,
+              "p90_error_m_std": 0.16522932568160262
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.06745329400196658,
+              "cell_acc_std": 0.010568360938088025,
+              "mean_error_m_mean": 0.862501535881462,
+              "mean_error_m_std": 0.08557355031115486,
+              "p90_error_m_mean": 1.5639254689735036,
+              "p90_error_m_std": 0.16063559432041755
+            },
+            "unseen": {
+              "cell_acc_mean": 0.025057471264367817,
+              "cell_acc_std": 0.0023443767878587505,
+              "mean_error_m_mean": 0.9066983931068755,
+              "mean_error_m_std": 0.11893127148341855,
+              "p90_error_m_mean": 1.5203413678915716,
+              "p90_error_m_std": 0.2005711637904411
+            }
+          }
+        },
+        "10": {
+          "requested_cell_count": 10,
+          "effective_cell_count": 10,
+          "coverage_mean": 0.29411764705882354,
+          "n_support_mean": 10.0,
+          "n_query_all_mean": 1690.0,
+          "n_query_unseen_mean": 1200.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.004733727810650888,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.1906005845194614,
+            "mean_error_m_std": 0.0003119901341675388,
+            "p90_error_m_mean": 2.08806130178211,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.0022222222222222222,
+            "cell_acc_std": 0.0031426968052735453,
+            "mean_error_m_mean": 1.1964331289747163,
+            "mean_error_m_std": 0.03595172680319074,
+            "p90_error_m_mean": 2.0587075345214068,
+            "p90_error_m_std": 0.04151249576683005
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.046548323471400394,
+              "cell_acc_std": 0.013322007724472016,
+              "mean_error_m_mean": 0.8962684764500223,
+              "mean_error_m_std": 0.04258606820786714,
+              "p90_error_m_mean": 1.6303591775322737,
+              "p90_error_m_std": 0.11297028622439116
+            },
+            "unseen": {
+              "cell_acc_mean": 0.022222222222222223,
+              "cell_acc_std": 0.008561686115234689,
+              "mean_error_m_mean": 0.9816829739273963,
+              "mean_error_m_std": 0.045197948568567466,
+              "p90_error_m_mean": 1.7134543670168039,
+              "p90_error_m_std": 0.07005330459283986
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.10552268244575937,
+              "cell_acc_std": 0.004463001380270121,
+              "mean_error_m_mean": 0.8825804040826791,
+              "mean_error_m_std": 0.006756267279618727,
+              "p90_error_m_mean": 1.5367634047425691,
+              "p90_error_m_std": 0.004990441933600864
+            },
+            "unseen": {
+              "cell_acc_mean": 0.014166666666666668,
+              "cell_acc_std": 0.0013608276348795437,
+              "mean_error_m_mean": 0.9616735898207599,
+              "mean_error_m_std": 0.023437452972528153,
+              "p90_error_m_mean": 1.5297058540778352,
+              "p90_error_m_std": 2.220446049250313e-16
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.11282051282051282,
+              "cell_acc_std": 0.007854953748220858,
+              "mean_error_m_mean": 0.8890223529695348,
+              "mean_error_m_std": 0.035251634127246814,
+              "p90_error_m_mean": 1.5484184320727288,
+              "p90_error_m_std": 0.04899346096605012
+            },
+            "unseen": {
+              "cell_acc_mean": 0.03222222222222223,
+              "cell_acc_std": 0.01748456109095135,
+              "mean_error_m_mean": 0.9843878681665035,
+              "mean_error_m_std": 0.045502853947648955,
+              "p90_error_m_mean": 1.6052734235104689,
+              "p90_error_m_std": 0.12150679996463351
+            }
+          }
+        },
+        "20": {
+          "requested_cell_count": 20,
+          "effective_cell_count": 20,
+          "coverage_mean": 0.5882352941176471,
+          "n_support_mean": 20.0,
+          "n_query_all_mean": 1680.0,
+          "n_query_unseen_mean": 700.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.004761904761904762,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.1903296605964788,
+            "mean_error_m_std": 0.0010029128770172588,
+            "p90_error_m_mean": 2.08806130178211,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.0038095238095238095,
+            "cell_acc_std": 0.0053874802376117905,
+            "mean_error_m_mean": 1.204539252061054,
+            "mean_error_m_std": 0.07815410851154232,
+            "p90_error_m_mean": 2.059542068146335,
+            "p90_error_m_std": 0.19988280616947998
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.1529761904761905,
+              "cell_acc_std": 0.026897913161178576,
+              "mean_error_m_mean": 0.7257079095822107,
+              "mean_error_m_std": 0.021148745173284304,
+              "p90_error_m_mean": 1.4043633611478932,
+              "p90_error_m_std": 0.09980333067337269
+            },
+            "unseen": {
+              "cell_acc_mean": 0.04047619047619048,
+              "cell_acc_std": 0.024253012529993987,
+              "mean_error_m_mean": 0.8474864786791124,
+              "mean_error_m_std": 0.033652333354020965,
+              "p90_error_m_mean": 1.4005814432274282,
+              "p90_error_m_std": 0.1001912548760683
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.18214285714285716,
+              "cell_acc_std": 0.02600493441169606,
+              "mean_error_m_mean": 0.7123252408769859,
+              "mean_error_m_std": 0.017842898082387593,
+              "p90_error_m_mean": 1.4005814432274282,
+              "p90_error_m_std": 0.1001912548760683
+            },
+            "unseen": {
+              "cell_acc_mean": 0.008095238095238095,
+              "cell_acc_std": 0.009499970163457144,
+              "mean_error_m_mean": 0.8631627726668921,
+              "mean_error_m_std": 0.0027306810159128552,
+              "p90_error_m_mean": 1.3906794918681495,
+              "p90_error_m_std": 0.087619732731913
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.1865079365079365,
+              "cell_acc_std": 0.022188537395149633,
+              "mean_error_m_mean": 0.7241225348563626,
+              "mean_error_m_std": 0.01522513884846859,
+              "p90_error_m_mean": 1.4205369070571372,
+              "p90_error_m_std": 0.07900355913001247
+            },
+            "unseen": {
+              "cell_acc_mean": 0.018571428571428572,
+              "cell_acc_std": 0.006998542122237651,
+              "mean_error_m_mean": 0.8602675827637315,
+              "mean_error_m_std": 0.03091873580333497,
+              "p90_error_m_mean": 1.4587089637949724,
+              "p90_error_m_std": 0.08112621957124405
+            }
+          }
+        },
+        "34": {
+          "requested_cell_count": 40,
+          "effective_cell_count": 34,
+          "coverage_mean": 1.0,
+          "n_support_mean": 34.0,
+          "n_query_all_mean": 1666.0,
+          "n_query_unseen_mean": 0.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.004601840736294518,
+            "cell_acc_std": 0.00028295589483255196,
+            "mean_error_m_mean": 1.1911234959278072,
+            "mean_error_m_std": 0.0015480982479844354,
+            "p90_error_m_mean": 2.08806130178211,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": NaN,
+            "cell_acc_std": NaN,
+            "mean_error_m_mean": NaN,
+            "mean_error_m_std": NaN,
+            "p90_error_m_mean": NaN,
+            "p90_error_m_std": NaN
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.32392957182873144,
+              "cell_acc_std": 0.01934060980167198,
+              "mean_error_m_mean": 0.5766625228174026,
+              "mean_error_m_std": 0.00933605575021224,
+              "p90_error_m_mean": 1.285496013218244,
+              "p90_error_m_std": 0.0
+            },
+            "unseen": {
+              "cell_acc_mean": NaN,
+              "cell_acc_std": NaN,
+              "mean_error_m_mean": NaN,
+              "mean_error_m_std": NaN,
+              "p90_error_m_mean": NaN,
+              "p90_error_m_std": NaN
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.32392957182873144,
+              "cell_acc_std": 0.01934060980167198,
+              "mean_error_m_mean": 0.5766625228174026,
+              "mean_error_m_std": 0.00933605575021224,
+              "p90_error_m_mean": 1.285496013218244,
+              "p90_error_m_std": 0.0
+            },
+            "unseen": {
+              "cell_acc_mean": NaN,
+              "cell_acc_std": NaN,
+              "mean_error_m_mean": NaN,
+              "mean_error_m_std": NaN,
+              "p90_error_m_mean": NaN,
+              "p90_error_m_std": NaN
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.32392957182873144,
+              "cell_acc_std": 0.01934060980167198,
+              "mean_error_m_mean": 0.5766625228174026,
+              "mean_error_m_std": 0.00933605575021224,
+              "p90_error_m_mean": 1.285496013218244,
+              "p90_error_m_std": 0.0
+            },
+            "unseen": {
+              "cell_acc_mean": NaN,
+              "cell_acc_std": NaN,
+              "mean_error_m_mean": NaN,
+              "mean_error_m_std": NaN,
+              "p90_error_m_mean": NaN,
+              "p90_error_m_std": NaN
+            }
+          }
+        }
+      }
+    },
+    "E101": {
+      "n_target_samples": 10800,
+      "n_target_cells": 72,
+      "source_knn_all_target": {
+        "cell_acc": 0.012685185185185185,
+        "mean_error_m": 1.360733893018582,
+        "p90_error_m": 2.5179356624028344,
+        "n": 10800
+      },
+      "by_cell_count": {
+        "1": {
+          "requested_cell_count": 1,
+          "effective_cell_count": 1,
+          "coverage_mean": 0.013888888888888888,
+          "n_support_mean": 1.0,
+          "n_query_all_mean": 10799.0,
+          "n_query_unseen_mean": 10650.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012686359848134087,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.3607520844276635,
+            "mean_error_m_std": 2.8707469405861306e-05,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.012863849765258216,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.3604186165077803,
+            "mean_error_m_std": 0.004312406135045306,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.013890175016205203,
+              "cell_acc_std": 1.734723475976807e-18,
+              "mean_error_m_mean": 1.8049532154676526,
+              "mean_error_m_std": 8.70018136222407e-05,
+              "p90_error_m_mean": 3.0594117081556704,
+              "p90_error_m_std": 4.440892098500626e-16
+            },
+            "unseen": {
+              "cell_acc_mean": 0.014084507042253521,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.7937186877430673,
+              "mean_error_m_std": 0.013232853314189467,
+              "p90_error_m_mean": 3.029779026942735,
+              "p90_error_m_std": 0.02095346983040616
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.013890175016205203,
+              "cell_acc_std": 1.734723475976807e-18,
+              "mean_error_m_mean": 1.8049532154676526,
+              "mean_error_m_std": 8.70018136222407e-05,
+              "p90_error_m_mean": 3.0594117081556704,
+              "p90_error_m_std": 4.440892098500626e-16
+            },
+            "unseen": {
+              "cell_acc_mean": 0.014084507042253521,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.7937186877430673,
+              "mean_error_m_std": 0.013232853314189467,
+              "p90_error_m_mean": 3.029779026942735,
+              "p90_error_m_std": 0.02095346983040616
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.013890175016205203,
+              "cell_acc_std": 1.734723475976807e-18,
+              "mean_error_m_mean": 1.8049532154676526,
+              "mean_error_m_std": 8.70018136222407e-05,
+              "p90_error_m_mean": 3.0594117081556704,
+              "p90_error_m_std": 4.440892098500626e-16
+            },
+            "unseen": {
+              "cell_acc_mean": 0.014084507042253521,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.7937186877430673,
+              "mean_error_m_std": 0.013232853314189467,
+              "p90_error_m_mean": 3.029779026942735,
+              "p90_error_m_std": 0.02095346983040616
+            }
+          }
+        },
+        "2": {
+          "requested_cell_count": 2,
+          "effective_cell_count": 2,
+          "coverage_mean": 0.027777777777777776,
+          "n_support_mean": 2.0,
+          "n_query_all_mean": 10798.0,
+          "n_query_unseen_mean": 10500.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012687534728653452,
+            "cell_acc_std": 1.734723475976807e-18,
+            "mean_error_m_mean": 1.3606441543839392,
+            "mean_error_m_std": 0.0001245362538950008,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.012349206349206348,
+            "cell_acc_std": 0.000499937007873766,
+            "mean_error_m_mean": 1.3594479335849028,
+            "mean_error_m_std": 0.0033625434032545443,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.015002778292276349,
+              "cell_acc_std": 0.0020886867721228953,
+              "mean_error_m_mean": 1.5233617492736873,
+              "mean_error_m_std": 0.12549942690701718,
+              "p90_error_m_mean": 2.7554384129082035,
+              "p90_error_m_std": 0.2042689877014788
+            },
+            "unseen": {
+              "cell_acc_mean": 0.01542857142857143,
+              "cell_acc_std": 0.002147965691941241,
+              "mean_error_m_mean": 1.520268190832384,
+              "mean_error_m_std": 0.11711414381438924,
+              "p90_error_m_mean": 2.7259260534578345,
+              "p90_error_m_std": 0.1559716354976037
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.016330184602086805,
+              "cell_acc_std": 0.004068040992058502,
+              "mean_error_m_mean": 1.2882418819900086,
+              "mean_error_m_std": 0.02578197193508009,
+              "p90_error_m_mean": 2.3828460323340788,
+              "p90_error_m_std": 0.12060176694284953
+            },
+            "unseen": {
+              "cell_acc_mean": 0.009333333333333334,
+              "cell_acc_std": 0.002970248035737414,
+              "mean_error_m_mean": 1.2985071808272313,
+              "mean_error_m_std": 0.0328827265584616,
+              "p90_error_m_mean": 2.3828460323340788,
+              "p90_error_m_std": 0.12060176694284953
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.017626720997715627,
+              "cell_acc_std": 0.00450679602779103,
+              "mean_error_m_mean": 1.3013934305999066,
+              "mean_error_m_std": 0.03540303436939884,
+              "p90_error_m_mean": 2.4094148117714984,
+              "p90_error_m_std": 0.11425234417484877
+            },
+            "unseen": {
+              "cell_acc_mean": 0.00980952380952381,
+              "cell_acc_std": 0.003030707043774634,
+              "mean_error_m_mean": 1.3102109519407004,
+              "mean_error_m_std": 0.04469483550279718,
+              "p90_error_m_mean": 2.4094148117714984,
+              "p90_error_m_std": 0.11425234417484877
+            }
+          }
+        },
+        "3": {
+          "requested_cell_count": 3,
+          "effective_cell_count": 3,
+          "coverage_mean": 0.041666666666666664,
+          "n_support_mean": 3.0,
+          "n_query_all_mean": 10797.0,
+          "n_query_unseen_mean": 10350.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012688709826803741,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.360742993996075,
+            "mean_error_m_std": 4.703294180038032e-05,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.013011272141706923,
+            "cell_acc_std": 0.00031882431357847536,
+            "mean_error_m_mean": 1.3612587915191579,
+            "mean_error_m_std": 0.005232741930226909,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.018894137260350097,
+              "cell_acc_std": 0.0018399758483222295,
+              "mean_error_m_mean": 1.3637609486844402,
+              "mean_error_m_std": 0.1113413931524337,
+              "p90_error_m_mean": 2.3653129949166583,
+              "p90_error_m_std": 0.3193134866319576
+            },
+            "unseen": {
+              "cell_acc_mean": 0.01971014492753623,
+              "cell_acc_std": 0.0019194414719164372,
+              "mean_error_m_mean": 1.3612395786044953,
+              "mean_error_m_std": 0.10824513710229532,
+              "p90_error_m_mean": 2.3653129949166583,
+              "p90_error_m_std": 0.3193134866319576
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.015220277237504245,
+              "cell_acc_std": 0.0033009333221261862,
+              "mean_error_m_mean": 1.283499083276806,
+              "mean_error_m_std": 0.08588577791578737,
+              "p90_error_m_mean": 2.269590261471721,
+              "p90_error_m_std": 0.2462249209551906
+            },
+            "unseen": {
+              "cell_acc_mean": 0.004830917874396136,
+              "cell_acc_std": 0.00226315311958272,
+              "mean_error_m_mean": 1.2995044693839317,
+              "mean_error_m_std": 0.08463155999907658,
+              "p90_error_m_mean": 2.2803013063332407,
+              "p90_error_m_std": 0.23322225237224553
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.015714241610323854,
+              "cell_acc_std": 0.0028439840580226678,
+              "mean_error_m_mean": 1.3195549521046643,
+              "mean_error_m_std": 0.061024287527776694,
+              "p90_error_m_mean": 2.415042450966465,
+              "p90_error_m_std": 0.23993740856708923
+            },
+            "unseen": {
+              "cell_acc_mean": 0.008792270531400966,
+              "cell_acc_std": 0.0036211481104496965,
+              "mean_error_m_mean": 1.336646358663228,
+              "mean_error_m_std": 0.0615141814856507,
+              "p90_error_m_mean": 2.415042450966465,
+              "p90_error_m_std": 0.23993740856708923
+            }
+          }
+        },
+        "5": {
+          "requested_cell_count": 5,
+          "effective_cell_count": 5,
+          "coverage_mean": 0.06944444444444445,
+          "n_support_mean": 5.0,
+          "n_query_all_mean": 10795.0,
+          "n_query_unseen_mean": 10050.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012691060676239,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.3606035409972022,
+            "mean_error_m_std": 7.43531547274275e-05,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.013167495854063018,
+            "cell_acc_std": 0.0006566829145347701,
+            "mean_error_m_mean": 1.361246200639803,
+            "mean_error_m_std": 0.009148361339756663,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.01000463177396943,
+              "cell_acc_std": 0.0031668149160577834,
+              "mean_error_m_mean": 1.3889271696905527,
+              "mean_error_m_std": 0.1331884123188488,
+              "p90_error_m_mean": 2.4887736601820567,
+              "p90_error_m_std": 0.21056828279050593
+            },
+            "unseen": {
+              "cell_acc_mean": 0.010746268656716419,
+              "cell_acc_std": 0.0034015688575963956,
+              "mean_error_m_mean": 1.3928324809035668,
+              "mean_error_m_std": 0.14199358839629497,
+              "p90_error_m_mean": 2.478030629049844,
+              "p90_error_m_std": 0.20864052376635514
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.014265863825845299,
+              "cell_acc_std": 0.0030974068545253338,
+              "mean_error_m_mean": 1.395755214346358,
+              "mean_error_m_std": 0.05803971816410895,
+              "p90_error_m_mean": 2.483206076958497,
+              "p90_error_m_std": 0.10963992288269438
+            },
+            "unseen": {
+              "cell_acc_mean": 0.004378109452736319,
+              "cell_acc_std": 0.0019549137019292044,
+              "mean_error_m_mean": 1.4090103076094505,
+              "mean_error_m_std": 0.0504307944498411,
+              "p90_error_m_mean": 2.4725179644261086,
+              "p90_error_m_std": 0.104026834311338
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.013308630538829705,
+              "cell_acc_std": 0.0010598117833398495,
+              "mean_error_m_mean": 1.406253889335396,
+              "mean_error_m_std": 0.03277450783850804,
+              "p90_error_m_mean": 2.5040839506832833,
+              "p90_error_m_std": 0.06107564651370986
+            },
+            "unseen": {
+              "cell_acc_mean": 0.005306799336650083,
+              "cell_acc_std": 0.0008015287544673019,
+              "mean_error_m_mean": 1.4199224227289846,
+              "mean_error_m_std": 0.0275288383609466,
+              "p90_error_m_mean": 2.529642562946441,
+              "p90_error_m_std": 0.03014139561735846
+            }
+          }
+        },
+        "10": {
+          "requested_cell_count": 10,
+          "effective_cell_count": 10,
+          "coverage_mean": 0.1388888888888889,
+          "n_support_mean": 10.0,
+          "n_query_all_mean": 10790.0,
+          "n_query_unseen_mean": 9300.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012696941612604264,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.3608372001698055,
+            "mean_error_m_std": 0.0001515654304482893,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.014050179211469534,
+            "cell_acc_std": 0.0004835389807610046,
+            "mean_error_m_mean": 1.3686084788428854,
+            "mean_error_m_std": 0.0046351845077008715,
+            "p90_error_m_mean": 2.5286237749352227,
+            "p90_error_m_std": 0.015115273699473629
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.01516836577077541,
+              "cell_acc_std": 0.002083833420332413,
+              "mean_error_m_mean": 1.245828396244999,
+              "mean_error_m_std": 0.01697721087239992,
+              "p90_error_m_mean": 2.1712436424492743,
+              "p90_error_m_std": 0.06976898874339107
+            },
+            "unseen": {
+              "cell_acc_mean": 0.015806451612903224,
+              "cell_acc_std": 0.004947015678079663,
+              "mean_error_m_mean": 1.267198763780937,
+              "mean_error_m_std": 0.0315753485293237,
+              "p90_error_m_mean": 2.213940469985176,
+              "p90_error_m_std": 0.06558146609486226
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.03463083101637318,
+              "cell_acc_std": 0.0012232925470017475,
+              "mean_error_m_mean": 1.2159474605108749,
+              "mean_error_m_std": 0.055343764752719134,
+              "p90_error_m_mean": 2.180103501339501,
+              "p90_error_m_std": 0.23905799180794762
+            },
+            "unseen": {
+              "cell_acc_mean": 0.01028673835125448,
+              "cell_acc_std": 0.002826318853579401,
+              "mean_error_m_mean": 1.2509559078044956,
+              "mean_error_m_std": 0.043758433986024386,
+              "p90_error_m_mean": 2.220145381132593,
+              "p90_error_m_std": 0.23477894561114454
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.032221192462156316,
+              "cell_acc_std": 0.001304832380719361,
+              "mean_error_m_mean": 1.2486031969449256,
+              "mean_error_m_std": 0.028980443102639083,
+              "p90_error_m_mean": 2.3595420681463346,
+              "p90_error_m_std": 0.10437701845258755
+            },
+            "unseen": {
+              "cell_acc_mean": 0.013082437275985662,
+              "cell_acc_std": 0.005430077953951434,
+              "mean_error_m_mean": 1.2756445379367685,
+              "mean_error_m_std": 0.03623420630996623,
+              "p90_error_m_mean": 2.367430883500451,
+              "p90_error_m_std": 0.09714771492392271
+            }
+          }
+        },
+        "20": {
+          "requested_cell_count": 20,
+          "effective_cell_count": 20,
+          "coverage_mean": 0.2777777777777778,
+          "n_support_mean": 20.0,
+          "n_query_all_mean": 10780.0,
+          "n_query_unseen_mean": 7800.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012677798392084105,
+            "cell_acc_std": 4.3729547383213186e-05,
+            "mean_error_m_mean": 1.3605864487101103,
+            "mean_error_m_std": 0.00016621725322276572,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.011196581196581198,
+            "cell_acc_std": 0.004343024278944445,
+            "mean_error_m_mean": 1.3549885436024611,
+            "mean_error_m_std": 0.02341748347739566,
+            "p90_error_m_mean": 2.4804199418711206,
+            "p90_error_m_std": 0.04103143471455129
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.02891156462585034,
+              "cell_acc_std": 0.006842102236036311,
+              "mean_error_m_mean": 1.3378029724361582,
+              "mean_error_m_std": 0.029431278995791267,
+              "p90_error_m_mean": 2.605978554134278,
+              "p90_error_m_std": 0.10267639484752099
+            },
+            "unseen": {
+              "cell_acc_mean": 0.022136752136752137,
+              "cell_acc_std": 0.01238240027850699,
+              "mean_error_m_mean": 1.3595726312051593,
+              "mean_error_m_std": 0.04019688365518987,
+              "p90_error_m_mean": 2.612975896279774,
+              "p90_error_m_std": 0.09928225148993584
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.04727891156462585,
+              "cell_acc_std": 0.003258071387785243,
+              "mean_error_m_mean": 1.2973647477364647,
+              "mean_error_m_std": 0.041659580082117634,
+              "p90_error_m_mean": 2.5893118874676113,
+              "p90_error_m_std": 0.1138593404992121
+            },
+            "unseen": {
+              "cell_acc_mean": 0.009145299145299145,
+              "cell_acc_std": 0.006931249792299317,
+              "mean_error_m_mean": 1.3354589417010698,
+              "mean_error_m_std": 0.021517160742804384,
+              "p90_error_m_mean": 2.612975896279774,
+              "p90_error_m_std": 0.09928225148993584
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.04329004329004329,
+              "cell_acc_std": 0.0010086274848670415,
+              "mean_error_m_mean": 1.277321086691064,
+              "mean_error_m_std": 0.041199262944847576,
+              "p90_error_m_mean": 2.526208734813001,
+              "p90_error_m_std": 0.17302050404840041
+            },
+            "unseen": {
+              "cell_acc_mean": 0.01158119658119658,
+              "cell_acc_std": 0.0018764528547094146,
+              "mean_error_m_mean": 1.3206276599178846,
+              "mean_error_m_std": 0.04549537249527707,
+              "p90_error_m_mean": 2.569191688112657,
+              "p90_error_m_std": 0.14464002350491037
+            }
+          }
+        },
+        "40": {
+          "requested_cell_count": 40,
+          "effective_cell_count": 40,
+          "coverage_mean": 0.5555555555555556,
+          "n_support_mean": 40.0,
+          "n_query_all_mean": 10760.0,
+          "n_query_unseen_mean": 4800.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012670384138785627,
+            "cell_acc_std": 4.3810829069798297e-05,
+            "mean_error_m_mean": 1.3599336582209383,
+            "mean_error_m_std": 0.00018319832218075812,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.01298611111111111,
+            "cell_acc_std": 0.002043602634661412,
+            "mean_error_m_mean": 1.3100818642010303,
+            "mean_error_m_std": 0.010071853202455298,
+            "p90_error_m_mean": 2.454832509748224,
+            "p90_error_m_std": 0.08924133431264951
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.05836431226765799,
+              "cell_acc_std": 0.005457746230338118,
+              "mean_error_m_mean": 1.2723519657387257,
+              "mean_error_m_std": 0.04007084632224872,
+              "p90_error_m_mean": 2.5006501225498434,
+              "p90_error_m_std": 0.1805056728327014
+            },
+            "unseen": {
+              "cell_acc_mean": 0.01902777777777778,
+              "cell_acc_std": 0.0029869184955009114,
+              "mean_error_m_mean": 1.3445687123760106,
+              "mean_error_m_std": 0.026641289401980996,
+              "p90_error_m_mean": 2.5303013063332407,
+              "p90_error_m_std": 0.19809585012049877
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.07388475836431226,
+              "cell_acc_std": 0.008020613015015398,
+              "mean_error_m_mean": 1.270348888617351,
+              "mean_error_m_std": 0.02579691735900427,
+              "p90_error_m_mean": 2.529642562946441,
+              "p90_error_m_std": 0.03014139561735846
+            },
+            "unseen": {
+              "cell_acc_mean": 0.009930555555555555,
+              "cell_acc_std": 0.00701835666284591,
+              "mean_error_m_mean": 1.3466721894839535,
+              "mean_error_m_std": 0.008038819410511653,
+              "p90_error_m_mean": 2.483206076958497,
+              "p90_error_m_std": 0.10963992288269436
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.07301734820322182,
+              "cell_acc_std": 0.0109313944683057,
+              "mean_error_m_mean": 1.2803543826999049,
+              "mean_error_m_std": 0.03384880429115935,
+              "p90_error_m_mean": 2.5893118874676113,
+              "p90_error_m_std": 0.1138593404992121
+            },
+            "unseen": {
+              "cell_acc_mean": 0.008541666666666668,
+              "cell_acc_std": 0.008021960598996474,
+              "mean_error_m_mean": 1.3538676220335712,
+              "mean_error_m_std": 0.015096124961510594,
+              "p90_error_m_mean": 2.549872743625164,
+              "p90_error_m_std": 0.17267211119386278
+            }
+          }
+        },
+        "60": {
+          "requested_cell_count": 60,
+          "effective_cell_count": 60,
+          "coverage_mean": 0.8333333333333334,
+          "n_support_mean": 60.0,
+          "n_query_all_mean": 10740.0,
+          "n_query_unseen_mean": 1800.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012631905648665426,
+            "cell_acc_std": 8.778482696294807e-05,
+            "mean_error_m_mean": 1.3606962201563741,
+            "mean_error_m_std": 0.0006581722793836411,
+            "p90_error_m_mean": 2.5179356624028344,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.010185185185185186,
+            "cell_acc_std": 0.0059027323890774915,
+            "mean_error_m_mean": 1.352600862957163,
+            "mean_error_m_std": 0.06852914632385808,
+            "p90_error_m_mean": 2.433983455883177,
+            "p90_error_m_std": 0.09068923027012385
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.09770328988206083,
+              "cell_acc_std": 0.0005603808220132765,
+              "mean_error_m_mean": 1.2255385559126213,
+              "mean_error_m_std": 0.031141493116136038,
+              "p90_error_m_mean": 2.522645220800945,
+              "p90_error_m_std": 0.02068227832757478
+            },
+            "unseen": {
+              "cell_acc_mean": 0.007962962962962963,
+              "cell_acc_std": 0.005850210740344932,
+              "mean_error_m_mean": 1.375403538511554,
+              "mean_error_m_std": 0.07003815277599937,
+              "p90_error_m_mean": 2.463634639666574,
+              "p90_error_m_std": 0.13725048476520607
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.10288640595903166,
+              "cell_acc_std": 0.0007252216912196096,
+              "mean_error_m_mean": 1.2263273315323224,
+              "mean_error_m_std": 0.0303994322170045,
+              "p90_error_m_mean": 2.529642562946441,
+              "p90_error_m_std": 0.03014139561735846
+            },
+            "unseen": {
+              "cell_acc_mean": 0.005555555555555556,
+              "cell_acc_std": 0.007071067811865475,
+              "mean_error_m_mean": 1.3820984161212155,
+              "mean_error_m_std": 0.0721365407910296,
+              "p90_error_m_mean": 2.585254015926672,
+              "p90_error_m_std": 0.18428693153616674
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.10291744258224705,
+              "cell_acc_std": 0.0023632712378400316,
+              "mean_error_m_mean": 1.2149085696329858,
+              "mean_error_m_std": 0.02618490387445397,
+              "p90_error_m_mean": 2.5236640088121627,
+              "p90_error_m_std": 0.033465962202276905
+            },
+            "unseen": {
+              "cell_acc_mean": 0.009814814814814816,
+              "cell_acc_std": 0.011918216970151177,
+              "mean_error_m_mean": 1.3830010955695318,
+              "mean_error_m_std": 0.08051032817402944,
+              "p90_error_m_mean": 2.6411270966139653,
+              "p90_error_m_std": 0.10930534996736063
+            }
+          }
+        }
+      }
+    },
+    "E102": {
+      "n_target_samples": 11250,
+      "n_target_cells": 75,
+      "source_knn_all_target": {
+        "cell_acc": 0.012888888888888889,
+        "mean_error_m": 1.4139505037891398,
+        "p90_error_m": 2.6570660511172846,
+        "n": 11250
+      },
+      "by_cell_count": {
+        "1": {
+          "requested_cell_count": 1,
+          "effective_cell_count": 1,
+          "coverage_mean": 0.013333333333333334,
+          "n_support_mean": 1.0,
+          "n_query_all_mean": 11249.0,
+          "n_query_unseen_mean": 11100.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012890034669748423,
+            "cell_acc_std": 1.734723475976807e-18,
+            "mean_error_m_mean": 1.413960369383337,
+            "mean_error_m_std": 5.5499145399004236e-05,
+            "p90_error_m_mean": 2.6570660511172846,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.013063063063063063,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.4128005174156224,
+            "mean_error_m_std": 0.004541023511174696,
+            "p90_error_m_mean": 2.5996833679967533,
+            "p90_error_m_std": 0.04057568435720631
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.01333451862387768,
+              "cell_acc_std": 1.734723475976807e-18,
+              "mean_error_m_mean": 1.9535394593389703,
+              "mean_error_m_std": 9.620152941893593e-05,
+              "p90_error_m_mean": 3.3049205739321486,
+              "p90_error_m_std": 4.440892098500626e-16
+            },
+            "unseen": {
+              "cell_acc_mean": 0.013513513513513514,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.9541679669489007,
+              "mean_error_m_std": 0.014623932492354916,
+              "p90_error_m_mean": 3.3049205739321486,
+              "p90_error_m_std": 4.440892098500626e-16
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.01333451862387768,
+              "cell_acc_std": 1.734723475976807e-18,
+              "mean_error_m_mean": 1.9535394593389703,
+              "mean_error_m_std": 9.620152941893593e-05,
+              "p90_error_m_mean": 3.3049205739321486,
+              "p90_error_m_std": 4.440892098500626e-16
+            },
+            "unseen": {
+              "cell_acc_mean": 0.013513513513513514,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.9541679669489007,
+              "mean_error_m_std": 0.014623932492354916,
+              "p90_error_m_mean": 3.3049205739321486,
+              "p90_error_m_std": 4.440892098500626e-16
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.01333451862387768,
+              "cell_acc_std": 1.734723475976807e-18,
+              "mean_error_m_mean": 1.9535394593389703,
+              "mean_error_m_std": 9.620152941893593e-05,
+              "p90_error_m_mean": 3.3049205739321486,
+              "p90_error_m_std": 4.440892098500626e-16
+            },
+            "unseen": {
+              "cell_acc_mean": 0.013513513513513514,
+              "cell_acc_std": 0.0,
+              "mean_error_m_mean": 1.9541679669489007,
+              "mean_error_m_std": 0.014623932492354916,
+              "p90_error_m_mean": 3.3049205739321486,
+              "p90_error_m_std": 4.440892098500626e-16
+            }
+          }
+        },
+        "2": {
+          "requested_cell_count": 2,
+          "effective_cell_count": 2,
+          "coverage_mean": 0.02666666666666667,
+          "n_support_mean": 2.0,
+          "n_query_all_mean": 11248.0,
+          "n_query_unseen_mean": 10950.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012891180654338549,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.4139919026660974,
+            "mean_error_m_std": 0.00011506117839524529,
+            "p90_error_m_mean": 2.6570660511172846,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.01293759512937595,
+            "cell_acc_std": 0.0004305064116813076,
+            "mean_error_m_mean": 1.4130741132165212,
+            "mean_error_m_std": 0.004838036998639896,
+            "p90_error_m_mean": 2.628374709557019,
+            "p90_error_m_std": 0.04057568435720631
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.013513513513513514,
+              "cell_acc_std": 0.0033130172547795158,
+              "mean_error_m_mean": 1.6710189704467975,
+              "mean_error_m_std": 0.2910026998568177,
+              "p90_error_m_mean": 2.8161902797922966,
+              "p90_error_m_std": 0.6330394732321611
+            },
+            "unseen": {
+              "cell_acc_mean": 0.013881278538812788,
+              "cell_acc_std": 0.003403179733494063,
+              "mean_error_m_mean": 1.665324391485423,
+              "mean_error_m_std": 0.2912576941774419,
+              "p90_error_m_mean": 2.8298915430785065,
+              "p90_error_m_std": 0.6429467482454623
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.015647226173541962,
+              "cell_acc_std": 0.0007647870969988106,
+              "mean_error_m_mean": 1.370887981363074,
+              "mean_error_m_std": 0.10792898066655478,
+              "p90_error_m_mean": 2.4514588468355734,
+              "p90_error_m_std": 0.279015272470164
+            },
+            "unseen": {
+              "cell_acc_mean": 0.007275494672754947,
+              "cell_acc_std": 0.0038926922041146498,
+              "mean_error_m_mean": 1.3820235102767462,
+              "mean_error_m_std": 0.10965866113561969,
+              "p90_error_m_mean": 2.4514588468355734,
+              "p90_error_m_std": 0.279015272470164
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.013513513513513514,
+              "cell_acc_std": 0.0005941778584567162,
+              "mean_error_m_mean": 1.352946655225768,
+              "mean_error_m_std": 0.13444433251808877,
+              "p90_error_m_mean": 2.41267258407268,
+              "p90_error_m_std": 0.332682534453978
+            },
+            "unseen": {
+              "cell_acc_mean": 0.006971080669710808,
+              "cell_acc_std": 0.00488980242464246,
+              "mean_error_m_mean": 1.3565162426386157,
+              "mean_error_m_std": 0.1355626914940092,
+              "p90_error_m_mean": 2.41267258407268,
+              "p90_error_m_std": 0.332682534453978
+            }
+          }
+        },
+        "3": {
+          "requested_cell_count": 3,
+          "effective_cell_count": 3,
+          "coverage_mean": 0.04,
+          "n_support_mean": 3.0,
+          "n_query_all_mean": 11247.0,
+          "n_query_unseen_mean": 10800.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012892326842713612,
+            "cell_acc_std": 1.734723475976807e-18,
+            "mean_error_m_mean": 1.4137942686360336,
+            "mean_error_m_std": 0.0001566373166535539,
+            "p90_error_m_mean": 2.6570660511172846,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.01324074074074074,
+            "cell_acc_std": 0.00026189140043946207,
+            "mean_error_m_mean": 1.4017825235985946,
+            "mean_error_m_std": 0.007580989601940318,
+            "p90_error_m_mean": 2.628374709557019,
+            "p90_error_m_std": 0.04057568435720631
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.016122817936634955,
+              "cell_acc_std": 0.0015388702155534413,
+              "mean_error_m_mean": 1.7135354996319956,
+              "mean_error_m_std": 0.15450031726427407,
+              "p90_error_m_mean": 3.1095034576936773,
+              "p90_error_m_std": 0.20853835760134265
+            },
+            "unseen": {
+              "cell_acc_mean": 0.016790123456790124,
+              "cell_acc_std": 0.0016025623439194039,
+              "mean_error_m_mean": 1.7252160233793516,
+              "mean_error_m_std": 0.15294722863567103,
+              "p90_error_m_mean": 3.098597491096072,
+              "p90_error_m_std": 0.20089861831230657
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.017901069914940282,
+              "cell_acc_std": 0.0015777637478683096,
+              "mean_error_m_mean": 1.4507426994481145,
+              "mean_error_m_std": 0.1563461695431076,
+              "p90_error_m_mean": 2.620382075518173,
+              "p90_error_m_std": 0.3876395812732979
+            },
+            "unseen": {
+              "cell_acc_mean": 0.01175925925925926,
+              "cell_acc_std": 0.0016372576802314617,
+              "mean_error_m_mean": 1.4608263754803517,
+              "mean_error_m_std": 0.16052325891426378,
+              "p90_error_m_mean": 2.5848911619335255,
+              "p90_error_m_std": 0.3547360722536515
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.015085504282623516,
+              "cell_acc_std": 0.000958534816916881,
+              "mean_error_m_mean": 1.4840499122798025,
+              "mean_error_m_std": 0.0984814546623578,
+              "p90_error_m_mean": 2.761555846287648,
+              "p90_error_m_std": 0.1970007813043165
+            },
+            "unseen": {
+              "cell_acc_mean": 0.009814814814814816,
+              "cell_acc_std": 0.0027436171092646393,
+              "mean_error_m_mean": 1.4938764370684021,
+              "mean_error_m_std": 0.10278284629706193,
+              "p90_error_m_mean": 2.7561174333794445,
+              "p90_error_m_std": 0.19701952548390375
+            }
+          }
+        },
+        "5": {
+          "requested_cell_count": 5,
+          "effective_cell_count": 5,
+          "coverage_mean": 0.06666666666666667,
+          "n_support_mean": 5.0,
+          "n_query_all_mean": 11245.0,
+          "n_query_unseen_mean": 10500.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012894619831036016,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.4136895453010228,
+            "mean_error_m_std": 9.883724420749329e-05,
+            "p90_error_m_mean": 2.6570660511172846,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.012031746031746032,
+            "cell_acc_std": 0.0011954393894452523,
+            "mean_error_m_mean": 1.4009181278763683,
+            "mean_error_m_std": 0.0035493551866601584,
+            "p90_error_m_mean": 2.570992026436488,
+            "p90_error_m_std": 0.0
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.014524974062546317,
+              "cell_acc_std": 0.004020727059859433,
+              "mean_error_m_mean": 1.5034200042347734,
+              "mean_error_m_std": 0.03750821184951096,
+              "p90_error_m_mean": 2.8023553503724283,
+              "p90_error_m_std": 0.14481421513681594
+            },
+            "unseen": {
+              "cell_acc_mean": 0.013428571428571429,
+              "cell_acc_std": 0.006688851974796628,
+              "mean_error_m_mean": 1.5261354029641294,
+              "mean_error_m_std": 0.041886467611017456,
+              "p90_error_m_mean": 2.740586546708266,
+              "p90_error_m_std": 0.06469451291771541
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.017815325329776196,
+              "cell_acc_std": 0.0022792213175326613,
+              "mean_error_m_mean": 1.3920330941347139,
+              "mean_error_m_std": 0.08334415411698198,
+              "p90_error_m_mean": 2.5970068623917477,
+              "p90_error_m_std": 0.12472111565476303
+            },
+            "unseen": {
+              "cell_acc_mean": 0.007523809523809524,
+              "cell_acc_std": 0.0033437479028468778,
+              "mean_error_m_mean": 1.4157402018176626,
+              "mean_error_m_std": 0.08674691963493851,
+              "p90_error_m_mean": 2.5947503003758148,
+              "p90_error_m_std": 0.12153550386458184
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.021579961464354525,
+              "cell_acc_std": 0.004304437304868215,
+              "mean_error_m_mean": 1.4219315072795569,
+              "mean_error_m_std": 0.06153898303316078,
+              "p90_error_m_mean": 2.620670871203911,
+              "p90_error_m_std": 0.10992808932814147
+            },
+            "unseen": {
+              "cell_acc_mean": 0.014,
+              "cell_acc_std": 0.005349182798685852,
+              "mean_error_m_mean": 1.4373510771421252,
+              "mean_error_m_std": 0.0656087491647719,
+              "p90_error_m_mean": 2.618414309187978,
+              "p90_error_m_std": 0.10680124268773895
+            }
+          }
+        },
+        "10": {
+          "requested_cell_count": 10,
+          "effective_cell_count": 10,
+          "coverage_mean": 0.13333333333333333,
+          "n_support_mean": 10.0,
+          "n_query_all_mean": 11240.0,
+          "n_query_unseen_mean": 9750.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012900355871886121,
+            "cell_acc_std": 0.0,
+            "mean_error_m_mean": 1.4139223503217255,
+            "mean_error_m_std": 0.00017282567939052795,
+            "p90_error_m_mean": 2.6570660511172846,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.011555555555555555,
+            "cell_acc_std": 0.001626718256871155,
+            "mean_error_m_mean": 1.4116133379980325,
+            "mean_error_m_std": 0.016200021458608892,
+            "p90_error_m_mean": 2.628374709557019,
+            "p90_error_m_std": 0.04057568435720631
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.015480427046263345,
+              "cell_acc_std": 0.004816337378567446,
+              "mean_error_m_mean": 1.4430807683562847,
+              "mean_error_m_std": 0.017734589647871057,
+              "p90_error_m_mean": 2.695769088387033,
+              "p90_error_m_std": 0.08848176138021459
+            },
+            "unseen": {
+              "cell_acc_mean": 0.017846153846153845,
+              "cell_acc_std": 0.005552372526676729,
+              "mean_error_m_mean": 1.4743604755802773,
+              "mean_error_m_std": 0.011519918105420577,
+              "p90_error_m_mean": 2.760876825816407,
+              "p90_error_m_std": 0.0076910772925664495
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.028173190984578888,
+              "cell_acc_std": 0.002252293896328295,
+              "mean_error_m_mean": 1.33272116553681,
+              "mean_error_m_std": 0.01932317632489176,
+              "p90_error_m_mean": 2.5179356624028344,
+              "p90_error_m_std": 0.0
+            },
+            "unseen": {
+              "cell_acc_mean": 0.009846153846153846,
+              "cell_acc_std": 0.005796459959361965,
+              "mean_error_m_mean": 1.3681726327032273,
+              "mean_error_m_std": 0.014705993493700754,
+              "p90_error_m_mean": 2.5286237749352227,
+              "p90_error_m_std": 0.015115273699473629
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.02947805456702254,
+              "cell_acc_std": 0.0005354528495037899,
+              "mean_error_m_mean": 1.3443662354173858,
+              "mean_error_m_std": 0.024436286557320473,
+              "p90_error_m_mean": 2.532775292243549,
+              "p90_error_m_std": 0.09599992535035597
+            },
+            "unseen": {
+              "cell_acc_mean": 0.01569230769230769,
+              "cell_acc_std": 0.0025551982141613387,
+              "mean_error_m_mean": 1.3776649866201092,
+              "mean_error_m_std": 0.014497442823169237,
+              "p90_error_m_mean": 2.6,
+              "p90_error_m_std": 0.10801234497346436
+            }
+          }
+        },
+        "20": {
+          "requested_cell_count": 20,
+          "effective_cell_count": 20,
+          "coverage_mean": 0.26666666666666666,
+          "n_support_mean": 20.0,
+          "n_query_all_mean": 11230.0,
+          "n_query_unseen_mean": 8250.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.01288216087859899,
+            "cell_acc_std": 4.197725029305756e-05,
+            "mean_error_m_mean": 1.4140203168890213,
+            "mean_error_m_std": 0.0001706481628807651,
+            "p90_error_m_mean": 2.6570660511172846,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.01187878787878788,
+            "cell_acc_std": 0.0015927598662163252,
+            "mean_error_m_mean": 1.4275742957726514,
+            "mean_error_m_std": 0.006035763478270224,
+            "p90_error_m_mean": 2.628374709557019,
+            "p90_error_m_std": 0.04057568435720631
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.0222024339566637,
+              "cell_acc_std": 0.0019268426675117226,
+              "mean_error_m_mean": 1.4088858561424107,
+              "mean_error_m_std": 0.019938878133122867,
+              "p90_error_m_mean": 2.688771746241537,
+              "p90_error_m_std": 0.09835224084840646
+            },
+            "unseen": {
+              "cell_acc_mean": 0.01919191919191919,
+              "cell_acc_std": 0.0022791603678659327,
+              "mean_error_m_mean": 1.4504387144352122,
+              "mean_error_m_std": 0.018309248762840003,
+              "p90_error_m_mean": 2.760876825816407,
+              "p90_error_m_std": 0.0076910772925664495
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.04214900563965568,
+              "cell_acc_std": 0.003245305716496672,
+              "mean_error_m_mean": 1.308810945878409,
+              "mean_error_m_std": 0.02175164605450093,
+              "p90_error_m_mean": 2.5893118874676113,
+              "p90_error_m_std": 0.1138593404992121
+            },
+            "unseen": {
+              "cell_acc_mean": 0.00905050505050505,
+              "cell_acc_std": 0.004097774511032921,
+              "mean_error_m_mean": 1.356889057947362,
+              "mean_error_m_std": 0.016995695509735308,
+              "p90_error_m_mean": 2.5952904416018896,
+              "p90_error_m_std": 0.10939617785768005
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.04223805283466905,
+              "cell_acc_std": 0.0041781600130007274,
+              "mean_error_m_mean": 1.3024002168490527,
+              "mean_error_m_std": 0.00863875031597483,
+              "p90_error_m_mean": 2.4863984960053984,
+              "p90_error_m_std": 0.0446002884380708
+            },
+            "unseen": {
+              "cell_acc_mean": 0.016242424242424242,
+              "cell_acc_std": 0.002955853116472224,
+              "mean_error_m_mean": 1.3468183732204342,
+              "mean_error_m_std": 0.015064577359453747,
+              "p90_error_m_mean": 2.5814387298823385,
+              "p90_error_m_std": 0.1335692724024748
+            }
+          }
+        },
+        "40": {
+          "requested_cell_count": 40,
+          "effective_cell_count": 40,
+          "coverage_mean": 0.5333333333333333,
+          "n_support_mean": 40.0,
+          "n_query_all_mean": 11210.0,
+          "n_query_unseen_mean": 5250.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012905144216473388,
+            "cell_acc_std": 4.2052142800270296e-05,
+            "mean_error_m_mean": 1.4141532135069814,
+            "mean_error_m_std": 0.00011073405295649333,
+            "p90_error_m_mean": 2.6570660511172846,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.015047619047619046,
+            "cell_acc_std": 0.0018662778992633731,
+            "mean_error_m_mean": 1.4324054817035108,
+            "mean_error_m_std": 0.007858701138208447,
+            "p90_error_m_mean": 2.719022017039095,
+            "p90_error_m_std": 0.04380948363827471
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.049033600951531364,
+              "cell_acc_std": 0.0069195903322970135,
+              "mean_error_m_mean": 1.3586699515234286,
+              "mean_error_m_std": 0.02432974779092901,
+              "p90_error_m_mean": 2.630661350957659,
+              "p90_error_m_std": 0.08438516799548101
+            },
+            "unseen": {
+              "cell_acc_mean": 0.012952380952380951,
+              "cell_acc_std": 0.007734052668085054,
+              "mean_error_m_mean": 1.4311982055996435,
+              "mean_error_m_std": 0.03770987393893427,
+              "p90_error_m_mean": 2.7244604299472983,
+              "p90_error_m_std": 0.04811824655348412
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.06152245019327981,
+              "cell_acc_std": 0.004700255870394776,
+              "mean_error_m_mean": 1.3422756737713095,
+              "mean_error_m_std": 0.0006344492599918277,
+              "p90_error_m_mean": 2.592686025851257,
+              "p90_error_m_std": 0.04632319097686218
+            },
+            "unseen": {
+              "cell_acc_mean": 0.0064761904761904765,
+              "cell_acc_std": 0.001911100564227608,
+              "mean_error_m_mean": 1.429032216726798,
+              "mean_error_m_std": 0.01672639842075199,
+              "p90_error_m_mean": 2.6957690883870327,
+              "p90_error_m_std": 0.08848176138021459
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.06018435920309248,
+              "cell_acc_std": 0.004252883539406752,
+              "mean_error_m_mean": 1.3482746360190951,
+              "mean_error_m_std": 0.029432666527700154,
+              "p90_error_m_mean": 2.612975896279774,
+              "p90_error_m_std": 0.09928225148993584
+            },
+            "unseen": {
+              "cell_acc_mean": 0.008888888888888889,
+              "cell_acc_std": 0.004933623410809502,
+              "mean_error_m_mean": 1.4297054512717684,
+              "mean_error_m_std": 0.032421070133900436,
+              "p90_error_m_mean": 2.664791105426128,
+              "p90_error_m_std": 0.07992724467786815
+            }
+          }
+        },
+        "60": {
+          "requested_cell_count": 60,
+          "effective_cell_count": 60,
+          "coverage_mean": 0.8000000000000002,
+          "n_support_mean": 60.0,
+          "n_query_all_mean": 11190.0,
+          "n_query_unseen_mean": 2250.0,
+          "SourceKNN_all": {
+            "cell_acc_mean": 0.012898421209413166,
+            "cell_acc_std": 4.212730301975307e-05,
+            "mean_error_m_mean": 1.4139728616480094,
+            "mean_error_m_std": 0.00038772030893274693,
+            "p90_error_m_mean": 2.6570660511172846,
+            "p90_error_m_std": 0.0
+          },
+          "SourceKNN_unseen": {
+            "cell_acc_mean": 0.010222222222222223,
+            "cell_acc_std": 0.00346172487275494,
+            "mean_error_m_mean": 1.4902348304280488,
+            "mean_error_m_std": 0.10826122919886852,
+            "p90_error_m_mean": 2.8572751006358295,
+            "p90_error_m_std": 0.20243270310528555
+          },
+          "NearestSpatial": {
+            "all": {
+              "cell_acc_mean": 0.07396484956806672,
+              "cell_acc_std": 0.0017878065043936467,
+              "mean_error_m_mean": 1.2962251745694258,
+              "mean_error_m_std": 0.05415207796037682,
+              "p90_error_m_mean": 2.5893118874676113,
+              "p90_error_m_std": 0.1138593404992121
+            },
+            "unseen": {
+              "cell_acc_mean": 0.0038518518518518515,
+              "cell_acc_std": 0.002747738813480208,
+              "mean_error_m_mean": 1.4950264101390858,
+              "mean_error_m_std": 0.046151218062979824,
+              "p90_error_m_mean": 2.7012075012952366,
+              "p90_error_m_std": 0.09207624528804748
+            }
+          },
+          "IDW": {
+            "all": {
+              "cell_acc_mean": 0.08313970807268393,
+              "cell_acc_std": 0.003836361193636735,
+              "mean_error_m_mean": 1.3008352106533438,
+              "mean_error_m_std": 0.052586374261747684,
+              "p90_error_m_mean": 2.5952904416018896,
+              "p90_error_m_std": 0.10939617785768005
+            },
+            "unseen": {
+              "cell_acc_mean": 0.009185185185185185,
+              "cell_acc_std": 0.0065050365629926365,
+              "mean_error_m_mean": 1.508223067611205,
+              "mean_error_m_std": 0.051087214484979,
+              "p90_error_m_mean": 2.7012075012952366,
+              "p90_error_m_std": 0.09207624528804748
+            }
+          },
+          "GP_RBF": {
+            "all": {
+              "cell_acc_mean": 0.07977360738754842,
+              "cell_acc_std": 0.004477995583422825,
+              "mean_error_m_mean": 1.3107356731376016,
+              "mean_error_m_std": 0.06080229314200489,
+              "p90_error_m_mean": 2.600728854510093,
+              "p90_error_m_std": 0.1170872551502465
+            },
+            "unseen": {
+              "cell_acc_mean": 0.006962962962962963,
+              "cell_acc_std": 0.003272699560648078,
+              "mean_error_m_mean": 1.5105155444322775,
+              "mean_error_m_std": 0.06518198483863967,
+              "p90_error_m_mean": 2.761420667107228,
+              "p90_error_m_std": 0.0069219695633087365
+            }
+          }
+        }
+      }
+    }
+  },
+  "summary": [
+    {
+      "requested_cell_count": 1,
+      "coverage_mean": 0.017283496732026143,
+      "n_support_mean": 1.0,
+      "SourceKNN_all_cell_acc_mean": 0.013006953253773207,
+      "SourceKNN_all_cell_acc_std_cross_room": 0.006026870700382756,
+      "SourceKNN_all_mean_error_m_mean": 1.3730821234938382,
+      "SourceKNN_all_mean_error_m_std_cross_room": 0.12123883879917813,
+      "SourceKNN_all_p90_error_m_mean": 2.539147568637072,
+      "SourceKNN_all_p90_error_m_std_cross_room": 0.2930095982804115,
+      "SourceKNN_unseen_cell_acc_mean": 0.013197659749430152,
+      "SourceKNN_unseen_cell_acc_std_cross_room": 0.006074290322125477,
+      "SourceKNN_unseen_mean_error_m_mean": 1.3723814391955964,
+      "SourceKNN_unseen_mean_error_m_std_cross_room": 0.12479590907987918,
+      "SourceKNN_unseen_p90_error_m_mean": 2.5515242424792994,
+      "SourceKNN_unseen_p90_error_m_std_cross_room": 0.32394049376416884,
+      "NearestSpatial_all_cell_acc_mean": 0.01729941830747966,
+      "NearestSpatial_all_cell_acc_std_cross_room": 0.007019381789425513,
+      "NearestSpatial_all_mean_error_m_mean": 1.7211560939701156,
+      "NearestSpatial_all_mean_error_m_std_cross_room": 0.3482483412604484,
+      "NearestSpatial_all_p90_error_m_mean": 2.9285830705219547,
+      "NearestSpatial_all_p90_error_m_std_cross_room": 0.6419900303370757,
+      "NearestSpatial_unseen_cell_acc_mean": 0.017650537905215848,
+      "NearestSpatial_unseen_cell_acc_std_cross_room": 0.007321441778158919,
+      "NearestSpatial_unseen_mean_error_m_mean": 1.7146170031848411,
+      "NearestSpatial_unseen_mean_error_m_std_cross_room": 0.35611661824182894,
+      "NearestSpatial_unseen_p90_error_m_mean": 2.9087629152947994,
+      "NearestSpatial_unseen_p90_error_m_std_cross_room": 0.6613852325927108,
+      "IDW_all_cell_acc_mean": 0.01729941830747966,
+      "IDW_all_cell_acc_std_cross_room": 0.007019381789425513,
+      "IDW_all_mean_error_m_mean": 1.7211560939701156,
+      "IDW_all_mean_error_m_std_cross_room": 0.3482483412604484,
+      "IDW_all_p90_error_m_mean": 2.9285830705219547,
+      "IDW_all_p90_error_m_std_cross_room": 0.6419900303370757,
+      "IDW_unseen_cell_acc_mean": 0.017650537905215848,
+      "IDW_unseen_cell_acc_std_cross_room": 0.007321441778158919,
+      "IDW_unseen_mean_error_m_mean": 1.7146170031848411,
+      "IDW_unseen_mean_error_m_std_cross_room": 0.35611661824182894,
+      "IDW_unseen_p90_error_m_mean": 2.9087629152947994,
+      "IDW_unseen_p90_error_m_std_cross_room": 0.6613852325927108,
+      "GP_RBF_all_cell_acc_mean": 0.01729941830747966,
+      "GP_RBF_all_cell_acc_std_cross_room": 0.007019381789425513,
+      "GP_RBF_all_mean_error_m_mean": 1.7211560939701156,
+      "GP_RBF_all_mean_error_m_std_cross_room": 0.3482483412604484,
+      "GP_RBF_all_p90_error_m_mean": 2.9285830705219547,
+      "GP_RBF_all_p90_error_m_std_cross_room": 0.6419900303370757,
+      "GP_RBF_unseen_cell_acc_mean": 0.017650537905215848,
+      "GP_RBF_unseen_cell_acc_std_cross_room": 0.007321441778158919,
+      "GP_RBF_unseen_mean_error_m_mean": 1.7146170031848411,
+      "GP_RBF_unseen_mean_error_m_std_cross_room": 0.35611661824182894,
+      "GP_RBF_unseen_p90_error_m_mean": 2.9087629152947994,
+      "GP_RBF_unseen_p90_error_m_std_cross_room": 0.6613852325927108
+    },
+    {
+      "requested_cell_count": 2,
+      "coverage_mean": 0.03456699346405229,
+      "n_support_mean": 2.0,
+      "SourceKNN_all_cell_acc_mean": 0.013009136017135353,
+      "SourceKNN_all_cell_acc_std_cross_room": 0.006027213043088487,
+      "SourceKNN_all_mean_error_m_mean": 1.37301805653245,
+      "SourceKNN_all_mean_error_m_std_cross_room": 0.12129495934306224,
+      "SourceKNN_all_p90_error_m_mean": 2.539147568637072,
+      "SourceKNN_all_p90_error_m_std_cross_room": 0.2930095982804115,
+      "SourceKNN_unseen_cell_acc_mean": 0.012788967379365416,
+      "SourceKNN_unseen_cell_acc_std_cross_room": 0.005616304823378447,
+      "SourceKNN_unseen_mean_error_m_mean": 1.3706699778588494,
+      "SourceKNN_unseen_mean_error_m_std_cross_room": 0.12816494611113669,
+      "SourceKNN_unseen_p90_error_m_mean": 2.5532232061888287,
+      "SourceKNN_unseen_p90_error_m_std_cross_room": 0.333204076609475,
+      "NearestSpatial_all_cell_acc_mean": 0.01645219241723374,
+      "NearestSpatial_all_cell_acc_std_cross_room": 0.00612430569501791,
+      "NearestSpatial_all_mean_error_m_mean": 1.5042391973556677,
+      "NearestSpatial_all_mean_error_m_std_cross_room": 0.31581951869316544,
+      "NearestSpatial_all_p90_error_m_mean": 2.6809465540789383,
+      "NearestSpatial_all_p90_error_m_std_cross_room": 0.6158370947839941,
+      "NearestSpatial_unseen_cell_acc_mean": 0.016449550113344053,
+      "NearestSpatial_unseen_cell_acc_std_cross_room": 0.005546010351019645,
+      "NearestSpatial_unseen_mean_error_m_mean": 1.504670866525672,
+      "NearestSpatial_unseen_mean_error_m_std_cross_room": 0.3211838343390718,
+      "NearestSpatial_unseen_p90_error_m_mean": 2.6778279024778593,
+      "NearestSpatial_unseen_p90_error_m_std_cross_room": 0.6228521563020095,
+      "IDW_all_cell_acc_mean": 0.023773696349344228,
+      "IDW_all_cell_acc_std_cross_room": 0.013477840541033924,
+      "IDW_all_mean_error_m_mean": 1.2473678640285149,
+      "IDW_all_mean_error_m_std_cross_room": 0.21113550564987876,
+      "IDW_all_p90_error_m_mean": 2.2831715423966057,
+      "IDW_all_p90_error_m_std_cross_room": 0.4079979382673124,
+      "IDW_unseen_cell_acc_mean": 0.010617419265673014,
+      "IDW_unseen_cell_acc_std_cross_room": 0.006499380365276114,
+      "IDW_unseen_mean_error_m_mean": 1.2643672051938335,
+      "IDW_unseen_mean_error_m_std_cross_room": 0.21152480435143325,
+      "IDW_unseen_p90_error_m_mean": 2.281044201525233,
+      "IDW_unseen_p90_error_m_std_cross_room": 0.41153388088685083,
+      "GP_RBF_all_cell_acc_mean": 0.01996802948167626,
+      "GP_RBF_all_cell_acc_std_cross_room": 0.010499542025594687,
+      "GP_RBF_all_mean_error_m_mean": 1.2830481574406236,
+      "GP_RBF_all_mean_error_m_std_cross_room": 0.23030559263074463,
+      "GP_RBF_all_p90_error_m_mean": 2.341644627818717,
+      "GP_RBF_all_p90_error_m_std_cross_room": 0.44977306696702735,
+      "GP_RBF_unseen_cell_acc_mean": 0.009418403692707453,
+      "GP_RBF_unseen_cell_acc_std_cross_room": 0.0031273988296725724,
+      "GP_RBF_unseen_mean_error_m_mean": 1.294869791169812,
+      "GP_RBF_unseen_mean_error_m_std_cross_room": 0.22913870555732263,
+      "GP_RBF_unseen_p90_error_m_mean": 2.3450699436402695,
+      "GP_RBF_unseen_p90_error_m_std_cross_room": 0.45404944758781796
+    },
+    {
+      "requested_cell_count": 3,
+      "coverage_mean": 0.05185049019607843,
+      "n_support_mean": 3.0,
+      "SourceKNN_all_cell_acc_mean": 0.013011320007159089,
+      "SourceKNN_all_cell_acc_std_cross_room": 0.006027554867755007,
+      "SourceKNN_all_mean_error_m_mean": 1.3728852623194958,
+      "SourceKNN_all_mean_error_m_std_cross_room": 0.12119369017270719,
+      "SourceKNN_all_p90_error_m_mean": 2.539147568637072,
+      "SourceKNN_all_p90_error_m_std_cross_room": 0.2930095982804115,
+      "SourceKNN_unseen_cell_acc_mean": 0.012950342887848446,
+      "SourceKNN_unseen_cell_acc_std_cross_room": 0.005386955149890276,
+      "SourceKNN_unseen_mean_error_m_mean": 1.364620512402599,
+      "SourceKNN_unseen_mean_error_m_std_cross_room": 0.11738332620483936,
+      "SourceKNN_unseen_p90_error_m_mean": 2.5319747332470053,
+      "SourceKNN_unseen_p90_error_m_std_cross_room": 0.29037450586870245,
+      "NearestSpatial_all_cell_acc_mean": 0.019906947964909036,
+      "NearestSpatial_all_cell_acc_std_cross_room": 0.0036434363190750657,
+      "NearestSpatial_all_mean_error_m_mean": 1.378493712176006,
+      "NearestSpatial_all_mean_error_m_std_cross_room": 0.31523862150251436,
+      "NearestSpatial_all_p90_error_m_mean": 2.4010710848176395,
+      "NearestSpatial_all_p90_error_m_std_cross_room": 0.5876842452410974,
+      "NearestSpatial_unseen_cell_acc_mean": 0.020377647834663278,
+      "NearestSpatial_unseen_cell_acc_std_cross_room": 0.004784423830718909,
+      "NearestSpatial_unseen_mean_error_m_mean": 1.384551638381299,
+      "NearestSpatial_unseen_mean_error_m_std_cross_room": 0.31276451343083994,
+      "NearestSpatial_unseen_p90_error_m_mean": 2.392009073079014,
+      "NearestSpatial_unseen_p90_error_m_std_cross_room": 0.5818173825570625,
+      "IDW_all_cell_acc_mean": 0.026128521410713583,
+      "IDW_all_cell_acc_std_cross_room": 0.01646913121709024,
+      "IDW_all_mean_error_m_mean": 1.2930764957466885,
+      "IDW_all_mean_error_m_std_cross_room": 0.2793011977144159,
+      "IDW_all_p90_error_m_mean": 2.3305657087605005,
+      "IDW_all_p90_error_m_std_cross_room": 0.49455697575941104,
+      "IDW_unseen_cell_acc_mean": 0.0111971411743829,
+      "IDW_unseen_cell_acc_std_cross_room": 0.008018136480441463,
+      "IDW_unseen_mean_error_m_mean": 1.3081081300591377,
+      "IDW_unseen_mean_error_m_std_cross_room": 0.2686781132397488,
+      "IDW_unseen_p90_error_m_mean": 2.3249449215562628,
+      "IDW_unseen_p90_error_m_std_cross_room": 0.4646094508620781,
+      "GP_RBF_all_cell_acc_mean": 0.024991545074229314,
+      "GP_RBF_all_cell_acc_std_cross_room": 0.01499152698316027,
+      "GP_RBF_all_mean_error_m_mean": 1.3169855134500081,
+      "GP_RBF_all_mean_error_m_std_cross_room": 0.27979023825873045,
+      "GP_RBF_all_p90_error_m_mean": 2.3899588840206203,
+      "GP_RBF_all_p90_error_m_std_cross_room": 0.5510354097990011,
+      "GP_RBF_unseen_cell_acc_mean": 0.01401562511494207,
+      "GP_RBF_unseen_cell_acc_std_cross_room": 0.008941524595963363,
+      "GP_RBF_unseen_mean_error_m_mean": 1.3322922445557133,
+      "GP_RBF_unseen_mean_error_m_std_cross_room": 0.26904798325658397,
+      "GP_RBF_unseen_p90_error_m_mean": 2.372889696793804,
+      "GP_RBF_unseen_p90_error_m_std_cross_room": 0.5380771343634124
+    },
+    {
+      "requested_cell_count": 5,
+      "coverage_mean": 0.08641748366013072,
+      "n_support_mean": 5.0,
+      "SourceKNN_all_cell_acc_mean": 0.01301569167370166,
+      "SourceKNN_all_cell_acc_std_cross_room": 0.006028236957874707,
+      "SourceKNN_all_mean_error_m_mean": 1.3729116039416995,
+      "SourceKNN_all_mean_error_m_std_cross_room": 0.12114397775371201,
+      "SourceKNN_all_p90_error_m_mean": 2.539147568637072,
+      "SourceKNN_all_p90_error_m_std_cross_room": 0.2930095982804115,
+      "SourceKNN_unseen_cell_acc_mean": 0.013269367619729149,
+      "SourceKNN_unseen_cell_acc_std_cross_room": 0.006006144627427685,
+      "SourceKNN_unseen_mean_error_m_mean": 1.369326270558343,
+      "SourceKNN_unseen_mean_error_m_std_cross_room": 0.1273167880009324,
+      "SourceKNN_unseen_p90_error_m_mean": 2.5469842958377895,
+      "SourceKNN_unseen_p90_error_m_std_cross_room": 0.3228266949997742,
+      "NearestSpatial_all_cell_acc_mean": 0.0201476156217123,
+      "NearestSpatial_all_cell_acc_std_cross_room": 0.012893232497280149,
+      "NearestSpatial_all_mean_error_m_mean": 1.3340080160505754,
+      "NearestSpatial_all_mean_error_m_std_cross_room": 0.2631874919320884,
+      "NearestSpatial_all_p90_error_m_mean": 2.46151119853147,
+      "NearestSpatial_all_p90_error_m_std_cross_room": 0.5354933691513528,
+      "NearestSpatial_unseen_cell_acc_mean": 0.020003382727341833,
+      "NearestSpatial_unseen_cell_acc_std_cross_room": 0.012291432605646331,
+      "NearestSpatial_unseen_mean_error_m_mean": 1.3566293171550663,
+      "NearestSpatial_unseen_mean_error_m_std_cross_room": 0.2569233148315846,
+      "NearestSpatial_unseen_p90_error_m_mean": 2.4533752822706165,
+      "NearestSpatial_unseen_p90_error_m_std_cross_room": 0.5065576892622673,
+      "IDW_all_cell_acc_mean": 0.031055518610126624,
+      "IDW_all_cell_acc_std_cross_room": 0.021444355090573654,
+      "IDW_all_mean_error_m_mean": 1.2635207280612,
+      "IDW_all_mean_error_m_std_cross_room": 0.2267820341255373,
+      "IDW_all_p90_error_m_mean": 2.319366927509128,
+      "IDW_all_p90_error_m_std_cross_room": 0.41999728033776007,
+      "IDW_unseen_cell_acc_mean": 0.01080720839363865,
+      "IDW_unseen_cell_acc_std_cross_room": 0.006215568030048195,
+      "IDW_unseen_mean_error_m_mean": 1.2956914957625947,
+      "IDW_unseen_mean_error_m_std_cross_room": 0.2209090339418263,
+      "IDW_unseen_p90_error_m_mean": 2.311756721419576,
+      "IDW_unseen_p90_error_m_std_cross_room": 0.44657031235011346,
+      "GP_RBF_all_cell_acc_mean": 0.031750046117745165,
+      "GP_RBF_all_cell_acc_std_cross_room": 0.021026954276903757,
+      "GP_RBF_all_mean_error_m_mean": 1.2782072832902212,
+      "GP_RBF_all_mean_error_m_std_cross_room": 0.24009431206779552,
+      "GP_RBF_all_p90_error_m_mean": 2.3430381258597994,
+      "GP_RBF_all_p90_error_m_std_cross_room": 0.45440279447336224,
+      "GP_RBF_unseen_cell_acc_mean": 0.015060737587810229,
+      "GP_RBF_unseen_cell_acc_std_cross_room": 0.007015486248627239,
+      "GP_RBF_unseen_mean_error_m_mean": 1.304578423683234,
+      "GP_RBF_unseen_mean_error_m_std_cross_room": 0.2300382597337217,
+      "GP_RBF_unseen_p90_error_m_mean": 2.3388643962712647,
+      "GP_RBF_unseen_p90_error_m_std_cross_room": 0.4758582070955824
+    },
+    {
+      "requested_cell_count": 10,
+      "coverage_mean": 0.17283496732026143,
+      "n_support_mean": 10.0,
+      "SourceKNN_all_cell_acc_mean": 0.013026642420937748,
+      "SourceKNN_all_cell_acc_std_cross_room": 0.006029933028005595,
+      "SourceKNN_all_mean_error_m_mean": 1.3729824605844574,
+      "SourceKNN_all_mean_error_m_std_cross_room": 0.12111541293445238,
+      "SourceKNN_all_p90_error_m_mean": 2.540034841476691,
+      "SourceKNN_all_p90_error_m_std_cross_room": 0.2940847656586515,
+      "SourceKNN_unseen_cell_acc_mean": 0.012565657188675755,
+      "SourceKNN_unseen_cell_acc_std_cross_room": 0.007204307853072018,
+      "SourceKNN_unseen_mean_error_m_mean": 1.3764701602066407,
+      "SourceKNN_unseen_mean_error_m_std_cross_room": 0.11941988423969827,
+      "SourceKNN_unseen_p90_error_m_mean": 2.5397659141766855,
+      "SourceKNN_unseen_p90_error_m_std_cross_room": 0.317127383638317,
+      "NearestSpatial_all_cell_acc_mean": 0.023445007715325865,
+      "NearestSpatial_all_cell_acc_std_cross_room": 0.013349053040693521,
+      "NearestSpatial_all_mean_error_m_mean": 1.24957278202126,
+      "NearestSpatial_all_mean_error_m_std_cross_room": 0.21738724418156952,
+      "NearestSpatial_all_p90_error_m_mean": 2.2760923126285193,
+      "NearestSpatial_all_p90_error_m_std_cross_room": 0.4223716550830191,
+      "NearestSpatial_unseen_cell_acc_mean": 0.017139516353079542,
+      "NearestSpatial_unseen_cell_acc_std_cross_room": 0.0034629725763278066,
+      "NearestSpatial_unseen_mean_error_m_mean": 1.2941521501870419,
+      "NearestSpatial_unseen_mean_error_m_std_cross_room": 0.1976029383906279,
+      "NearestSpatial_unseen_p90_error_m_mean": 2.332684130822598,
+      "NearestSpatial_unseen_p90_error_m_std_cross_room": 0.4113570960492333,
+      "IDW_all_cell_acc_mean": 0.04989853819989673,
+      "IDW_all_cell_acc_std_cross_room": 0.032195716043599054,
+      "IDW_all_mean_error_m_mean": 1.1823604547640088,
+      "IDW_all_mean_error_m_std_cross_room": 0.17820047609573159,
+      "IDW_all_p90_error_m_mean": 2.1472980873716976,
+      "IDW_all_p90_error_m_std_cross_room": 0.3721854294146369,
+      "IDW_unseen_cell_acc_mean": 0.010439134457892553,
+      "IDW_unseen_cell_acc_std_cross_room": 0.0024063768572052387,
+      "IDW_unseen_mean_error_m_mean": 1.2315695027400386,
+      "IDW_unseen_mean_error_m_std_cross_room": 0.1619063885027283,
+      "IDW_unseen_p90_error_m_mean": 2.164154672999704,
+      "IDW_unseen_p90_error_m_std_cross_room": 0.38219408858731263,
+      "GP_RBF_all_cell_acc_mean": 0.0525076619054715,
+      "GP_RBF_all_cell_acc_std_cross_room": 0.034887082040045085,
+      "GP_RBF_all_mean_error_m_mean": 1.201686357971441,
+      "GP_RBF_all_mean_error_m_std_cross_room": 0.18402654343200614,
+      "GP_RBF_all_p90_error_m_mean": 2.214513145419781,
+      "GP_RBF_all_p90_error_m_std_cross_room": 0.38959455450962754,
+      "GP_RBF_unseen_cell_acc_mean": 0.01931233931196924,
+      "GP_RBF_unseen_cell_acc_std_cross_room": 0.00754891837455074,
+      "GP_RBF_unseen_mean_error_m_mean": 1.25125790118946,
+      "GP_RBF_unseen_mean_error_m_std_cross_room": 0.1591122117909051,
+      "GP_RBF_unseen_p90_error_m_mean": 2.2540443909760044,
+      "GP_RBF_unseen_p90_error_m_std_cross_room": 0.38383878242400266
+    },
+    {
+      "requested_cell_count": 20,
+      "coverage_mean": 0.34566993464052287,
+      "n_support_mean": 20.0,
+      "SourceKNN_all_cell_acc_mean": 0.013019504039466874,
+      "SourceKNN_all_cell_acc_std_cross_room": 0.006013580287512187,
+      "SourceKNN_all_mean_error_m_mean": 1.3728314193408924,
+      "SourceKNN_all_mean_error_m_std_cross_room": 0.1211748367517085,
+      "SourceKNN_all_p90_error_m_mean": 2.540034841476691,
+      "SourceKNN_all_p90_error_m_std_cross_room": 0.2940847656586515,
+      "SourceKNN_unseen_cell_acc_mean": 0.011501729173604175,
+      "SourceKNN_unseen_cell_acc_std_cross_room": 0.005419275833920256,
+      "SourceKNN_unseen_mean_error_m_mean": 1.369707215786698,
+      "SourceKNN_unseen_mean_error_m_std_cross_room": 0.10692809093745642,
+      "SourceKNN_unseen_p90_error_m_mean": 2.495757577145497,
+      "SourceKNN_unseen_p90_error_m_std_cross_room": 0.2783103918373834,
+      "NearestSpatial_all_cell_acc_mean": 0.05644760319308777,
+      "NearestSpatial_all_cell_acc_std_cross_room": 0.05580348013244243,
+      "NearestSpatial_all_mean_error_m_mean": 1.2309076940057815,
+      "NearestSpatial_all_mean_error_m_std_cross_room": 0.2944797729586294,
+      "NearestSpatial_all_p90_error_m_mean": 2.3750691369946413,
+      "NearestSpatial_all_p90_error_m_std_cross_room": 0.5647021499346755,
+      "NearestSpatial_unseen_cell_acc_mean": 0.023594816641691642,
+      "NearestSpatial_unseen_cell_acc_std_cross_room": 0.010343376124288758,
+      "NearestSpatial_unseen_mean_error_m_mean": 1.291640015926313,
+      "NearestSpatial_unseen_mean_error_m_std_cross_room": 0.26190487527440076,
+      "NearestSpatial_unseen_p90_error_m_mean": 2.415379363011769,
+      "NearestSpatial_unseen_p90_error_m_std_cross_room": 0.5938712605455014,
+      "IDW_all_cell_acc_mean": 0.08269974056665044,
+      "IDW_all_cell_acc_std_cross_room": 0.0577469576003117,
+      "IDW_all_mean_error_m_mean": 1.1526908690441326,
+      "IDW_all_mean_error_m_std_cross_room": 0.2543158212937937,
+      "IDW_all_p90_error_m_mean": 2.2858794192009086,
+      "IDW_all_p90_error_m_std_cross_room": 0.5112289089320524,
+      "IDW_unseen_cell_acc_mean": 0.01036740342990343,
+      "IDW_unseen_cell_acc_std_cross_room": 0.0028079277520785735,
+      "IDW_unseen_mean_error_m_mean": 1.2254953326830593,
+      "IDW_unseen_mean_error_m_std_cross_room": 0.20933000002169022,
+      "IDW_unseen_p90_error_m_mean": 2.2908145720976996,
+      "IDW_unseen_p90_error_m_std_cross_room": 0.5199850311577686,
+      "GP_RBF_all_cell_acc_mean": 0.08215889630133894,
+      "GP_RBF_all_cell_acc_std_cross_room": 0.060511287627558676,
+      "GP_RBF_all_mean_error_m_mean": 1.1488957850564145,
+      "GP_RBF_all_mean_error_m_std_cross_room": 0.2454043872109148,
+      "GP_RBF_all_p90_error_m_mean": 2.2600353700052582,
+      "GP_RBF_all_p90_error_m_std_cross_room": 0.48662840143926356,
+      "GP_RBF_unseen_cell_acc_mean": 0.01440754211066711,
+      "GP_RBF_unseen_cell_acc_std_cross_room": 0.003112765652858865,
+      "GP_RBF_unseen_mean_error_m_mean": 1.2183523233290485,
+      "GP_RBF_unseen_mean_error_m_std_cross_room": 0.20700530289368688,
+      "GP_RBF_unseen_p90_error_m_mean": 2.2981015265905183,
+      "GP_RBF_unseen_p90_error_m_std_cross_room": 0.4846531968790905
+    },
+    {
+      "requested_cell_count": 40,
+      "coverage_mean": 0.6472222222222221,
+      "n_support_mean": 38.5,
+      "SourceKNN_all_cell_acc_mean": 0.013015722744268855,
+      "SourceKNN_all_cell_acc_std_cross_room": 0.006115517836077615,
+      "SourceKNN_all_mean_error_m_mean": 1.372976851028406,
+      "SourceKNN_all_mean_error_m_std_cross_room": 0.12100222712351333,
+      "SourceKNN_all_p90_error_m_mean": 2.539147568637072,
+      "SourceKNN_all_p90_error_m_std_cross_room": 0.2930095982804115,
+      "SourceKNN_unseen_cell_acc_mean": 0.01870574997336742,
+      "SourceKNN_unseen_cell_acc_std_cross_room": 0.006684278988326833,
+      "SourceKNN_unseen_mean_error_m_mean": 1.4103219005702854,
+      "SourceKNN_unseen_mean_error_m_std_cross_room": 0.07448530267115071,
+      "SourceKNN_unseen_p90_error_m_mean": 2.6804783089420163,
+      "SourceKNN_unseen_p90_error_m_std_cross_room": 0.1706935232323719,
+      "NearestSpatial_all_cell_acc_mean": 0.12597160190171083,
+      "NearestSpatial_all_cell_acc_std_cross_room": 0.11459763716376883,
+      "NearestSpatial_all_mean_error_m_mean": 1.1140727665769155,
+      "NearestSpatial_all_mean_error_m_std_cross_room": 0.3129653404377902,
+      "NearestSpatial_all_p90_error_m_mean": 2.2416700575877275,
+      "NearestSpatial_all_p90_error_m_std_cross_room": 0.5539951712722727,
+      "NearestSpatial_unseen_cell_acc_mean": 0.016035146124072298,
+      "NearestSpatial_unseen_cell_acc_std_cross_room": 0.002481089100215044,
+      "NearestSpatial_unseen_mean_error_m_mean": 1.3900178681766782,
+      "NearestSpatial_unseen_mean_error_m_std_cross_room": 0.035494923409808164,
+      "NearestSpatial_unseen_p90_error_m_mean": 2.6302871667154673,
+      "NearestSpatial_unseen_p90_error_m_std_cross_room": 0.07937161975949722,
+      "IDW_all_cell_acc_mean": 0.14046550822789403,
+      "IDW_all_cell_acc_std_cross_room": 0.10696205904427893,
+      "IDW_all_mean_error_m_mean": 1.1019942742735547,
+      "IDW_all_mean_error_m_std_cross_room": 0.3064595288863001,
+      "IDW_all_p90_error_m_mean": 2.2314697166448756,
+      "IDW_all_p90_error_m_std_cross_room": 0.5468960639346179,
+      "IDW_unseen_cell_acc_mean": 0.008252907389652356,
+      "IDW_unseen_cell_acc_std_cross_room": 0.0014119774521196295,
+      "IDW_unseen_mean_error_m_mean": 1.3817451059286496,
+      "IDW_unseen_mean_error_m_std_cross_room": 0.034714871257511964,
+      "IDW_unseen_p90_error_m_mean": 2.6085072108857474,
+      "IDW_unseen_p90_error_m_std_cross_room": 0.0908515170629975,
+      "GP_RBF_all_cell_acc_mean": 0.13970369522963685,
+      "GP_RBF_all_cell_acc_std_cross_room": 0.10741869298197165,
+      "GP_RBF_all_mean_error_m_mean": 1.1077201293664105,
+      "GP_RBF_all_mean_error_m_std_cross_room": 0.3096709150689414,
+      "GP_RBF_all_p90_error_m_mean": 2.267305631711992,
+      "GP_RBF_all_p90_error_m_std_cross_room": 0.566966862101537,
+      "GP_RBF_unseen_cell_acc_mean": 0.009739342530449913,
+      "GP_RBF_unseen_cell_acc_std_cross_room": 0.0014551670398726406,
+      "GP_RBF_unseen_mean_error_m_mean": 1.3836824217010468,
+      "GP_RBF_unseen_mean_error_m_std_cross_room": 0.03301387711592245,
+      "GP_RBF_unseen_p90_error_m_mean": 2.627022522051172,
+      "GP_RBF_unseen_p90_error_m_std_cross_room": 0.05455710379954231
+    },
+    {
+      "requested_cell_count": 60,
+      "coverage_mean": 0.8458333333333334,
+      "n_support_mean": 53.5,
+      "SourceKNN_all_cell_acc_mean": 0.012924370727422106,
+      "SourceKNN_all_cell_acc_std_cross_room": 0.006000346615488895,
+      "SourceKNN_all_mean_error_m_mean": 1.3733637420033358,
+      "SourceKNN_all_mean_error_m_std_cross_room": 0.1212736027110695,
+      "SourceKNN_all_p90_error_m_mean": 2.549829562523764,
+      "SourceKNN_all_p90_error_m_std_cross_room": 0.30621545199734823,
+      "SourceKNN_unseen_cell_acc_mean": 0.012506172839506174,
+      "SourceKNN_unseen_cell_acc_std_cross_room": 0.003256218184693916,
+      "SourceKNN_unseen_mean_error_m_mean": 1.4752470105117126,
+      "SourceKNN_unseen_mean_error_m_std_cross_room": 0.0946168197973165,
+      "SourceKNN_unseen_p90_error_m_mean": 2.7788946034759223,
+      "SourceKNN_unseen_p90_error_m_std_cross_room": 0.2556989047616551,
+      "NearestSpatial_all_cell_acc_mean": 0.15752836926115618,
+      "NearestSpatial_all_cell_acc_std_cross_room": 0.09846426011729292,
+      "NearestSpatial_all_mean_error_m_mean": 1.0721183282861673,
+      "NearestSpatial_all_mean_error_m_std_cross_room": 0.28859369609184565,
+      "NearestSpatial_all_p90_error_m_mean": 2.2376174324086393,
+      "NearestSpatial_all_p90_error_m_std_cross_room": 0.5502139735623506,
+      "NearestSpatial_unseen_cell_acc_mean": 0.009123456790123458,
+      "NearestSpatial_unseen_cell_acc_std_cross_room": 0.004847970677728993,
+      "NearestSpatial_unseen_mean_error_m_mean": 1.4309741338537014,
+      "NearestSpatial_unseen_mean_error_m_std_cross_room": 0.04920272375808333,
+      "NearestSpatial_unseen_p90_error_m_mean": 2.616151159336374,
+      "NearestSpatial_unseen_p90_error_m_std_cross_room": 0.10808445101925751,
+      "IDW_all_cell_acc_mean": 0.16394725479844507,
+      "IDW_all_cell_acc_std_cross_room": 0.09510618116354091,
+      "IDW_all_mean_error_m_mean": 1.0697621038455702,
+      "IDW_all_mean_error_m_std_cross_room": 0.2881738722286362,
+      "IDW_all_p90_error_m_mean": 2.2402224411720018,
+      "IDW_all_p90_error_m_std_cross_room": 0.5517217710052843,
+      "IDW_unseen_cell_acc_mean": 0.007876543209876543,
+      "IDW_unseen_cell_acc_std_cross_room": 0.0016456377978223836,
+      "IDW_unseen_mean_error_m_mean": 1.4136045628442984,
+      "IDW_unseen_mean_error_m_std_cross_room": 0.06813826253413809,
+      "IDW_unseen_p90_error_m_mean": 2.627070605865908,
+      "IDW_unseen_p90_error_m_std_cross_room": 0.05256585902471416,
+      "GP_RBF_all_cell_acc_mean": 0.16356393923341553,
+      "GP_RBF_all_cell_acc_std_cross_room": 0.09574664509083068,
+      "GP_RBF_all_mean_error_m_mean": 1.0692569244000043,
+      "GP_RBF_all_mean_error_m_std_cross_room": 0.2886599596510833,
+      "GP_RBF_all_p90_error_m_mean": 2.24783190160571,
+      "GP_RBF_all_p90_error_m_std_cross_room": 0.5563280256931237,
+      "GP_RBF_unseen_cell_acc_mean": 0.010185185185185186,
+      "GP_RBF_unseen_cell_acc_std_cross_room": 0.0027944356494637797,
+      "GP_RBF_unseen_mean_error_m_mean": 1.420535120971996,
+      "GP_RBF_unseen_mean_error_m_std_cross_room": 0.0639163628977833,
+      "GP_RBF_unseen_p90_error_m_mean": 2.671661172924964,
+      "GP_RBF_unseen_p90_error_m_std_cross_room": 0.06454132199360768
+    }
+  ]
+}

@@ -2594,6 +2594,58 @@ Conclusion pratique :
     En pratique, les supports doivent donc être collectés proprement plutôt que
     simulés.
 
+  Exploration complémentaire : calibration partielle de cellules + interpolation
+  spatiale de carte radio
+
+  Question :
+  Peut-on éviter de mesurer toutes les cellules ? On calibre seulement M cellules
+  de la salle cible, puis on tente d'inférer les cellules restantes par
+  interpolation spatiale des prototypes RSSI.
+
+  Scripts et artefacts :
+  - `scripts/fewshot_cell_coverage.py`
+  - `scripts/fewshot_spatial_interpolation.py`
+  - `reports/benchmarks/fewshot_cell_coverage_summary.csv`
+  - `reports/benchmarks/fewshot_spatial_interpolation_summary.csv`
+  - `reports/benchmarks/fewshot_spatial_interpolation_k5_summary.csv`
+
+  Modèles testés :
+  - TargetOnly KNN : KNN entraîné seulement sur les cellules calibrées.
+  - NearestSpatial : chaque cellule non calibrée copie le prototype RSSI de la
+    cellule calibrée spatialement la plus proche.
+  - IDW : interpolation inverse-distance des prototypes RSSI.
+  - GP_RBF : interpolation par processus gaussien/RBF, analogue à un krigeage
+    simplifié avec noyau fixé.
+
+  Résultats principaux, accuracy sur cellules non calibrées :
+  - TargetOnly KNN : 0.00 % tant que la cellule n'a aucun support labellisé.
+    C'est attendu : un KNN ne peut pas prédire une classe absente de son train.
+  - K=1, interpolation spatiale :
+    * M=5 cellules calibrées  : SourceKNN 1.33 %, Nearest 2.00 %, IDW 1.08 %, GP 1.51 %
+    * M=20 cellules calibrées : SourceKNN 1.15 %, Nearest 2.36 %, IDW 1.04 %, GP 1.44 %
+    * M=60 cellules calibrées : SourceKNN 1.25 %, Nearest 0.91 %, IDW 0.79 %, GP 1.02 %
+  - K=5, contrôle court :
+    * M=5  : SourceKNN 1.27 %, Nearest 1.01 %, IDW 0.50 %, GP 0.93 %
+    * M=20 : SourceKNN 0.90 %, Nearest 1.30 %, IDW 0.46 %, GP 1.60 %
+    * M=40 : SourceKNN 1.45 %, Nearest 1.55 %, IDW 0.18 %, GP 0.35 %
+
+  Lecture :
+  - L'interpolation spatiale simple ne donne pas de raccourci exploitable. Les
+    scores restent autour du hasard, parfois légèrement au-dessus, mais sans
+    tendance monotone ni niveau utilisable.
+  - IDW et GP/RBF lissent trop les signatures RSSI : ils fabriquent des
+    prototypes moyens qui ne correspondent pas assez aux mesures réelles.
+  - NearestSpatial est parfois le meilleur des interpolateurs, mais seulement
+    parce qu'il copie une signature réelle voisine ; cela reste proche du hasard
+    sur les cellules vraiment non calibrées.
+  - Conclusion pratique : pour un KNN/fingerprinting par classe, il faut au
+    moins une mesure labellisée par cellule cible. Calibrer 50 % des cellules ne
+    permet pas d'inférer proprement les 50 % restantes avec ces interpolateurs
+    simples. Un vrai raccourci demanderait un modèle de champ radio beaucoup
+    plus fort : propagation physique, contraintes de plan, modèle spatial
+    supervisé, ou apprentissage métrique explicitement régularisé par la
+    géométrie.
+
 ────────────────────────────────────────────────────────────────────────────────
 18.8 TTA / Tent — Adaptation test-time par minimisation d'entropie
 ────────────────────────────────────────────────────────────────────────────────
@@ -3572,6 +3624,9 @@ Conclusion pratique :
   ├── fewshot_target_calibration.json     — TargetKNN/RawCentroid K={1,2,3,5,10,15,20,25}
   ├── fewshot_campaign_calibration_e102.json — TargetKNN LOCO E102 par campagne
   ├── fewshot_campaign_calibration_all_rooms.json — TargetKNN LOCO B121/D005/E101/E102
+  ├── fewshot_cell_coverage.json       — calibration partielle M cellules cible
+  ├── fewshot_spatial_interpolation.json — IDW/GP/RBF sur cellules non calibrées (K=1)
+  ├── fewshot_spatial_interpolation_k5.json — contrôle interpolation spatiale K=5
   ├── targetknn_stress_test_loro_audit.json — audit anti-fuite TargetKNN LORO
   ├── targetknn_loco_audit.json          — audit anti-fuite TargetKNN LOCO campagne
   ├── tta_loro.json                      — TTA/Tent 4 modes LORO
